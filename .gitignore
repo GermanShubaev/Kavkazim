@@ -1,0 +1,37 @@
+# Unity
+[Ll]ibrary/
+[Tt]emp/
+[Oo]bj/
+[Bb]uild/
+[Bb]uilds/
+[Ll]ogs/
+[Mm]emoryCaptures/
+UserSettings/
+Packages/com.unity.package-manager-ui/
+*.csproj
+*.sln
+*.unityproj
+*.pidb
+*.user
+*.userprefs
+*.svd
+*.pdb
+*.mdb
+
+# Rider / VS / VSCode
+.idea/
+.vs/
+*.DotSettings.user
+.vscode/
+
+# Crash/Profiler
+*.stacktrace
+
+# Addressables/Cache (optional)
+ServerData/
+Assets/StreamingAssets/aa/
+
+# If you generate builds inside the project
+*.apk
+*.aab
+*.ipa
