@@ -35,3 +35,10 @@ Assets/StreamingAssets/aa/
 *.apk
 *.aab
 *.ipa
+
+# In .gitconfig (global) or .git/config (repo)
+[merge]
+    tool = unityyamlmerge
+[mergetool "unityyamlmerge"]
+    cmd = "C:/Program Files/Unity/Hub/Editor/2022.3.XXf1/Editor/Data/Tools/UnityYAMLMerge.exe" merge -p "$BASE" "$REMOTE" "$LOCAL" "$MERGED"
+    trustExitCode = true
