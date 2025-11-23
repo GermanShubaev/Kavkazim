@@ -28,11 +28,12 @@ namespace Kavkazim.Services
             if (!AuthenticationService.Instance.IsSignedIn)
             {
                 await AuthenticationService.Instance.SignInAnonymouslyAsync();
-                if (!string.IsNullOrWhiteSpace(displayName))
-                {
-                    try { await AuthenticationService.Instance.UpdatePlayerNameAsync(displayName); }
-                    catch (Exception e) { Debug.LogWarning($"Display name set failed: {e.Message}"); }
-                }
+            }
+
+            if (!string.IsNullOrWhiteSpace(displayName))
+            {
+                try { await AuthenticationService.Instance.UpdatePlayerNameAsync(displayName); }
+                catch (Exception e) { Debug.LogWarning($"Display name set failed: {e.Message}"); }
             }
         }
     }
