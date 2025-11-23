@@ -1,0 +1,43 @@
+2025-11-23 13:23:27.419 +02:00 [INF] Initializing Coplay services
+2025-11-23 13:23:27.434 +02:00 [INF] Initializing EditorThreadHelper
+2025-11-23 13:23:27.434 +02:00 [INF] EditorThreadHelper initialized successfully
+2025-11-23 13:23:27.456 +02:00 [INF] Enabling console error detection
+2025-11-23 13:23:27.465 +02:00 [INF] ConsoleDebugButtonService initializing
+2025-11-23 13:23:27.470 +02:00 [INF] ConsoleDebugButtonService initialized
+2025-11-23 13:23:39.863 +02:00 [INF] Coplay container created
+2025-11-23 13:23:39.882 +02:00 [INF] Debug button created, initial visibility: hidden
+2025-11-23 13:23:39.889 +02:00 [INF] Copy button created
+2025-11-23 13:23:39.890 +02:00 [INF] Debug With AI button successfully injected into console
+2025-11-23 13:23:39.890 +02:00 [INF] Subscribed to error detection
+2025-11-23 13:27:53.683 +02:00 [INF] No startup errors found after delayed check
+2025-11-23 14:05:22.372 +02:00 [INF] Initializing Coplay services
+2025-11-23 14:05:22.392 +02:00 [INF] Initializing EditorThreadHelper
+2025-11-23 14:05:22.393 +02:00 [INF] EditorThreadHelper initialized successfully
+2025-11-23 14:05:22.427 +02:00 [INF] Enabling console error detection
+2025-11-23 14:05:22.439 +02:00 [INF] ConsoleDebugButtonService initializing
+2025-11-23 14:05:22.447 +02:00 [INF] ConsoleDebugButtonService initialized
+2025-11-23 14:05:27.034 +02:00 [INF] Coplay container created
+2025-11-23 14:05:27.038 +02:00 [INF] Debug button created, initial visibility: hidden
+2025-11-23 14:05:27.039 +02:00 [INF] Copy button created
+2025-11-23 14:05:27.039 +02:00 [INF] Debug With AI button successfully injected into console
+2025-11-23 14:05:27.040 +02:00 [INF] Subscribed to error detection
+2025-11-23 14:05:27.072 +02:00 [INF] No startup errors found after delayed check
+2025-11-23 14:05:56.174 +02:00 [INF] No existing action records JSON file found.
+2025-11-23 14:05:56.206 +02:00 [INF] Loading state from file, and setting to: Initialized
+2025-11-23 14:05:56.225 +02:00 [INF] No request found, returning empty.
+2025-11-23 14:05:56.241 +02:00 [INF] No MCP servers configuration found
+2025-11-23 14:05:56.242 +02:00 [INF] MCP host initialized
+2025-11-23 14:05:56.246 +02:00 [INF] Loaded 0 scroll positions from disk
+2025-11-23 14:05:56.286 +02:00 [INF] Context file not found: C:\Users\germa\OneDrive\Desktop\Kavkazim\kavkazim\Packages\Coplay\Editor\CoplayLogs\context_items.json
+2025-11-23 14:05:56.287 +02:00 [INF] Checking for dependencies in: C:\Users\germa\OneDrive\Desktop\Kavkazim\kavkazim\Packages\Coplay\Editor\Binaries
+2025-11-23 14:05:56.288 +02:00 [INF] Executable at C:\Users\germa\OneDrive\Desktop\Kavkazim\kavkazim\Packages\Coplay\Editor\Binaries\ripgrep\x86_64\rg.exe exists: True
+2025-11-23 14:05:56.291 +02:00 [INF] RunInBackgroundStartupTask initialized - will enable background execution in play mode
+2025-11-23 14:05:56.400 +02:00 [INF] Checking for dependencies in: C:\Users\germa\OneDrive\Desktop\Kavkazim\kavkazim\Packages\Coplay\Editor\Binaries
+2025-11-23 14:05:56.402 +02:00 [INF] Executable at C:\Users\germa\OneDrive\Desktop\Kavkazim\kavkazim\Packages\Coplay\Editor\Binaries\ripgrep\x86_64\rg.exe exists: True
+2025-11-23 14:05:56.607 +02:00 [WRN] No refresh token found
+2025-11-23 14:05:56.635 +02:00 [WRN] Unauthorized access to subscription endpoint
+2025-11-23 14:07:57.275 +02:00 [DBG] Compilation finished, refreshing error state
+2025-11-23 14:07:57.840 +02:00 [INF] Deinitializing Coplay services
+2025-11-23 14:07:57.840 +02:00 [INF] ConsoleDebugButtonService disposing
+2025-11-23 14:07:57.844 +02:00 [INF] Unsubscribed from error detection
+2025-11-23 14:07:57.866 +02:00 [INF] EditorThreadHelper disposed

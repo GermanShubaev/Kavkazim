@@ -5,6 +5,7 @@ using Unity.Netcode.Transports.UTP;
 
 public class LocalNetworkHUD : MonoBehaviour
 {
+    /*
     [SerializeField] private NetworkManager networkManager; // drag NetworkRuntime here (optional)
     [SerializeField] private UnityTransport transport;      // drag UnityTransport here (optional)
 
@@ -54,4 +55,5 @@ public class LocalNetworkHUD : MonoBehaviour
         GUI.enabled = true;
         GUILayout.EndArea();
     }
+    */
 }
