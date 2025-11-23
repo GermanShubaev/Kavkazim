@@ -7,7 +7,6 @@ using Unity.Networking.Transport.Relay;
 using Unity.Services.Relay.Models;
 using UnityEngine;
 using Unity.Netcode.Transports.UTP; 
-using Unity.Networking.Transport.Relay;
 
 namespace Kavkazim.Netcode
 {

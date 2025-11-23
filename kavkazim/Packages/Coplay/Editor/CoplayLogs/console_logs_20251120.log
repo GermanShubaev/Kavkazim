@@ -1,0 +1,149 @@
+2025-11-20 11:53:10.745 +02:00 [INF] Initializing Coplay services
+2025-11-20 11:53:11.199 +02:00 [INF] Added GLTFAST_FORCE_DEFAULT_IMPORTER_OFF define to prevent glTF importer conflicts with other packages
+2025-11-20 11:53:11.203 +02:00 [INF] Initializing EditorThreadHelper
+2025-11-20 11:53:11.203 +02:00 [INF] EditorThreadHelper initialized successfully
+2025-11-20 11:53:11.222 +02:00 [INF] Enabling console error detection
+2025-11-20 11:53:11.232 +02:00 [INF] ConsoleDebugButtonService initializing
+2025-11-20 11:53:11.235 +02:00 [INF] ConsoleDebugButtonService initialized
+2025-11-20 11:54:27.897 +02:00 [DBG] Compilation finished, refreshing error state
+2025-11-20 11:54:27.978 +02:00 [INF] Deinitializing Coplay services
+2025-11-20 11:54:27.980 +02:00 [INF] ConsoleDebugButtonService disposing
+2025-11-20 11:54:28.012 +02:00 [INF] EditorThreadHelper disposed
+2025-11-20 11:54:36.382 +02:00 [INF] Initializing Coplay services
+2025-11-20 11:54:36.407 +02:00 [INF] Initializing EditorThreadHelper
+2025-11-20 11:54:36.408 +02:00 [INF] EditorThreadHelper initialized successfully
+2025-11-20 11:54:36.448 +02:00 [INF] Enabling console error detection
+2025-11-20 11:54:36.474 +02:00 [INF] ConsoleDebugButtonService initializing
+2025-11-20 11:54:36.483 +02:00 [INF] ConsoleDebugButtonService initialized
+2025-11-20 11:54:58.779 +02:00 [INF] No existing action records JSON file found.
+2025-11-20 11:55:00.890 +02:00 [INF] Coplay container created
+2025-11-20 11:55:00.912 +02:00 [INF] Debug button created, initial visibility: visible
+2025-11-20 11:55:00.914 +02:00 [INF] Copy button created
+2025-11-20 11:55:00.914 +02:00 [INF] Debug With AI button successfully injected into console
+2025-11-20 11:55:00.919 +02:00 [INF] Subscribed to error detection
+2025-11-20 11:57:36.454 +02:00 [INF] Found 1 startup errors via direct console query - caching for downstream use
+2025-11-20 12:57:06.280 +02:00 [INF] No state file found, maintaining Initialized state for fresh installation
+2025-11-20 12:57:06.328 +02:00 [INF] No request found, returning empty.
+2025-11-20 12:57:06.351 +02:00 [INF] No MCP servers configuration found
+2025-11-20 12:57:06.351 +02:00 [INF] MCP host initialized
+2025-11-20 12:57:06.389 +02:00 [INF] Context file not found: C:\Users\germa\OneDrive\Desktop\Kavkazim\kavkazim\Packages\Coplay\Editor\CoplayLogs\context_items.json
+2025-11-20 12:57:06.390 +02:00 [INF] Checking for dependencies in: C:\Users\germa\OneDrive\Desktop\Kavkazim\kavkazim\Packages\Coplay\Editor\Binaries
+2025-11-20 12:57:06.390 +02:00 [INF] Ripgrep directory not found
+2025-11-20 12:57:06.390 +02:00 [INF] RunInBackgroundStartupTask initialized - will enable background execution in play mode
+2025-11-20 12:57:06.492 +02:00 [INF] Checking for dependencies in: C:\Users\germa\OneDrive\Desktop\Kavkazim\kavkazim\Packages\Coplay\Editor\Binaries
+2025-11-20 12:57:06.492 +02:00 [INF] Ripgrep directory not found
+2025-11-20 12:57:06.495 +02:00 [INF] Showing dependency download screen
+2025-11-20 12:57:12.313 +02:00 [INF] Creating Binaries directory at: C:\Users\germa\OneDrive\Desktop\Kavkazim\kavkazim\Packages\Coplay\Editor\Binaries
+2025-11-20 12:57:48.098 +02:00 [INF] Checking for executable in: C:\Users\germa\OneDrive\Desktop\Kavkazim\kavkazim\Packages\Coplay\Editor\Binaries\ripgrep\x86_64
+2025-11-20 12:57:48.098 +02:00 [INF] Looking for executable at: C:\Users\germa\OneDrive\Desktop\Kavkazim\kavkazim\Packages\Coplay\Editor\Binaries\ripgrep\x86_64\rg.exe
+2025-11-20 12:57:48.099 +02:00 [INF] Set executable permissions successfully
+2025-11-20 12:58:04.571 +02:00 [INF] Dependency installation completed successfully
+2025-11-20 12:59:09.271 +02:00 [INF] Successfully got device ID: cpl-device-aeb39282-772d-4cc9-98fe-77502aa3d2f2
+2025-11-20 12:59:16.585 +02:00 [INF] Clearing All
+2025-11-20 12:59:16.586 +02:00 [INF] Clearing state model
+2025-11-20 12:59:16.587 +02:00 [WRN] You are setting to the same state: Initialized
+2025-11-20 12:59:16.610 +02:00 [INF] Cleaned up all thumbnail textures
+2025-11-20 12:59:16.614 +02:00 [INF] AssistantController: Dispose called
+2025-11-20 12:59:16.615 +02:00 [INF] FunctionExecutionController: Dispose called
+2025-11-20 13:01:11.113 +02:00 [WRN] No refresh token found
+2025-11-20 13:01:11.118 +02:00 [WRN] Unauthorized access to subscription endpoint
+2025-11-20 13:10:49.810 +02:00 [INF] Loading state from file, and setting to: Initialized
+2025-11-20 13:10:49.815 +02:00 [INF] No request found, returning empty.
+2025-11-20 13:10:49.817 +02:00 [INF] No MCP servers configuration found
+2025-11-20 13:10:49.817 +02:00 [INF] MCP host initialized
+2025-11-20 13:10:49.821 +02:00 [INF] Loaded 0 scroll positions from disk
+2025-11-20 13:10:49.826 +02:00 [INF] Context file not found: C:\Users\germa\OneDrive\Desktop\Kavkazim\kavkazim\Packages\Coplay\Editor\CoplayLogs\context_items.json
+2025-11-20 13:10:49.826 +02:00 [INF] Checking for dependencies in: C:\Users\germa\OneDrive\Desktop\Kavkazim\kavkazim\Packages\Coplay\Editor\Binaries
+2025-11-20 13:10:49.827 +02:00 [INF] Executable at C:\Users\germa\OneDrive\Desktop\Kavkazim\kavkazim\Packages\Coplay\Editor\Binaries\ripgrep\x86_64\rg.exe exists: True
+2025-11-20 13:10:49.828 +02:00 [INF] RunInBackgroundStartupTask initialized - will enable background execution in play mode
+2025-11-20 13:10:49.938 +02:00 [INF] Checking for dependencies in: C:\Users\germa\OneDrive\Desktop\Kavkazim\kavkazim\Packages\Coplay\Editor\Binaries
+2025-11-20 13:10:49.939 +02:00 [INF] Executable at C:\Users\germa\OneDrive\Desktop\Kavkazim\kavkazim\Packages\Coplay\Editor\Binaries\ripgrep\x86_64\rg.exe exists: True
+2025-11-20 13:10:50.209 +02:00 [WRN] No refresh token found
+2025-11-20 13:10:50.214 +02:00 [WRN] Unauthorized access to subscription endpoint
+2025-11-20 13:11:49.163 +02:00 [ERR] CoplayError - Login failed
+System.Threading.Tasks.TaskCanceledException: A task was canceled.
+  at Coplay.Common.CoplayApi.CoplayApiClient.CheckForTokens (System.Threading.CancellationToken cancellationToken) [0x00169] in <c5154154e5fe431a957d18469842598f>:0 
+System.Threading.Tasks.TaskCanceledException: A task was canceled.
+  at Coplay.Common.CoplayApi.CoplayApiClient.CheckForTokens (System.Threading.CancellationToken cancellationToken) [0x0025f] in <c5154154e5fe431a957d18469842598f>:0 
+  at Coplay.Views.Components.LoginViewFactory+<>c__DisplayClass9_0.<LoginUI>b__2 () [0x00192] in <c5154154e5fe431a957d18469842598f>:0 
+2025-11-20 13:11:49.165 +02:00 [INF] Login attempt cancelled
+2025-11-20 13:12:12.355 +02:00 [INF] Saving state
+2025-11-20 13:12:12.452 +02:00 [INF] Clearing All
+2025-11-20 13:12:12.452 +02:00 [INF] Clearing state model
+2025-11-20 13:12:12.452 +02:00 [WRN] You are setting to the same state: Initialized
+2025-11-20 13:12:13.688 +02:00 [INF] Clearing All
+2025-11-20 13:12:13.688 +02:00 [INF] Clearing state model
+2025-11-20 13:12:13.688 +02:00 [WRN] You are setting to the same state: Initialized
+2025-11-20 13:12:13.690 +02:00 [INF] Cleaned up all thumbnail textures
+2025-11-20 13:12:13.691 +02:00 [INF] AssistantController: Dispose called
+2025-11-20 13:12:13.691 +02:00 [INF] FunctionExecutionController: Dispose called
+2025-11-20 13:12:14.971 +02:00 [INF] Loading state from file, and setting to: Initialized
+2025-11-20 13:12:14.973 +02:00 [INF] No request found, returning empty.
+2025-11-20 13:12:14.973 +02:00 [INF] No MCP servers configuration found
+2025-11-20 13:12:14.973 +02:00 [INF] MCP host initialized
+2025-11-20 13:12:14.974 +02:00 [INF] Loaded 0 scroll positions from disk
+2025-11-20 13:12:14.977 +02:00 [INF] Context file not found: C:\Users\germa\OneDrive\Desktop\Kavkazim\kavkazim\Packages\Coplay\Editor\CoplayLogs\context_items.json
+2025-11-20 13:12:14.977 +02:00 [INF] Checking for dependencies in: C:\Users\germa\OneDrive\Desktop\Kavkazim\kavkazim\Packages\Coplay\Editor\Binaries
+2025-11-20 13:12:14.977 +02:00 [INF] Executable at C:\Users\germa\OneDrive\Desktop\Kavkazim\kavkazim\Packages\Coplay\Editor\Binaries\ripgrep\x86_64\rg.exe exists: True
+2025-11-20 13:12:14.977 +02:00 [INF] RunInBackgroundStartupTask initialized - will enable background execution in play mode
+2025-11-20 13:12:15.065 +02:00 [INF] Checking for dependencies in: C:\Users\germa\OneDrive\Desktop\Kavkazim\kavkazim\Packages\Coplay\Editor\Binaries
+2025-11-20 13:12:15.067 +02:00 [INF] Executable at C:\Users\germa\OneDrive\Desktop\Kavkazim\kavkazim\Packages\Coplay\Editor\Binaries\ripgrep\x86_64\rg.exe exists: True
+2025-11-20 13:12:15.184 +02:00 [WRN] No refresh token found
+2025-11-20 13:12:15.190 +02:00 [WRN] Unauthorized access to subscription endpoint
+2025-11-20 13:12:35.243 +02:00 [INF] Clearing All
+2025-11-20 13:12:35.244 +02:00 [INF] Clearing state model
+2025-11-20 13:12:35.244 +02:00 [WRN] You are setting to the same state: Initialized
+2025-11-20 13:12:35.246 +02:00 [INF] Cleaned up all thumbnail textures
+2025-11-20 13:12:35.246 +02:00 [INF] AssistantController: Dispose called
+2025-11-20 13:12:35.246 +02:00 [INF] FunctionExecutionController: Dispose called
+2025-11-20 13:12:36.891 +02:00 [INF] Loading state from file, and setting to: Initialized
+2025-11-20 13:12:36.892 +02:00 [INF] No request found, returning empty.
+2025-11-20 13:12:36.892 +02:00 [INF] No MCP servers configuration found
+2025-11-20 13:12:36.892 +02:00 [INF] MCP host initialized
+2025-11-20 13:12:36.893 +02:00 [INF] Loaded 0 scroll positions from disk
+2025-11-20 13:12:36.897 +02:00 [INF] Context file not found: C:\Users\germa\OneDrive\Desktop\Kavkazim\kavkazim\Packages\Coplay\Editor\CoplayLogs\context_items.json
+2025-11-20 13:12:36.897 +02:00 [INF] Checking for dependencies in: C:\Users\germa\OneDrive\Desktop\Kavkazim\kavkazim\Packages\Coplay\Editor\Binaries
+2025-11-20 13:12:36.897 +02:00 [INF] Executable at C:\Users\germa\OneDrive\Desktop\Kavkazim\kavkazim\Packages\Coplay\Editor\Binaries\ripgrep\x86_64\rg.exe exists: True
+2025-11-20 13:12:36.897 +02:00 [INF] RunInBackgroundStartupTask initialized - will enable background execution in play mode
+2025-11-20 13:12:36.986 +02:00 [INF] Checking for dependencies in: C:\Users\germa\OneDrive\Desktop\Kavkazim\kavkazim\Packages\Coplay\Editor\Binaries
+2025-11-20 13:12:36.986 +02:00 [INF] Executable at C:\Users\germa\OneDrive\Desktop\Kavkazim\kavkazim\Packages\Coplay\Editor\Binaries\ripgrep\x86_64\rg.exe exists: True
+2025-11-20 13:12:37.078 +02:00 [WRN] No refresh token found
+2025-11-20 13:12:37.079 +02:00 [WRN] Unauthorized access to subscription endpoint
+2025-11-20 13:12:39.599 +02:00 [INF] Clearing All
+2025-11-20 13:12:39.599 +02:00 [INF] Clearing state model
+2025-11-20 13:12:39.599 +02:00 [WRN] You are setting to the same state: Initialized
+2025-11-20 13:12:39.601 +02:00 [INF] Cleaned up all thumbnail textures
+2025-11-20 13:12:39.601 +02:00 [INF] AssistantController: Dispose called
+2025-11-20 13:12:39.601 +02:00 [INF] FunctionExecutionController: Dispose called
+2025-11-20 13:33:42.682 +02:00 [INF] Initializing Coplay services
+2025-11-20 13:33:42.698 +02:00 [INF] Initializing EditorThreadHelper
+2025-11-20 13:33:42.698 +02:00 [INF] EditorThreadHelper initialized successfully
+2025-11-20 13:33:42.728 +02:00 [INF] Enabling console error detection
+2025-11-20 13:33:42.775 +02:00 [INF] ConsoleDebugButtonService initializing
+2025-11-20 13:33:42.785 +02:00 [INF] ConsoleDebugButtonService initialized
+2025-11-20 13:33:47.543 +02:00 [INF] No existing action records JSON file found.
+2025-11-20 13:33:47.592 +02:00 [INF] Loading state from file, and setting to: Initialized
+2025-11-20 13:33:47.625 +02:00 [INF] No request found, returning empty.
+2025-11-20 13:33:47.653 +02:00 [INF] No MCP servers configuration found
+2025-11-20 13:33:47.654 +02:00 [INF] MCP host initialized
+2025-11-20 13:33:47.659 +02:00 [INF] Loaded 0 scroll positions from disk
+2025-11-20 13:33:47.708 +02:00 [INF] Context file not found: C:\Users\germa\OneDrive\Desktop\Kavkazim\kavkazim\Packages\Coplay\Editor\CoplayLogs\context_items.json
+2025-11-20 13:33:47.709 +02:00 [INF] Checking for dependencies in: C:\Users\germa\OneDrive\Desktop\Kavkazim\kavkazim\Packages\Coplay\Editor\Binaries
+2025-11-20 13:33:47.710 +02:00 [INF] Executable at C:\Users\germa\OneDrive\Desktop\Kavkazim\kavkazim\Packages\Coplay\Editor\Binaries\ripgrep\x86_64\rg.exe exists: True
+2025-11-20 13:33:47.716 +02:00 [INF] RunInBackgroundStartupTask initialized - will enable background execution in play mode
+2025-11-20 13:33:50.591 +02:00 [WRN] No refresh token found
+2025-11-20 13:33:50.600 +02:00 [WRN] Unauthorized access to subscription endpoint
+2025-11-20 13:33:50.727 +02:00 [INF] Coplay container created
+2025-11-20 13:33:50.748 +02:00 [INF] Debug button created, initial visibility: hidden
+2025-11-20 13:33:50.757 +02:00 [INF] Copy button created
+2025-11-20 13:33:50.757 +02:00 [INF] Debug With AI button successfully injected into console
+2025-11-20 13:33:50.758 +02:00 [INF] Subscribed to error detection
+2025-11-20 13:33:50.772 +02:00 [INF] Checking for dependencies in: C:\Users\germa\OneDrive\Desktop\Kavkazim\kavkazim\Packages\Coplay\Editor\Binaries
+2025-11-20 13:33:50.773 +02:00 [INF] Executable at C:\Users\germa\OneDrive\Desktop\Kavkazim\kavkazim\Packages\Coplay\Editor\Binaries\ripgrep\x86_64\rg.exe exists: True
+2025-11-20 13:33:50.834 +02:00 [INF] No startup errors found after delayed check
+2025-11-20 14:27:41.971 +02:00 [INF] Clearing All
+2025-11-20 14:27:41.972 +02:00 [INF] Clearing state model
+2025-11-20 14:27:41.972 +02:00 [WRN] You are setting to the same state: Initialized
+2025-11-20 14:27:41.984 +02:00 [INF] Cleaned up all thumbnail textures
+2025-11-20 14:27:41.987 +02:00 [INF] AssistantController: Dispose called
+2025-11-20 14:27:41.987 +02:00 [INF] FunctionExecutionController: Dispose called
