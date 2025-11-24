@@ -17,6 +17,12 @@ namespace Kavkazim.UI
             CreateUI();
             SceneManager.activeSceneChanged += OnSceneChanged;
             UpdateVisibility(SceneManager.GetActiveScene());
+            
+            // Add disconnect handler for clients
+            if (!gameObject.GetComponent<Kavkazim.Netcode.DisconnectHandler>())
+            {
+                gameObject.AddComponent<Kavkazim.Netcode.DisconnectHandler>();
+            }
         }
 
         private void OnDestroy()
@@ -78,12 +84,33 @@ namespace Kavkazim.UI
             Image panelImage = _panel.AddComponent<Image>();
             panelImage.color = new Color(0, 0, 0, 0.8f);
             RectTransform panelRect = _panel.GetComponent<RectTransform>();
-            panelRect.sizeDelta = new Vector2(300, 200);
+            panelRect.sizeDelta = new Vector2(300, 250); // Increased height
             panelRect.anchoredPosition = Vector2.zero;
             _panel.SetActive(false);
 
+            // 3.1 Room Code Text
+            GameObject codeTextObj = new GameObject("RoomCodeText");
+            codeTextObj.transform.SetParent(_panel.transform, false);
+            Text codeText = codeTextObj.AddComponent<Text>();
+            codeText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            codeText.alignment = TextAnchor.MiddleCenter;
+            codeText.color = Color.yellow;
+            codeText.fontSize = 20;
+            
+            // Get code from Bootstrap
+            string code = "Unknown";
+            if (Kavkazim.Netcode.NetworkBootstrap.Instance != null)
+            {
+                code = Kavkazim.Netcode.NetworkBootstrap.Instance.LobbyCode ?? "None";
+            }
+            codeText.text = $"Room Code: {code}";
+
+            RectTransform codeRect = codeTextObj.GetComponent<RectTransform>();
+            codeRect.sizeDelta = new Vector2(280, 40);
+            codeRect.anchoredPosition = new Vector2(0, 60); // Top of panel
+
             // 4. Create Leave Button inside Panel
-            GameObject leaveBtnObj = CreateButton(_panel.transform, "LeaveButton", "Leave Game", new Vector2(200, 50), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero);
+            GameObject leaveBtnObj = CreateButton(_panel.transform, "LeaveButton", "Leave Game", new Vector2(200, 50), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0, -20));
             leaveBtnObj.GetComponent<Button>().onClick.AddListener(OnLeaveClicked);
         }
 
