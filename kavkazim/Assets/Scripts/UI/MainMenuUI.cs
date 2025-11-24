@@ -48,9 +48,8 @@ namespace Kavkazim.UI
             // Wire buttons
             hostButton.onClick.AddListener(() => _ = OnHostClicked());
             quickJoinButton.onClick.AddListener(ShowRoomCodePopup);
-            leaveLobbyButton.onClick.AddListener(() => _ = OnLeaveClicked());
-
-            leaveLobbyButton.interactable = false;
+            leaveLobbyButton.onClick.AddListener(OnLeaveClicked);
+            leaveLobbyButton.interactable = true; // Force enable in case it's disabled in Inspector
 
             CreateRoomCodePopup();
         }
@@ -254,19 +253,13 @@ namespace Kavkazim.UI
             finally { SetUIInteractable(true); }
         }
 
-        private async Task OnLeaveClicked()
+        private void OnLeaveClicked()
         {
-            SetUIInteractable(false);
-            try
-            {
-                await _bootstrap.LeaveLobbyAsync();
-                if (NetworkManager.Singleton && (NetworkManager.Singleton.IsClient || NetworkManager.Singleton.IsHost))
-                {
-                    NetworkManager.Singleton.Shutdown();
-                }
-                leaveLobbyButton.interactable = false;
-            }
-            finally { SetUIInteractable(true); }
+            Debug.Log("Leave/Quit button clicked. Exiting game...");
+            Application.Quit();
+#if UNITY_EDITOR
+            UnityEditor.EditorApplication.isPlaying = false;
+#endif
         }
 
         private void SetUIInteractable(bool state)

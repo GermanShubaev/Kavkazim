@@ -15,6 +15,11 @@ namespace Kavkazim.Netcode
     {
         [SerializeField] private SpriteRenderer spriteRenderer;
         
+        [Header("Camera Follow")]
+        [SerializeField] private Vector3 cameraOffset = new Vector3(0, 0, -10);
+        [SerializeField] private float cameraSmoothSpeed = 5f;
+        private Camera _mainCamera;
+        
         // Networked name variable
         public NetworkVariable<Unity.Collections.FixedString32Bytes> PlayerName = 
             new NetworkVariable<Unity.Collections.FixedString32Bytes>();
@@ -77,6 +82,9 @@ namespace Kavkazim.Netcode
                 
                 // Request the server to set our name
                 SetPlayerNameServerRpc(pName);
+
+                // Initialize Camera
+                TryFindCamera();
             }
 
             // Update label initially
@@ -185,6 +193,31 @@ namespace Kavkazim.Netcode
         private void UpdateNameLabel(Unity.Collections.FixedString32Bytes newName)
         {
             if (_nameLabel) _nameLabel.text = newName.ToString();
+        }
+
+        private void TryFindCamera()
+        {
+            if (_mainCamera) return;
+            _mainCamera = Camera.main;
+            if (_mainCamera)
+            {
+                Debug.Log($"[PlayerAvatar] Camera found and attached to {name}");
+            }
+        }
+
+        private void LateUpdate()
+        {
+            if (!IsOwner) return;
+
+            if (!_mainCamera)
+            {
+                TryFindCamera();
+                if (!_mainCamera) return;
+            }
+
+            Vector3 desiredPos = transform.position + cameraOffset;
+            Vector3 smoothedPos = Vector3.Lerp(_mainCamera.transform.position, desiredPos, cameraSmoothSpeed * Time.deltaTime);
+            _mainCamera.transform.position = smoothedPos;
         }
     }
 }
