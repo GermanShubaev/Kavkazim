@@ -1,0 +1,21 @@
+Main Menu  
+1.code to join
+2.host
+3.leave - exit app
+
+Game
+1.Movement
+2.Kill ability 
+
+Todo
+	Create 2d map - Amir
+Crewmate :
+	Create 8 mini games - Amir
+	Progress bar
+
+Voting System :
+	Implement + clock
+	Most voted is killed
+	
+Impostor :
+Kill turns into ghost instead of kick - German
