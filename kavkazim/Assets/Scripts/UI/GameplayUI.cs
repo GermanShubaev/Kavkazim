@@ -1,9 +1,10 @@
-using UnityEngine;
-using UnityEngine.UI;
+using Netcode;
 using Unity.Netcode;
+using UnityEngine;
 using UnityEngine.SceneManagement;
+using UnityEngine.UI;
 
-namespace Kavkazim.UI
+namespace UI
 {
     public class GameplayUI : MonoBehaviour
     {
@@ -99,9 +100,9 @@ namespace Kavkazim.UI
             
             // Get code from Bootstrap
             string code = "Unknown";
-            if (Kavkazim.Netcode.NetworkBootstrap.Instance != null)
+            if (NetworkBootstrap.Instance != null)
             {
-                code = Kavkazim.Netcode.NetworkBootstrap.Instance.LobbyCode ?? "None";
+                code = NetworkBootstrap.Instance.LobbyCode ?? "None";
             }
             codeText.text = $"Room Code: {code}";
 

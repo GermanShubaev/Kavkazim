@@ -1,13 +1,15 @@
 ﻿using System.Threading.Tasks;
 using Kavkazim.Netcode;
 using Kavkazim.Services;
+using Netcode;
+using Services;
 using TMPro;
 using Unity.Netcode;
 using UnityEngine;
-using UnityEngine.UI;
 using UnityEngine.SceneManagement;
+using UnityEngine.UI;
 
-namespace Kavkazim.UI
+namespace UI
 {
     public class MainMenuUI : MonoBehaviour
     {

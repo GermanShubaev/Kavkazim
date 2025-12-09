@@ -2,7 +2,7 @@ using Kavkazim.Config;
 using Unity.Netcode;
 using UnityEngine;
 
-namespace Kavkazim.Netcode
+namespace Netcode.Player
 {
     /// <summary>
     /// Server-only motor: applies validated velocity to Rigidbody2D.
