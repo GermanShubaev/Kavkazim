@@ -4,6 +4,7 @@ using UnityEngine.InputSystem;
 using TMPro;
 using Unity.Services.Authentication;
 using System.Collections;
+using UI;
 
 namespace Kavkazim.Netcode
 {
@@ -46,11 +47,11 @@ namespace Kavkazim.Netcode
             if (IsOwner)
             {
                 // Spawn Gameplay UI
-                if (GameObject.FindFirstObjectByType<Kavkazim.UI.GameplayUI>() == null)
+                if (GameObject.FindFirstObjectByType<GameplayUI>() == null)
                 {
                     GameObject uiGo = new GameObject("GameplayUIManager");
                     uiGo.transform.SetParent(transform); // Parent to player to persist across scenes
-                    uiGo.AddComponent<Kavkazim.UI.GameplayUI>();
+                    uiGo.AddComponent<GameplayUI>();
                 }
 
                 // Assign random role if we are the server (Host)

@@ -1,10 +1,12 @@
 ﻿// Assets/Scripts/Netcode/Player/PlayerInputClient.cs
 // Assets/Scripts/Netcode/Player/PlayerInputClient.cs
-using UnityEngine;
+
+using Kavkazim.Netcode;
 using Unity.Netcode;
+using UnityEngine;
 using UnityEngine.InputSystem;
 
-namespace Kavkazim.Netcode
+namespace Netcode.Player
 {
     [RequireComponent(typeof(PlayerMotorServer))]
     [RequireComponent(typeof(PlayerInput))]
