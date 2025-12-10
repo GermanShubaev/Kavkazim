@@ -8,6 +8,7 @@ namespace Netcode.Player
     /// Server-only motor: applies validated velocity to Rigidbody2D.
     /// </summary>
     [RequireComponent(typeof(Rigidbody2D))]
+    [RequireComponent(typeof(BoxCollider2D))]
     public class PlayerMotorServer : NetworkBehaviour
     {
         [SerializeField] private NetworkGameplayConfig config;
