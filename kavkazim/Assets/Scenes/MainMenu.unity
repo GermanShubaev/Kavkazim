@@ -774,6 +774,7 @@ GameObject:
   - component: {fileID: 1215751966}
   - component: {fileID: 1215751968}
   - component: {fileID: 1215751969}
+  - component: {fileID: 1215751970}
   m_Layer: 0
   m_Name: NetworkRuntime
   m_TagString: Untagged
@@ -847,7 +848,7 @@ MonoBehaviour:
       - {fileID: 11400000, guid: 40f20898579fc394ca2b0284ef473390, type: 2}
     TickRate: 30
     ClientConnectionBufferTimeout: 10
-    ConnectionApproval: 0
+    ConnectionApproval: 1
     ConnectionData: 
     EnableTimeResync: 0
     TimeResyncInterval: 30
@@ -891,6 +892,21 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7ca24bd4c7cf7074083b98e00b693482, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::KeepNetworkManagerAlive
+--- !u!114 &1215751970
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1215751964}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c43c5b9a6f3644b4bb28a687e02c2751, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Kavkazim.Netcode.PlayerSpawnHandler
+  spawnCenter: {x: 12.4, y: 30.3, z: 0}
+  spawnRadius: 1.5
+  maxPlayersOnCircle: 10
 --- !u!1 &1317697001
 GameObject:
   m_ObjectHideFlags: 0
