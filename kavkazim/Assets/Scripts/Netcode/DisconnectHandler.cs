@@ -2,7 +2,7 @@ using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-namespace Kavkazim.Netcode
+namespace Netcode
 {
     /// <summary>
     /// Handles client disconnection - returns clients to main menu if host disconnects.
