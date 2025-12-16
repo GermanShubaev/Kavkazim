@@ -14,4 +14,4 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Kavkazim.Config.NetworkGameplayConfig
   moveSpeed: 7
   inputSendRate: 30
-  stateSendRate: 20
+  stateSendRate: 30

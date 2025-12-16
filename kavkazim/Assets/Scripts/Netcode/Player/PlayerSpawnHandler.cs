@@ -20,23 +20,34 @@ namespace Netcode.Player
         [SerializeField] private int maxPlayersOnCircle = 10;
 
         private int _spawnedPlayerCount = 0;
+        private bool _isRegistered = false;
 
         private void OnEnable()
         {
-            if (NetworkManager.Singleton != null)
+            // Only register if we're actually on the NetworkManager object
+            // and haven't already registered
+            if (_isRegistered) return;
+            
+            var nm = NetworkManager.Singleton;
+            if (nm != null && nm.gameObject == gameObject)
             {
-                NetworkManager.Singleton.ConnectionApprovalCallback += OnConnectionApproval;
-                NetworkManager.Singleton.OnClientDisconnectCallback += OnClientDisconnected;
+                // Use direct assignment (Unity Netcode only allows one callback)
+                nm.ConnectionApprovalCallback = OnConnectionApproval;
+                nm.OnClientDisconnectCallback += OnClientDisconnected;
+                _isRegistered = true;
             }
         }
 
         private void OnDisable()
         {
+            if (!_isRegistered) return;
+            
             if (NetworkManager.Singleton != null)
             {
-                NetworkManager.Singleton.ConnectionApprovalCallback -= OnConnectionApproval;
+                NetworkManager.Singleton.ConnectionApprovalCallback = null;
                 NetworkManager.Singleton.OnClientDisconnectCallback -= OnClientDisconnected;
             }
+            _isRegistered = false;
         }
 
         /// <summary>
