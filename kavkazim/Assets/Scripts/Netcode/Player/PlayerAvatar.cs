@@ -150,32 +150,10 @@ namespace Kavkazim.Netcode
             transform.rotation = startRot;
         }
 
-        [Rpc(SendTo.Server)]
-        public void RequestKillServerRpc(ulong targetId)
-        {
-            if (!IsServer) return;
-
-            if (NetworkManager.Singleton.SpawnManager.SpawnedObjects.TryGetValue(targetId, out NetworkObject targetObj))
-            {
-                // Kill the target. For now, just despawn or disable.
-                // Let's just disable the object for now to simulate death
-                targetObj.gameObject.SetActive(false);
-                Debug.Log($"[Server] Player {targetId} killed by {OwnerClientId}");
-                
-                // Notify clients (Optional: Play sound/effect)
-                KillClientRpc(targetId);
-            }
-        }
-
-        [Rpc(SendTo.ClientsAndHost)]
-        private void KillClientRpc(ulong targetId)
-        {
-             if (NetworkManager.Singleton.SpawnManager.SpawnedObjects.TryGetValue(targetId, out NetworkObject targetObj))
-            {
-                // Visual feedback for death on all clients
-                targetObj.gameObject.SetActive(false);
-            }
-        }
+        // NOTE: Kill functionality has been moved to KillerAbility and PlayerState components.
+        // - KillerAbility.RequestKillServerRpc() handles the kill request
+        // - PlayerState manages the alive/ghost state
+        // PerformSlashAnimation() is kept here for visual feedback
 
         private void SetupNameLabel()
         {

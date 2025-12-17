@@ -12,7 +12,6 @@ GameObject:
   - component: {fileID: 3327020728377956164}
   - component: {fileID: 4572544402284761578}
   - component: {fileID: 2316493240184490851}
-  - component: {fileID: 4152613538345482205}
   - component: {fileID: 8365024740585526556}
   - component: {fileID: 3928432986146746478}
   - component: {fileID: 8588229111260279699}
@@ -20,6 +19,9 @@ GameObject:
   - component: {fileID: 7553111882227554343}
   - component: {fileID: 2363073354470318395}
   - component: {fileID: 6762606234800706794}
+  - component: {fileID: -2638491744535586950}
+  - component: {fileID: 8959800121656972371}
+  - component: {fileID: 7536937082566640545}
   m_Layer: 0
   m_Name: Player
   m_TagString: Untagged
@@ -152,43 +154,6 @@ Rigidbody2D:
   m_SleepingMode: 1
   m_CollisionDetection: 1
   m_Constraints: 4
---- !u!70 &4152613538345482205
-CapsuleCollider2D:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 64683924485901163}
-  m_Enabled: 0
-  serializedVersion: 3
-  m_Density: 1
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
-  m_ForceSendLayers:
-    serializedVersion: 2
-    m_Bits: 4294967295
-  m_ForceReceiveLayers:
-    serializedVersion: 2
-    m_Bits: 4294967295
-  m_ContactCaptureLayers:
-    serializedVersion: 2
-    m_Bits: 4294967295
-  m_CallbackLayers:
-    serializedVersion: 2
-    m_Bits: 4294967295
-  m_IsTrigger: 0
-  m_UsedByEffector: 0
-  m_CompositeOperation: 0
-  m_CompositeOrder: 0
-  m_Offset: {x: 0, y: 0}
-  m_Size: {x: 1, y: 1}
-  m_Direction: 0
 --- !u!114 &8365024740585526556
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -410,3 +375,57 @@ BoxCollider2D:
   m_AutoTiling: 0
   m_Size: {x: 1, y: 1}
   m_EdgeRadius: 0
+--- !u!114 &-2638491744535586950
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 64683924485901163}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b4a99561d5b05794fb0cb832e9e9df03, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Kavkazim.Netcode.PlayerState
+  ShowTopMostFoldoutHeaderGroup: 1
+  aliveLayerName: Alive
+  ghostLayerName: Ghost
+  ghostAlpha: 0.5
+  spriteRenderer: {fileID: 0}
+  playerCollider: {fileID: 0}
+  IsAlive:
+    m_InternalValue: 1
+--- !u!114 &8959800121656972371
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 64683924485901163}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e9cfdb0d2a2dd7b4082cba82942be1ed, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Kavkazim.Netcode.KillerAbility
+  ShowTopMostFoldoutHeaderGroup: 1
+  config: {fileID: 0}
+  defaultKillRange: 2
+  defaultKillCooldown: 15
+  avatar: {fileID: 0}
+  CooldownEndTime:
+    m_InternalValue: 0
+--- !u!114 &7536937082566640545
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 64683924485901163}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4a69b6da237bce446bf4df90f9379650, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Netcode.Player.GhostVisibilityManager
+  ShowTopMostFoldoutHeaderGroup: 1
+  renderersToHide: []
+  objectsToHide: []
