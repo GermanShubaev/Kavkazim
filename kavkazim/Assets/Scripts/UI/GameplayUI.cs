@@ -1,3 +1,4 @@
+using Kavkazim.Netcode;
 using Netcode;
 using Unity.Netcode;
 using UnityEngine;
@@ -20,9 +21,9 @@ namespace UI
             UpdateVisibility(SceneManager.GetActiveScene());
             
             // Add disconnect handler for clients
-            if (!gameObject.GetComponent<Kavkazim.Netcode.DisconnectHandler>())
+            if (!gameObject.GetComponent<DisconnectHandler>())
             {
-                gameObject.AddComponent<Kavkazim.Netcode.DisconnectHandler>();
+                gameObject.AddComponent<DisconnectHandler>();
             }
         }
 

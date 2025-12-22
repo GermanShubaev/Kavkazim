@@ -1,32 +1,103 @@
 using Unity.Netcode;
 using UnityEngine;
 
-namespace Kavkazim.Netcode
+namespace Netcode.Player
 {
     /// <summary>
-    /// Spawns the player prefab when a client connects; set as the PlayerPrefab in NetworkManager.
+    /// Handles custom player spawning in a circular pattern around the hexagon center.
+    /// Attach to the NetworkManager GameObject and enable Connection Approval.
     /// </summary>
     public class PlayerSpawnHandler : MonoBehaviour
     {
+        [Header("Spawn Configuration")]
+        [Tooltip("Center of the spawn area (hexagon center)")]
+        [SerializeField] private Vector3 spawnCenter = new Vector3(12.4f, 30.3f, 0f);
+        
+        [Tooltip("Radius of the spawn circle")]
+        [SerializeField] private float spawnRadius = 1.5f;
+        
+        [Tooltip("Maximum players to distribute around the circle")]
+        [SerializeField] private int maxPlayersOnCircle = 10;
+
+        private int _spawnedPlayerCount = 0;
+        private bool _isRegistered = false;
+
         private void OnEnable()
         {
-            if (NetworkManager.Singleton != null)
+            // Only register if we're actually on the NetworkManager object
+            // and haven't already registered
+            if (_isRegistered) return;
+            
+            var nm = NetworkManager.Singleton;
+            if (nm != null && nm.gameObject == gameObject)
             {
-                NetworkManager.Singleton.OnClientConnectedCallback += OnClientConnected;
-                NetworkManager.Singleton.OnClientDisconnectCallback += OnClientDisconnected;
+                // Use direct assignment (Unity Netcode only allows one callback)
+                nm.ConnectionApprovalCallback = OnConnectionApproval;
+                nm.OnClientDisconnectCallback += OnClientDisconnected;
+                _isRegistered = true;
             }
         }
 
         private void OnDisable()
         {
+            if (!_isRegistered) return;
+            
             if (NetworkManager.Singleton != null)
             {
-                NetworkManager.Singleton.OnClientConnectedCallback -= OnClientConnected;
+                NetworkManager.Singleton.ConnectionApprovalCallback = null;
                 NetworkManager.Singleton.OnClientDisconnectCallback -= OnClientDisconnected;
             }
+            _isRegistered = false;
         }
 
-        private void OnClientConnected(ulong clientId) { /* reserved for later (spawn points, cosmetics) */ }
-        private void OnClientDisconnected(ulong clientId) { /* cleanup if needed */ }
+        /// <summary>
+        /// Called on the server when a client requests to connect.
+        /// Sets the spawn position in a circular pattern around the hexagon.
+        /// </summary>
+        private void OnConnectionApproval(NetworkManager.ConnectionApprovalRequest request, NetworkManager.ConnectionApprovalResponse response)
+        {
+            // Approve the connection
+            response.Approved = true;
+            response.CreatePlayerObject = true;
+            
+            // Calculate spawn position on circle
+            response.Position = GetNextSpawnPosition();
+            response.Rotation = Quaternion.identity;
+            
+            Debug.Log($"[PlayerSpawnHandler] Player spawning at position: {response.Position}");
+        }
+
+        /// <summary>
+        /// Calculate the next spawn position in a circular pattern.
+        /// </summary>
+        private Vector3 GetNextSpawnPosition()
+        {
+            // Calculate angle for this player (evenly distributed around circle)
+            float angleStep = 360f / maxPlayersOnCircle;
+            float angle = _spawnedPlayerCount * angleStep * Mathf.Deg2Rad;
+            
+            // Calculate position on circle
+            float x = spawnCenter.x + Mathf.Cos(angle) * spawnRadius;
+            float y = spawnCenter.y + Mathf.Sin(angle) * spawnRadius;
+            
+            _spawnedPlayerCount++;
+            
+            return new Vector3(x, y, spawnCenter.z);
+        }
+
+        private void OnClientDisconnected(ulong clientId)
+        {
+            // Optionally decrease count when players leave (for respawn scenarios)
+            // Note: This simple implementation doesn't reclaim positions
+            Debug.Log($"[PlayerSpawnHandler] Client {clientId} disconnected");
+        }
+
+        /// <summary>
+        /// Reset spawn counter (useful when returning to lobby)
+        /// </summary>
+        public void ResetSpawnCounter()
+        {
+            _spawnedPlayerCount = 0;
+        }
     }
 }
