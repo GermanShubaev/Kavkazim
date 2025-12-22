@@ -1,10 +1,14 @@
 using Unity.Netcode;
 using UnityEngine;
+using Kavkazim.Netcode;
+using System.Collections.Generic;
+using System.Collections;
 
 namespace Netcode.Player
 {
     /// <summary>
     /// Handles custom player spawning in a circular pattern around the hexagon center.
+    /// Also manages server-side role assignment and secure role distribution.
     /// Attach to the NetworkManager GameObject and enable Connection Approval.
     /// </summary>
     public class PlayerSpawnHandler : MonoBehaviour
@@ -19,8 +23,15 @@ namespace Netcode.Player
         [Tooltip("Maximum players to distribute around the circle")]
         [SerializeField] private int maxPlayersOnCircle = 10;
 
+        [Header("Role Configuration")]
+        [Tooltip("Chance for a player to be Kavkazi (0-1)")]
+        [SerializeField] private float kavkaziChance = 0.3f;
+
         private int _spawnedPlayerCount = 0;
         private bool _isRegistered = false;
+        
+        // Track spawned players for role distribution
+        private List<PlayerAvatar> _spawnedPlayers = new List<PlayerAvatar>();
 
         private void OnEnable()
         {
@@ -34,6 +45,7 @@ namespace Netcode.Player
                 // Use direct assignment (Unity Netcode only allows one callback)
                 nm.ConnectionApprovalCallback = OnConnectionApproval;
                 nm.OnClientDisconnectCallback += OnClientDisconnected;
+                nm.OnClientConnectedCallback += OnClientConnected;
                 _isRegistered = true;
             }
         }
@@ -46,8 +58,10 @@ namespace Netcode.Player
             {
                 NetworkManager.Singleton.ConnectionApprovalCallback = null;
                 NetworkManager.Singleton.OnClientDisconnectCallback -= OnClientDisconnected;
+                NetworkManager.Singleton.OnClientConnectedCallback -= OnClientConnected;
             }
             _isRegistered = false;
+            _spawnedPlayers.Clear();
         }
 
         /// <summary>
@@ -87,17 +101,160 @@ namespace Netcode.Player
 
         private void OnClientDisconnected(ulong clientId)
         {
-            // Optionally decrease count when players leave (for respawn scenarios)
-            // Note: This simple implementation doesn't reclaim positions
-            Debug.Log($"[PlayerSpawnHandler] Client {clientId} disconnected");
+            // Remove disconnected player from our tracking list
+            _spawnedPlayers.RemoveAll(p => p == null || p.OwnerClientId == clientId);
+            Debug.Log($"[PlayerSpawnHandler] Client {clientId} disconnected. Tracked players: {_spawnedPlayers.Count}");
         }
 
         /// <summary>
-        /// Reset spawn counter (useful when returning to lobby)
+        /// Called when a client fully connects (after spawn).
+        /// Used to assign role and distribute role visibility.
+        /// </summary>
+        private void OnClientConnected(ulong clientId)
+        {
+            if (!NetworkManager.Singleton.IsServer) return;
+            
+            // Use coroutine to wait for player object to be spawned
+            StartCoroutine(AssignAndDistributeRolesCoroutine(clientId));
+        }
+
+        /// <summary>
+        /// Coroutine to wait for player spawn and then assign/distribute roles.
+        /// </summary>
+        private IEnumerator AssignAndDistributeRolesCoroutine(ulong clientId)
+        {
+            // Wait a frame for the player object to be fully spawned
+            yield return null;
+            yield return null; // Extra frame for safety
+            
+            // Find the player's avatar
+            PlayerAvatar newPlayerAvatar = null;
+            foreach (var netObj in NetworkManager.Singleton.SpawnManager.SpawnedObjects.Values)
+            {
+                if (netObj.OwnerClientId == clientId)
+                {
+                    var avatar = netObj.GetComponent<PlayerAvatar>();
+                    if (avatar != null)
+                    {
+                        newPlayerAvatar = avatar;
+                        break;
+                    }
+                }
+            }
+            
+            if (newPlayerAvatar == null)
+            {
+                Debug.LogWarning($"[PlayerSpawnHandler] Could not find PlayerAvatar for client {clientId}");
+                yield break;
+            }
+            
+            // Assign role to new player
+            AssignRoleToPlayer(newPlayerAvatar);
+            
+            // Add to tracked players
+            if (!_spawnedPlayers.Contains(newPlayerAvatar))
+            {
+                _spawnedPlayers.Add(newPlayerAvatar);
+            }
+            
+            // Distribute roles: tell new client about all existing players
+            DistributeRolesToClient(clientId, newPlayerAvatar.Role.Value);
+            
+            // Broadcast new player's role to all existing clients
+            BroadcastNewPlayerRole(newPlayerAvatar);
+            
+            Debug.Log($"[PlayerSpawnHandler] Role assignment complete for client {clientId}. Role: {newPlayerAvatar.Role.Value}");
+        }
+
+        /// <summary>
+        /// SERVER ONLY: Assign a random role to a player.
+        /// </summary>
+        private void AssignRoleToPlayer(PlayerAvatar avatar)
+        {
+            // Random role assignment
+            PlayerRoleType role = Random.value < kavkaziChance ? PlayerRoleType.Kavkazi : PlayerRoleType.Innocent;
+            avatar.Role.Value = role;
+            Debug.Log($"[PlayerSpawnHandler] Assigned role {role} to player {avatar.OwnerClientId}");
+        }
+
+        /// <summary>
+        /// SERVER ONLY: Send perceived roles for ALL players to a specific client.
+        /// Uses the new client's true role to determine what they should see.
+        /// </summary>
+        private void DistributeRolesToClient(ulong clientId, PlayerRoleType observerTrueRole)
+        {
+            // Find the observer's avatar to send RPCs through
+            PlayerAvatar observerAvatar = null;
+            foreach (var player in _spawnedPlayers)
+            {
+                if (player != null && player.OwnerClientId == clientId)
+                {
+                    observerAvatar = player;
+                    break;
+                }
+            }
+            
+            if (observerAvatar == null)
+            {
+                Debug.LogWarning($"[PlayerSpawnHandler] Could not find observer avatar for client {clientId}");
+                return;
+            }
+            
+            // Send perceived role for each player (including self)
+            foreach (var targetPlayer in _spawnedPlayers)
+            {
+                if (targetPlayer == null) continue;
+                
+                PlayerRoleType targetTrueRole = targetPlayer.Role.Value;
+                PlayerRoleType perceivedRole = RoleVisibilityService.GetPerceivedRole(observerTrueRole, targetTrueRole);
+                
+                // Send targeted RPC to this specific client
+                // Access RpcTarget through the NetworkBehaviour instance
+                observerAvatar.ReceivePerceivedRoleClientRpc(
+                    targetPlayer.NetworkObjectId,
+                    perceivedRole,
+                    observerAvatar.RpcTarget.Single(clientId, RpcTargetUse.Temp)
+                );
+                
+                Debug.Log($"[PlayerSpawnHandler] Sent to client {clientId}: Player {targetPlayer.OwnerClientId} perceived as {perceivedRole}");
+            }
+        }
+
+        /// <summary>
+        /// SERVER ONLY: Broadcast a new player's role to all existing clients.
+        /// Each client receives the perceived role based on their own true role.
+        /// </summary>
+        private void BroadcastNewPlayerRole(PlayerAvatar newPlayer)
+        {
+            PlayerRoleType newPlayerTrueRole = newPlayer.Role.Value;
+            
+            foreach (var existingPlayer in _spawnedPlayers)
+            {
+                if (existingPlayer == null) continue;
+                
+                // Get what this existing player should see for the new player
+                PlayerRoleType existingPlayerTrueRole = existingPlayer.Role.Value;
+                PlayerRoleType perceivedRole = RoleVisibilityService.GetPerceivedRole(existingPlayerTrueRole, newPlayerTrueRole);
+                
+                // Send targeted RPC
+                // Access RpcTarget through the NetworkBehaviour instance
+                existingPlayer.ReceivePerceivedRoleClientRpc(
+                    newPlayer.NetworkObjectId,
+                    perceivedRole,
+                    existingPlayer.RpcTarget.Single(existingPlayer.OwnerClientId, RpcTargetUse.Temp)
+                );
+                
+                Debug.Log($"[PlayerSpawnHandler] Broadcast to client {existingPlayer.OwnerClientId}: New player {newPlayer.OwnerClientId} perceived as {perceivedRole}");
+            }
+        }
+
+        /// <summary>
+        /// Reset spawn counter and player tracking (useful when returning to lobby)
         /// </summary>
         public void ResetSpawnCounter()
         {
             _spawnedPlayerCount = 0;
+            _spawnedPlayers.Clear();
         }
     }
 }

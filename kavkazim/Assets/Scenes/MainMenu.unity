@@ -907,6 +907,7 @@ MonoBehaviour:
   spawnCenter: {x: 12.4, y: 30.3, z: 0}
   spawnRadius: 1.5
   maxPlayersOnCircle: 10
+  kavkaziChance: 0.3
 --- !u!1 &1317697001
 GameObject:
   m_ObjectHideFlags: 0

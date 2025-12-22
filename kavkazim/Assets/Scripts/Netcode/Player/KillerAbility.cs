@@ -176,6 +176,20 @@ namespace Kavkazim.Netcode
                 return;
             }
             
+            // 8. Check if target is a Kavkazi teammate (SERVER-SIDE validation using true role)
+            PlayerAvatar killerAvatar = GetComponent<PlayerAvatar>();
+            PlayerAvatar targetAvatar = targetNetObj.GetComponent<PlayerAvatar>();
+            if (killerAvatar != null && targetAvatar != null)
+            {
+                // On server, GetTrueRole() works correctly
+                if (killerAvatar.GetTrueRole() == PlayerRoleType.Kavkazi && 
+                    targetAvatar.GetTrueRole() == PlayerRoleType.Kavkazi)
+                {
+                    Debug.LogWarning($"[KillerAbility] SERVER: Kill rejected - cannot kill Kavkazi teammate.");
+                    return;
+                }
+            }
+            
             // === EXECUTE KILL ===
             
             // Start cooldown
@@ -237,12 +251,13 @@ namespace Kavkazim.Netcode
                 if (!player.IsAlive.Value)
                     continue;
                 
-                // Check if it's a Kavkazi (don't kill teammates)
-                // You may want to add team checking logic here
+                // Check if it's a Kavkazi teammate (use PerceivedRole since Role is OwnerOnly)
+                // On the client, we use what we PERCEIVE the target to be
+                // If we're Kavkazi, we'll see other Kavkazis as Kavkazi and skip them
                 PlayerAvatar targetAvatar = player.GetComponent<PlayerAvatar>();
-                if (targetAvatar != null && targetAvatar.Role.Value == PlayerRoleType.Kavkazi)
+                if (targetAvatar != null && targetAvatar.PerceivedRole == PlayerRoleType.Kavkazi)
                 {
-                    // Skip fellow Kavkazi
+                    // Skip fellow Kavkazi (as we perceive them)
                     continue;
                 }
 
