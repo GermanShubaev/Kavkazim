@@ -296,8 +296,8 @@ namespace UI
                 return;
             }
             
-            // Only show for Kavkazi players
-            bool isKavkazi = _localAvatar.Role.Value == PlayerRoleType.Kavkazi;
+            // Only show for Kavkazi players (use PerceivedRole since Role is OwnerOnly)
+            bool isKavkazi = _localAvatar.PerceivedRole == PlayerRoleType.Kavkazi;
             if (_cooldownContainer != null)
             {
                 _cooldownContainer.SetActive(isKavkazi && _localKillerAbility != null);

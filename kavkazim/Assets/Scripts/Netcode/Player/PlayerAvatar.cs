@@ -4,6 +4,7 @@ using UnityEngine.InputSystem;
 using TMPro;
 using Unity.Services.Authentication;
 using System.Collections;
+using System.Collections.Generic;
 using UI;
 
 namespace Kavkazim.Netcode
@@ -25,9 +26,21 @@ namespace Kavkazim.Netcode
         public NetworkVariable<Unity.Collections.FixedString32Bytes> PlayerName = 
             new NetworkVariable<Unity.Collections.FixedString32Bytes>();
 
-        // Networked Role variable
+        // Networked Role variable - OWNER ONLY read permission for security
+        // Only the server and the owning client can read the true role
         public NetworkVariable<PlayerRoleType> Role = 
-            new NetworkVariable<PlayerRoleType>(PlayerRoleType.Innocent);
+            new NetworkVariable<PlayerRoleType>(
+                PlayerRoleType.Innocent,
+                NetworkVariableReadPermission.Owner,
+                NetworkVariableWritePermission.Server
+            );
+
+        // Local cache of perceived roles for each player (what THIS client sees)
+        // Key: NetworkObjectId, Value: Perceived role
+        private Dictionary<ulong, PlayerRoleType> _perceivedRoles = new Dictionary<ulong, PlayerRoleType>();
+        
+        // The role this client perceives for THIS player (set via RPC)
+        public PlayerRoleType PerceivedRole { get; private set; } = PlayerRoleType.Innocent;
 
         private TextMeshPro _nameLabel;
         public PlayerRole CurrentRole { get; private set; }
@@ -39,9 +52,9 @@ namespace Kavkazim.Netcode
             // Setup name label
             SetupNameLabel();
 
-            // Initialize Role
-            UpdateRole(Role.Value);
-            Role.OnValueChanged += (oldVal, newVal) => UpdateRole(newVal);
+            // Initialize visuals with default Innocent appearance
+            // Actual perceived role will be set via RPC from server
+            UpdateVisuals(PerceivedRole);
 
             // If we are the owner, we set the name from Auth service
             if (IsOwner)
@@ -54,13 +67,8 @@ namespace Kavkazim.Netcode
                     uiGo.AddComponent<GameplayUI>();
                 }
 
-                // Assign random role if we are the server (Host)
-                if (IsServer)
-                {
-                    // Simple random role assignment for testing
-                    // 50% chance to be Kavkazi
-                    Role.Value = Random.value > 0.5f ? PlayerRoleType.Kavkazi : PlayerRoleType.Innocent;
-                }
+                // Role assignment is now handled by PlayerSpawnHandler on the server
+                // This ensures proper role distribution and security
                 
                 // Set name - use RPC to avoid write permission error
                 string pName = "";
@@ -101,9 +109,13 @@ namespace Kavkazim.Netcode
             PlayerName.Value = name;
         }
 
-        private void UpdateRole(PlayerRoleType roleType)
+        /// <summary>
+        /// Updates visuals based on PERCEIVED role (not true role).
+        /// Called when we receive role perception update from server.
+        /// </summary>
+        private void UpdateVisuals(PlayerRoleType perceivedRole)
         {
-            switch (roleType)
+            switch (perceivedRole)
             {
                 case PlayerRoleType.Kavkazi:
                     CurrentRole = new KavkaziRole(this);
@@ -115,7 +127,68 @@ namespace Kavkazim.Netcode
             }
             
             CurrentRole.SetupVisuals();
-            Debug.Log($"[PlayerAvatar] Role set to {roleType}");
+            Debug.Log($"[PlayerAvatar] Visuals set to perceived role: {perceivedRole}");
+        }
+
+        /// <summary>
+        /// SERVER ONLY: Get the true role of this player.
+        /// Use this on the server for game logic (killing, voting, etc.)
+        /// </summary>
+        public PlayerRoleType GetTrueRole()
+        {
+            return Role.Value;
+        }
+
+        /// <summary>
+        /// Targeted ClientRpc to receive perceived role for a specific player.
+        /// Called by server to tell THIS client what role they should see for a player.
+        /// </summary>
+        /// <param name="targetNetworkObjectId">The NetworkObjectId of the player being described</param>
+        /// <param name="perceivedRole">The role this client should perceive for that player</param>
+        [Rpc(SendTo.SpecifiedInParams)]
+        public void ReceivePerceivedRoleClientRpc(ulong targetNetworkObjectId, PlayerRoleType perceivedRole, RpcParams rpcParams = default)
+        {
+            // Store in our local perception cache
+            _perceivedRoles[targetNetworkObjectId] = perceivedRole;
+            
+            // If this is about ourselves, update our perceived role
+            if (targetNetworkObjectId == NetworkObjectId)
+            {
+                PerceivedRole = perceivedRole;
+                UpdateVisuals(perceivedRole);
+                Debug.Log($"[PlayerAvatar] Received my perceived role: {perceivedRole}");
+            }
+            else
+            {
+                // Find the target player and update their visuals
+                if (NetworkManager.Singleton.SpawnManager.SpawnedObjects.TryGetValue(
+                    targetNetworkObjectId, out NetworkObject targetNetObj))
+                {
+                    PlayerAvatar targetAvatar = targetNetObj.GetComponent<PlayerAvatar>();
+                    if (targetAvatar != null)
+                    {
+                        targetAvatar.ApplyPerceivedRole(perceivedRole);
+                    }
+                }
+                Debug.Log($"[PlayerAvatar] Received perceived role for player {targetNetworkObjectId}: {perceivedRole}");
+            }
+        }
+
+        /// <summary>
+        /// Apply a perceived role to this avatar (called by other avatars receiving RPC).
+        /// </summary>
+        public void ApplyPerceivedRole(PlayerRoleType perceivedRole)
+        {
+            PerceivedRole = perceivedRole;
+            UpdateVisuals(perceivedRole);
+        }
+
+        /// <summary>
+        /// Get the perceived role for a player from our local cache.
+        /// </summary>
+        public PlayerRoleType GetPerceivedRoleFor(ulong networkObjectId)
+        {
+            return _perceivedRoles.TryGetValue(networkObjectId, out var role) ? role : PlayerRoleType.Innocent;
         }
 
         public void SetBodyColor(Color c)
