@@ -56,41 +56,49 @@ namespace Kavkazim.Netcode
             // Actual perceived role will be set via RPC from server
             UpdateVisuals(PerceivedRole);
 
-            // If we are the owner, we set the name from Auth service
+            // If we are the owner, set up local player specifics
             if (IsOwner)
             {
-                // Spawn Gameplay UI
+                // PlayerAvatar is only spawned when match starts, so spawn GameplayUI
                 if (GameObject.FindFirstObjectByType<GameplayUI>() == null)
                 {
                     GameObject uiGo = new GameObject("GameplayUIManager");
-                    uiGo.transform.SetParent(transform); // Parent to player to persist across scenes
+                    uiGo.transform.SetParent(transform); // Parent to player to persist
                     uiGo.AddComponent<GameplayUI>();
                 }
 
-                // Role assignment is now handled by PlayerSpawnHandler on the server
-                // This ensures proper role distribution and security
+                // Role assignment is handled by PlayerSpawnHandler on the server
                 
-                // Set name - use RPC to avoid write permission error
-                string pName = "";
-                try 
+                // Only set name if server hasn't already set it
+                // (Server sets name from GameSessionManager PlayerSessionData)
+                if (string.IsNullOrEmpty(PlayerName.Value.ToString()))
                 {
-                    if (AuthenticationService.Instance.IsSignedIn)
+                    // Get name from PlayerPrefs (set during MainMenu connect)
+                    string pName = PlayerPrefs.GetString("PlayerName", "");
+                    
+                    // Fallback to Auth service if PlayerPrefs is empty
+                    if (string.IsNullOrEmpty(pName))
                     {
-                        pName = AuthenticationService.Instance.PlayerName;
-                        // Remove #1234 suffix if present
-                        if (!string.IsNullOrEmpty(pName))
+                        try 
                         {
-                            var parts = pName.Split('#');
-                            if (parts.Length > 0) pName = parts[0];
+                            if (AuthenticationService.Instance.IsSignedIn)
+                            {
+                                pName = AuthenticationService.Instance.PlayerName;
+                                if (!string.IsNullOrEmpty(pName))
+                                {
+                                    var parts = pName.Split('#');
+                                    if (parts.Length > 0) pName = parts[0];
+                                }
+                            }
                         }
+                        catch { }
                     }
-                }
-                catch { }
 
-                if (string.IsNullOrEmpty(pName)) pName = $"Player {OwnerClientId}";
-                
-                // Request the server to set our name
-                SetPlayerNameServerRpc(pName);
+                    if (string.IsNullOrEmpty(pName)) pName = $"Player {OwnerClientId}";
+                    
+                    // Request the server to set our name on the avatar
+                    SetPlayerNameServerRpc(pName);
+                }
 
                 // Initialize Camera
                 TryFindCamera();

@@ -3,35 +3,67 @@ using UnityEngine;
 using Kavkazim.Netcode;
 using System.Collections.Generic;
 using System.Collections;
+using System.Linq;
 
 namespace Netcode.Player
 {
     /// <summary>
-    /// Handles custom player spawning in a circular pattern around the hexagon center.
-    /// Also manages server-side role assignment and secure role distribution.
+    /// Handles connection approval and player avatar spawning.
+    /// 
+    /// In lobby mode:
+    /// - Connection approval enforces MaxPlayers limit
+    /// - Player objects are NOT auto-spawned (CreatePlayerObject = false)
+    /// - Players are added to GameSessionManager.Players list
+    /// 
+    /// When match starts:
+    /// - SpawnGameplayAvatars() creates PlayerAvatar for eligible players
+    /// - Roles are assigned based on lobby settings
+    /// 
     /// Attach to the NetworkManager GameObject and enable Connection Approval.
     /// </summary>
     public class PlayerSpawnHandler : MonoBehaviour
     {
-        [Header("Spawn Configuration")]
-        [Tooltip("Center of the spawn area (hexagon center)")]
-        [SerializeField] private Vector3 spawnCenter = new Vector3(12.4f, 30.3f, 0f);
-        
-        [Tooltip("Radius of the spawn circle")]
-        [SerializeField] private float spawnRadius = 1.5f;
-        
-        [Tooltip("Maximum players to distribute around the circle")]
-        [SerializeField] private int maxPlayersOnCircle = 10;
+        /// <summary>Singleton instance for GameSessionManager to call SpawnGameplayAvatars.</summary>
+        public static PlayerSpawnHandler Instance { get; private set; }
 
-        [Header("Role Configuration")]
-        [Tooltip("Chance for a player to be Kavkazi (0-1)")]
-        [SerializeField] private float kavkaziChance = 0.3f;
+        [Header("Gameplay Spawn Configuration")]
+        [Tooltip("Center of the gameplay spawn area (hexagon center)")]
+        [SerializeField] private Vector3 gameplaySpawnCenter = new Vector3(12.4f, 30.3f, 0f);
+        
+        [Tooltip("Radius of the gameplay spawn circle")]
+        [SerializeField] private float gameplaySpawnRadius = 1.5f;
+
+        [Header("Lobby Area Configuration")]
+        [Tooltip("Center of the lobby waiting area")]
+        [SerializeField] private Vector3 lobbySpawnCenter = new Vector3(0f, -50f, 0f);
+
+        [Header("References")]
+        [Tooltip("Player prefab to spawn (must have PlayerAvatar component)")]
+        [SerializeField] private GameObject playerPrefab;
 
         private int _spawnedPlayerCount = 0;
         private bool _isRegistered = false;
         
-        // Track spawned players for role distribution
+        // Track spawned player avatars for role distribution
         private List<PlayerAvatar> _spawnedPlayers = new List<PlayerAvatar>();
+
+        private void Awake()
+        {
+            if (Instance != null && Instance != this)
+            {
+                Debug.LogWarning("[PlayerSpawnHandler] Duplicate instance detected");
+                return;
+            }
+            Instance = this;
+        }
+
+        private void OnDestroy()
+        {
+            if (Instance == this)
+            {
+                Instance = null;
+            }
+        }
 
         private void OnEnable()
         {
@@ -47,6 +79,7 @@ namespace Netcode.Player
                 nm.OnClientDisconnectCallback += OnClientDisconnected;
                 nm.OnClientConnectedCallback += OnClientConnected;
                 _isRegistered = true;
+                Debug.Log("[PlayerSpawnHandler] Registered with NetworkManager");
             }
         }
 
@@ -66,186 +99,257 @@ namespace Netcode.Player
 
         /// <summary>
         /// Called on the server when a client requests to connect.
-        /// Sets the spawn position in a circular pattern around the hexagon.
+        /// Enforces MaxPlayers limit, checks for duplicate names, and does NOT auto-spawn player objects.
         /// </summary>
         private void OnConnectionApproval(NetworkManager.ConnectionApprovalRequest request, NetworkManager.ConnectionApprovalResponse response)
         {
-            // Approve the connection
+            // Get current player count (not including this incoming connection)
+            int currentCount = NetworkManager.Singleton.ConnectedClientsIds.Count;
+            
+            // Get max players from lobby settings (fallback to 10 if not available)
+            int maxPlayers = GameSessionManager.Instance?.Settings.Value.MaxPlayers ?? 10;
+            
+            // Timing-safe check: currentCount + 1 (this connection) > maxPlayers
+            if (currentCount + 1 > maxPlayers)
+            {
+                response.Approved = false;
+                response.Reason = "Server full";
+                return;
+            }
+            
+            // Get player name from connection payload (if provided)
+            string playerName = null;
+            if (request.Payload != null && request.Payload.Length > 0)
+            {
+                try
+                {
+                    playerName = System.Text.Encoding.UTF8.GetString(request.Payload);
+                }
+                catch { }
+            }
+            
+            // Check for duplicate names (only if GameSessionManager exists and name was provided)
+            if (!string.IsNullOrEmpty(playerName) && GameSessionManager.Instance != null)
+            {
+                var connectedClients = NetworkManager.Singleton.ConnectedClientsIds;
+                
+                foreach (var player in GameSessionManager.Instance.Players)
+                {
+                    // Skip if this player is no longer connected (stale entry)
+                    if (!connectedClients.Contains(player.ClientId))
+                        continue;
+                    
+                    if (player.PlayerName.ToString().Equals(playerName, System.StringComparison.OrdinalIgnoreCase))
+                    {
+                        response.Approved = false;
+                        response.Reason = $"Name '{playerName}' is already taken";
+                        return;
+                    }
+                }
+            }
+            
+            // Approve the connection but DO NOT spawn player object
+            // Player objects are spawned only when match starts
             response.Approved = true;
-            response.CreatePlayerObject = true;
+            response.CreatePlayerObject = false;
             
-            // Calculate spawn position on circle
-            response.Position = GetNextSpawnPosition();
-            response.Rotation = Quaternion.identity;
-            
-            Debug.Log($"[PlayerSpawnHandler] Player spawning at position: {response.Position}");
+            Debug.Log($"[PlayerSpawnHandler] Connection approved for '{playerName ?? "unknown"}'. Total will be: {currentCount + 1}/{maxPlayers}");
         }
 
         /// <summary>
-        /// Calculate the next spawn position in a circular pattern.
+        /// Called when a client fully connects.
+        /// Adds them to the GameSessionManager player list.
         /// </summary>
-        private Vector3 GetNextSpawnPosition()
+        private void OnClientConnected(ulong clientId)
         {
-            // Calculate angle for this player (evenly distributed around circle)
-            float angleStep = 360f / maxPlayersOnCircle;
-            float angle = _spawnedPlayerCount * angleStep * Mathf.Deg2Rad;
+            if (!NetworkManager.Singleton.IsServer) return;
             
-            // Calculate position on circle
-            float x = spawnCenter.x + Mathf.Cos(angle) * spawnRadius;
-            float y = spawnCenter.y + Mathf.Sin(angle) * spawnRadius;
+            Debug.Log($"[PlayerSpawnHandler] Client {clientId} connected");
             
-            _spawnedPlayerCount++;
-            
-            return new Vector3(x, y, spawnCenter.z);
+            // Add player to lobby list
+            // Name will be updated when client calls SubmitPlayerNameServerRpc
+            if (GameSessionManager.Instance != null)
+            {
+                string pendingName = $"Player {clientId}";
+                GameSessionManager.Instance.AddPlayer(clientId, pendingName);
+            }
+            else
+            {
+                // This is expected for the host - they connect before GameSession scene loads
+                // The host will be added when GameSessionManager.OnNetworkSpawn runs
+                bool isHost = clientId == NetworkManager.ServerClientId;
+                if (!isHost)
+                {
+                    Debug.LogWarning($"[PlayerSpawnHandler] GameSessionManager.Instance is null for client {clientId}");
+                }
+            }
         }
 
         private void OnClientDisconnected(ulong clientId)
         {
             // Remove disconnected player from our tracking list
             _spawnedPlayers.RemoveAll(p => p == null || p.OwnerClientId == clientId);
-            Debug.Log($"[PlayerSpawnHandler] Client {clientId} disconnected. Tracked players: {_spawnedPlayers.Count}");
+            Debug.Log($"[PlayerSpawnHandler] Client {clientId} disconnected. Tracked avatars: {_spawnedPlayers.Count}");
         }
 
         /// <summary>
-        /// Called when a client fully connects (after spawn).
-        /// Used to assign role and distribute role visibility.
+        /// Spawn gameplay avatars for all eligible players.
+        /// Called by GameSessionManager when match starts.
         /// </summary>
-        private void OnClientConnected(ulong clientId)
+        /// <param name="eligiblePlayers">Players who were in lobby (not late joiners)</param>
+        /// <param name="settings">Lobby settings for role assignment</param>
+        public void SpawnGameplayAvatars(List<PlayerSessionData> eligiblePlayers, LobbySettings settings)
         {
-            if (!NetworkManager.Singleton.IsServer) return;
-            
-            // Use coroutine to wait for player object to be spawned
-            StartCoroutine(AssignAndDistributeRolesCoroutine(clientId));
-        }
+            if (!NetworkManager.Singleton.IsServer)
+            {
+                Debug.LogError("[PlayerSpawnHandler] SpawnGameplayAvatars called on client!");
+                return;
+            }
 
-        /// <summary>
-        /// Coroutine to wait for player spawn and then assign/distribute roles.
-        /// </summary>
-        private IEnumerator AssignAndDistributeRolesCoroutine(ulong clientId)
-        {
-            // Wait a frame for the player object to be fully spawned
-            yield return null;
-            yield return null; // Extra frame for safety
+            Debug.Log($"[PlayerSpawnHandler] Spawning {eligiblePlayers.Count} gameplay avatars");
             
-            // Find the player's avatar
-            PlayerAvatar newPlayerAvatar = null;
-            foreach (var netObj in NetworkManager.Singleton.SpawnManager.SpawnedObjects.Values)
+            // Reset spawn counter
+            _spawnedPlayerCount = 0;
+            _spawnedPlayers.Clear();
+            
+            // Get player prefab from NetworkManager if not set
+            if (playerPrefab == null)
             {
-                if (netObj.OwnerClientId == clientId)
-                {
-                    var avatar = netObj.GetComponent<PlayerAvatar>();
-                    if (avatar != null)
-                    {
-                        newPlayerAvatar = avatar;
-                        break;
-                    }
-                }
+                playerPrefab = NetworkManager.Singleton.NetworkConfig.PlayerPrefab;
             }
             
-            if (newPlayerAvatar == null)
+            if (playerPrefab == null)
             {
-                Debug.LogWarning($"[PlayerSpawnHandler] Could not find PlayerAvatar for client {clientId}");
-                yield break;
-            }
-            
-            // Assign role to new player
-            AssignRoleToPlayer(newPlayerAvatar);
-            
-            // Add to tracked players
-            if (!_spawnedPlayers.Contains(newPlayerAvatar))
-            {
-                _spawnedPlayers.Add(newPlayerAvatar);
-            }
-            
-            // Distribute roles: tell new client about all existing players
-            DistributeRolesToClient(clientId, newPlayerAvatar.Role.Value);
-            
-            // Broadcast new player's role to all existing clients
-            BroadcastNewPlayerRole(newPlayerAvatar);
-            
-            Debug.Log($"[PlayerSpawnHandler] Role assignment complete for client {clientId}. Role: {newPlayerAvatar.Role.Value}");
-        }
-
-        /// <summary>
-        /// SERVER ONLY: Assign a random role to a player.
-        /// </summary>
-        private void AssignRoleToPlayer(PlayerAvatar avatar)
-        {
-            // Random role assignment
-            PlayerRoleType role = Random.value < kavkaziChance ? PlayerRoleType.Kavkazi : PlayerRoleType.Innocent;
-            avatar.Role.Value = role;
-            Debug.Log($"[PlayerSpawnHandler] Assigned role {role} to player {avatar.OwnerClientId}");
-        }
-
-        /// <summary>
-        /// SERVER ONLY: Send perceived roles for ALL players to a specific client.
-        /// Uses the new client's true role to determine what they should see.
-        /// </summary>
-        private void DistributeRolesToClient(ulong clientId, PlayerRoleType observerTrueRole)
-        {
-            // Find the observer's avatar to send RPCs through
-            PlayerAvatar observerAvatar = null;
-            foreach (var player in _spawnedPlayers)
-            {
-                if (player != null && player.OwnerClientId == clientId)
-                {
-                    observerAvatar = player;
-                    break;
-                }
-            }
-            
-            if (observerAvatar == null)
-            {
-                Debug.LogWarning($"[PlayerSpawnHandler] Could not find observer avatar for client {clientId}");
+                Debug.LogError("[PlayerSpawnHandler] No player prefab configured!");
                 return;
             }
             
-            // Send perceived role for each player (including self)
-            foreach (var targetPlayer in _spawnedPlayers)
+            // Spawn avatar for each eligible player
+            foreach (var playerData in eligiblePlayers)
             {
-                if (targetPlayer == null) continue;
-                
-                PlayerRoleType targetTrueRole = targetPlayer.Role.Value;
-                PlayerRoleType perceivedRole = RoleVisibilityService.GetPerceivedRole(observerTrueRole, targetTrueRole);
-                
-                // Send targeted RPC to this specific client
-                // Access RpcTarget through the NetworkBehaviour instance
-                observerAvatar.ReceivePerceivedRoleClientRpc(
-                    targetPlayer.NetworkObjectId,
-                    perceivedRole,
-                    observerAvatar.RpcTarget.Single(clientId, RpcTargetUse.Temp)
-                );
-                
-                Debug.Log($"[PlayerSpawnHandler] Sent to client {clientId}: Player {targetPlayer.OwnerClientId} perceived as {perceivedRole}");
+                SpawnPlayerAvatar(playerData.ClientId, playerData.PlayerName.ToString());
             }
+            
+            // Assign roles after all avatars are spawned
+            StartCoroutine(AssignRolesCoroutine(settings.KavkaziCount));
+        }
+
+        private void SpawnPlayerAvatar(ulong clientId, string playerName)
+        {
+            Vector3 spawnPos = GetNextGameplaySpawnPosition();
+            
+            GameObject playerObj = Instantiate(playerPrefab, spawnPos, Quaternion.identity);
+            NetworkObject netObj = playerObj.GetComponent<NetworkObject>();
+            
+            if (netObj == null)
+            {
+                Debug.LogError("[PlayerSpawnHandler] Player prefab missing NetworkObject!");
+                Destroy(playerObj);
+                return;
+            }
+            
+            // Set the player name BEFORE spawning so it's synced with initial spawn
+            PlayerAvatar avatar = playerObj.GetComponent<PlayerAvatar>();
+            if (avatar != null)
+            {
+                avatar.PlayerName.Value = playerName;
+                _spawnedPlayers.Add(avatar);
+            }
+            
+            // NOW spawn as player object owned by the client
+            // The PlayerName value will be included in the initial sync
+            netObj.SpawnAsPlayerObject(clientId, true);
+            
+            Debug.Log($"[PlayerSpawnHandler] Spawned avatar for {playerName} (Client {clientId}) at {spawnPos}");
         }
 
         /// <summary>
-        /// SERVER ONLY: Broadcast a new player's role to all existing clients.
-        /// Each client receives the perceived role based on their own true role.
+        /// Calculate the next spawn position in a circular pattern around gameplay area.
         /// </summary>
-        private void BroadcastNewPlayerRole(PlayerAvatar newPlayer)
+        private Vector3 GetNextGameplaySpawnPosition()
         {
-            PlayerRoleType newPlayerTrueRole = newPlayer.Role.Value;
+            int maxPlayers = GameSessionManager.Instance?.Settings.Value.MaxPlayers ?? 10;
+            float angleStep = 360f / maxPlayers;
+            float angle = _spawnedPlayerCount * angleStep * Mathf.Deg2Rad;
             
-            foreach (var existingPlayer in _spawnedPlayers)
+            float x = gameplaySpawnCenter.x + Mathf.Cos(angle) * gameplaySpawnRadius;
+            float y = gameplaySpawnCenter.y + Mathf.Sin(angle) * gameplaySpawnRadius;
+            
+            _spawnedPlayerCount++;
+            
+            return new Vector3(x, y, gameplaySpawnCenter.z);
+        }
+
+        /// <summary>
+        /// Assign roles after avatars are spawned.
+        /// Uses lobby settings for Kavkazi count instead of random chance.
+        /// </summary>
+        private IEnumerator AssignRolesCoroutine(int kavkaziCount)
+        {
+            // Wait for all avatars to be fully spawned
+            yield return null;
+            yield return null;
+            
+            // Clean up null references
+            _spawnedPlayers.RemoveAll(p => p == null);
+            
+            if (_spawnedPlayers.Count == 0)
             {
-                if (existingPlayer == null) continue;
-                
-                // Get what this existing player should see for the new player
-                PlayerRoleType existingPlayerTrueRole = existingPlayer.Role.Value;
-                PlayerRoleType perceivedRole = RoleVisibilityService.GetPerceivedRole(existingPlayerTrueRole, newPlayerTrueRole);
-                
-                // Send targeted RPC
-                // Access RpcTarget through the NetworkBehaviour instance
-                existingPlayer.ReceivePerceivedRoleClientRpc(
-                    newPlayer.NetworkObjectId,
-                    perceivedRole,
-                    existingPlayer.RpcTarget.Single(existingPlayer.OwnerClientId, RpcTargetUse.Temp)
-                );
-                
-                Debug.Log($"[PlayerSpawnHandler] Broadcast to client {existingPlayer.OwnerClientId}: New player {newPlayer.OwnerClientId} perceived as {perceivedRole}");
+                Debug.LogWarning("[PlayerSpawnHandler] No players to assign roles to!");
+                yield break;
             }
+            
+            // Shuffle players for random role assignment
+            List<PlayerAvatar> shuffled = _spawnedPlayers.OrderBy(_ => Random.value).ToList();
+            
+            // Clamp Kavkazi count to valid range
+            kavkaziCount = Mathf.Clamp(kavkaziCount, 1, shuffled.Count - 1);
+            
+            Debug.Log($"[PlayerSpawnHandler] Assigning roles: {kavkaziCount} Kavkazi, {shuffled.Count - kavkaziCount} Innocent");
+            
+            // Assign Kavkazi roles
+            for (int i = 0; i < shuffled.Count; i++)
+            {
+                PlayerAvatar avatar = shuffled[i];
+                PlayerRoleType role = i < kavkaziCount ? PlayerRoleType.Kavkazi : PlayerRoleType.Innocent;
+                avatar.Role.Value = role;
+                Debug.Log($"[PlayerSpawnHandler] Assigned {role} to {avatar.PlayerName.Value} (Client {avatar.OwnerClientId})");
+            }
+            
+            // Distribute perceived roles to all clients
+            yield return null; // Wait a frame for roles to sync
+            
+            DistributeAllRoles();
+        }
+
+        /// <summary>
+        /// Distribute perceived roles to all clients after role assignment.
+        /// </summary>
+        private void DistributeAllRoles()
+        {
+            foreach (var observer in _spawnedPlayers)
+            {
+                if (observer == null) continue;
+                
+                PlayerRoleType observerTrueRole = observer.Role.Value;
+                
+                // Send perceived role for each player to this observer
+                foreach (var target in _spawnedPlayers)
+                {
+                    if (target == null) continue;
+                    
+                    PlayerRoleType targetTrueRole = target.Role.Value;
+                    PlayerRoleType perceivedRole = RoleVisibilityService.GetPerceivedRole(observerTrueRole, targetTrueRole);
+                    
+                    observer.ReceivePerceivedRoleClientRpc(
+                        target.NetworkObjectId,
+                        perceivedRole,
+                        observer.RpcTarget.Single(observer.OwnerClientId, RpcTargetUse.Temp)
+                    );
+                }
+            }
+            
+            Debug.Log($"[PlayerSpawnHandler] Distributed roles to {_spawnedPlayers.Count} players");
         }
 
         /// <summary>
@@ -256,5 +360,15 @@ namespace Netcode.Player
             _spawnedPlayerCount = 0;
             _spawnedPlayers.Clear();
         }
+
+        /// <summary>
+        /// Get the lobby spawn position (for UI/camera positioning)
+        /// </summary>
+        public Vector3 GetLobbySpawnCenter() => lobbySpawnCenter;
+
+        /// <summary>
+        /// Get the gameplay spawn position (for UI/camera positioning)
+        /// </summary>
+        public Vector3 GetGameplaySpawnCenter() => gameplaySpawnCenter;
     }
 }
