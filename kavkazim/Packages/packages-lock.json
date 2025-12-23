@@ -201,6 +201,15 @@
       },
       "url": "https://packages.unity.com"
     },
+    "com.unity.multiplayer.playmode": {
+      "version": "1.6.3",
+      "depth": 0,
+      "source": "registry",
+      "dependencies": {
+        "com.unity.nuget.newtonsoft-json": "2.0.2"
+      },
+      "url": "https://packages.unity.com"
+    },
     "com.unity.netcode.gameobjects": {
       "version": "2.7.0",
       "depth": 0,
