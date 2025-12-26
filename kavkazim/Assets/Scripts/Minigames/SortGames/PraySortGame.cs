@@ -29,6 +29,7 @@ namespace Minigames
         private Text _resultText;
         private Sprite[] _targetOrder; // Array of images in correct order
         private List<PrayWordElement> _wordElements = new List<PrayWordElement>();
+        private float cellSize = 250f; // Cell size (3x original 100)
 
         public bool IsActive => _popupWindow != null && _popupWindow.activeSelf;
         public GameObject PopupWindow => _popupWindow;
@@ -104,9 +105,10 @@ namespace Minigames
             }
 
             numberOfElements = _targetOrder.Length;
-            elementSize = 100f;
-            cellSpacing = 10f;
-            minDistanceBetweenElements = 120f;
+            elementSize = 300f; // 4x original (100 * 4)
+            cellSpacing = 30f; // Increased spacing for larger elements
+            minDistanceBetweenElements = 450f; // Increased for larger elements
+            snapProximityDistance = 200f; // Increased snap distance for larger cells
             
             SetupUpperSection();
             SetupLowerSection();
@@ -117,8 +119,9 @@ namespace Minigames
             if (upperSection == null) return;
 
             cells.Clear();
-            float totalWidth = (numberOfElements * elementSize) + ((numberOfElements - 1) * cellSpacing);
-            float startX = -totalWidth / 2f + elementSize / 2f;
+            // Use cellSize for cell dimensions (3x original = 300)
+            float totalWidth = (numberOfElements * cellSize) + ((numberOfElements - 1) * cellSpacing);
+            float startX = -totalWidth / 2f + cellSize / 2f;
 
             for (int i = 0; i < numberOfElements; i++)
             {
@@ -126,8 +129,8 @@ namespace Minigames
                 cellObj.transform.SetParent(upperSection, false);
                 RectTransform cellRect = cellObj.AddComponent<RectTransform>();
                 
-                cellRect.sizeDelta = new Vector2(elementSize, elementSize);
-                cellRect.anchoredPosition = new Vector2(startX + i * (elementSize + cellSpacing), 0);
+                cellRect.sizeDelta = new Vector2(cellSize, cellSize);
+                cellRect.anchoredPosition = new Vector2(startX + i * (cellSize + cellSpacing), 0);
                 cellRect.anchorMin = new Vector2(0.5f, 1f);
                 cellRect.anchorMax = new Vector2(0.5f, 1f);
                 cellRect.pivot = new Vector2(0.5f, 0.5f);
@@ -205,11 +208,13 @@ namespace Minigames
 
         private void CheckWinCondition()
         {
-            if (cells == null || _targetOrder == null || cells.Count != _targetOrder.Length)
+            if (cells == null || cells.Count != 6)
                 return;
 
-            // Check if all cells have elements and they're in the correct order
-            bool allCorrect = true;
+            // Check if all cells have elements
+            bool allFilled = true;
+            int[] placedValues = new int[6];
+            
             for (int i = 0; i < cells.Count; i++)
             {
                 Cell cell = cells[i];
@@ -217,27 +222,60 @@ namespace Minigames
                 
                 if (element == null)
                 {
-                    allCorrect = false;
+                    allFilled = false;
                     break;
                 }
 
-                // Check if the element is a PrayWordElement and has the correct sprite
                 PrayWordElement wordElement = element.GetComponent<PrayWordElement>();
-                if (wordElement == null || wordElement.PraySprite != _targetOrder[i])
+                if (wordElement == null)
                 {
-                    allCorrect = false;
+                    allFilled = false;
                     break;
                 }
+                
+                placedValues[i] = wordElement.OrderValue;
             }
 
-            if (allCorrect && _resultText != null)
+            if (!allFilled)
             {
-                _resultText.text = "Correct!";
+                if (_resultText != null)
+                    _resultText.text = "";
+                return;
+            }
+
+            // Check correct order (right to left: cell 0 = value 1, cell 1 = value 2, etc.)
+            // Positions 3 and 5 (cell indices 2 and 4) are interchangeable for malachei images
+            bool allCorrect = true;
+            
+            // Check fixed positions
+            if (placedValues[0] != 1) allCorrect = false; // pray_shalom must be in cell 0
+            if (placedValues[1] != 2) allCorrect = false; // pray_alechem must be in cell 1
+            if (placedValues[3] != 4) allCorrect = false; // pray_hashalom must be in cell 3
+            if (placedValues[5] != 6) allCorrect = false; // pray_elion must be in cell 5
+            
+            // Check interchangeable malachei positions (cells 2 and 4 should have values 3 and 5 in any order)
+            bool malacheiCorrect = (placedValues[2] == 3 && placedValues[4] == 5) ||
+                                   (placedValues[2] == 5 && placedValues[4] == 3);
+            if (!malacheiCorrect) allCorrect = false;
+
+            if (allCorrect)
+            {
+                if (_resultText != null)
+                    _resultText.text = "Correct!";
+                
+                // Close the popup after a short delay
+                StartCoroutine(CloseAfterDelay(1.5f));
             }
             else if (_resultText != null)
             {
                 _resultText.text = "";
             }
+        }
+
+        private System.Collections.IEnumerator CloseAfterDelay(float delay)
+        {
+            yield return new WaitForSeconds(delay);
+            CloseGame();
         }
 
         // IMinigame implementation
@@ -315,16 +353,17 @@ namespace Minigames
             bgRect.anchorMax = Vector2.one;
             bgRect.sizeDelta = Vector2.zero;
 
-            // Create content panel (centered)
+            // Create content panel (centered, 75% of screen)
             _contentPanel = new GameObject("ContentPanel");
             _contentPanel.transform.SetParent(_popupWindow.transform, false);
             Image contentImage = _contentPanel.AddComponent<Image>();
             contentImage.color = new Color(0.15f, 0.15f, 0.2f, 0.95f);
             RectTransform contentRect = _contentPanel.GetComponent<RectTransform>();
-            contentRect.sizeDelta = new Vector2(700, 500);
+            // Use anchors for 75% screen coverage (12.5% margin on each side)
+            contentRect.anchorMin = new Vector2(0.125f, 0.125f);
+            contentRect.anchorMax = new Vector2(0.875f, 0.875f);
+            contentRect.sizeDelta = Vector2.zero;
             contentRect.anchoredPosition = Vector2.zero;
-            contentRect.anchorMin = new Vector2(0.5f, 0.5f);
-            contentRect.anchorMax = new Vector2(0.5f, 0.5f);
 
             // Set popupWindow reference for SortGame
             popupWindow = contentRect;
@@ -433,16 +472,44 @@ namespace Minigames
     {
         private Sprite _praySprite;
         private Canvas _canvas;
+        private int _orderValue; // The correct position value (1-6, right to left)
 
         public Sprite PraySprite => _praySprite;
+        public int OrderValue => _orderValue;
 
         public void Initialize(Sprite sprite, int index, PraySortGame game)
         {
             _praySprite = sprite;
+            _orderValue = GetOrderValueFromName(sprite.name);
             base.Initialize(index, game, sprite);
             
             // Cache the canvas from the popup window (element is a child of the popup)
             _canvas = GetComponentInParent<Canvas>();
+        }
+
+        /// <summary>
+        /// Gets the order value based on sprite name.
+        /// Order is right to left: 1 = rightmost, 6 = leftmost
+        /// </summary>
+        private int GetOrderValueFromName(string spriteName)
+        {
+            string lowerName = spriteName.ToLower();
+            
+            if (lowerName.Contains("shalom") && !lowerName.Contains("hashalom"))
+                return 1; // pray_shalom
+            if (lowerName.Contains("alechem"))
+                return 2; // pray_alechem
+            if (lowerName.Contains("malachei_1"))
+                return 3; // pray_malachei_1 (can also be 5)
+            if (lowerName.Contains("hashalom"))
+                return 4; // pray_hashalom
+            if (lowerName.Contains("malachei_2"))
+                return 5; // pray_malachei_2 (can also be 3)
+            if (lowerName.Contains("elion"))
+                return 6; // pray_elion
+                
+            Debug.LogWarning($"[PrayWordElement] Unknown sprite name: {spriteName}, defaulting to order 0");
+            return 0;
         }
 
         public override void OnDrag(PointerEventData eventData)
@@ -461,16 +528,27 @@ namespace Minigames
             
             if (game != null && rectTransform != null && _canvas != null)
             {
+                RectTransform parentRect = rectTransform.parent as RectTransform;
+                
                 // Use the cached canvas instead of trying to get it from game component
                 Camera cam = _canvas.renderMode != RenderMode.ScreenSpaceOverlay ? _canvas.worldCamera : null;
                 
                 RectTransformUtility.ScreenPointToLocalPointInRectangle(
-                    rectTransform.parent as RectTransform,
+                    parentRect,
                     eventData.position,
                     cam,
                     out Vector2 localPoint);
                 
-                rectTransform.anchoredPosition = localPoint;
+                // Calculate anchor position in parent's local space (relative to parent's center/pivot)
+                Vector2 parentSize = parentRect.rect.size;
+                Vector2 anchorCenter = (rectTransform.anchorMin + rectTransform.anchorMax) / 2f;
+                Vector2 anchorLocalPos = new Vector2(
+                    (anchorCenter.x - 0.5f) * parentSize.x,
+                    (anchorCenter.y - 0.5f) * parentSize.y
+                );
+                
+                // Set anchoredPosition so element center follows cursor exactly
+                rectTransform.anchoredPosition = localPoint - anchorLocalPos;
                 game.OnElementDrag(this, eventData.position);
             }
         }

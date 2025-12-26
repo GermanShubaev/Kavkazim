@@ -16,10 +16,11 @@ namespace Kavkazim.UI
         [SerializeField] protected GameObject elementPrefab; // Prefab for draggable photo elements
 
         [Header("Game Settings")]
-        [SerializeField] protected int numberOfElements = 5;
-        [SerializeField] protected float cellSpacing = 10f;
-        [SerializeField] protected float elementSize = 100f;
+        [SerializeField] protected int numberOfElements = 6;
+        [SerializeField] protected float cellSpacing = 50f;
+        [SerializeField] protected float elementSize = 1000f;
         [SerializeField] protected float minDistanceBetweenElements = 120f; // To prevent overlap
+        [SerializeField] protected float snapProximityDistance = 120f; // Distance within which element snaps to cell
 
         protected List<DraggableElement> elements = new List<DraggableElement>();
         protected List<Cell> cells = new List<Cell>();
@@ -167,40 +168,42 @@ namespace Kavkazim.UI
             RectTransformUtility.ScreenPointToLocalPointInRectangle(
                 upperSection, position, popupCanvas.worldCamera, out Vector2 localPoint);
 
-            // Find closest cell
-            Cell closestCell = FindClosestCell(localPoint);
-            if (closestCell != null)
+            // Reset all cell highlights
+            foreach (Cell cell in cells)
             {
-                // Visual feedback could be added here
+                cell.SetHighlight(false);
+            }
+
+            // Find closest cell and highlight if within proximity
+            Cell closestCell = FindClosestCell(localPoint);
+            if (closestCell != null && IsWithinSnapProximity(localPoint, closestCell))
+            {
+                closestCell.SetHighlight(true);
             }
         }
 
         public virtual void OnElementDragEnd(DraggableElement element, Vector2 position)
         {
+            // Reset all cell highlights
+            foreach (Cell cell in cells)
+            {
+                cell.SetHighlight(false);
+            }
+
             // Check if position is within upper section bounds
             RectTransformUtility.ScreenPointToLocalPointInRectangle(
                 upperSection, position, popupCanvas.worldCamera, out Vector2 upperLocalPoint);
             
-            bool isInUpperSection = RectTransformUtility.RectangleContainsScreenPoint(
-                upperSection, position, popupCanvas.worldCamera);
-
-            if (isInUpperSection)
+            // Find closest cell and check proximity
+            Cell closestCell = FindClosestCell(upperLocalPoint);
+            if (closestCell != null && IsWithinSnapProximity(upperLocalPoint, closestCell))
             {
-                Cell closestCell = FindClosestCell(upperLocalPoint);
-                if (closestCell != null && IsWithinCellBounds(upperLocalPoint, closestCell))
-                {
-                    SnapToCell(element, closestCell);
-                }
-                else
-                {
-                    // If in upper section but not in a cell, return to lower section
-                    ReturnToLowerSection(element);
-                }
+                SnapToCell(element, closestCell);
             }
             else
             {
-                // Return to lower section if dropped outside upper section
-                ReturnToLowerSection(element);
+                // Keep element at current position if dropped outside snap range
+                // Element stays where it was dropped (no automatic return)
             }
 
             currentlyDragging = null;
@@ -224,16 +227,15 @@ namespace Kavkazim.UI
             return closest;
         }
 
-        protected virtual bool IsWithinCellBounds(Vector2 position, Cell cell)
+        /// <summary>
+        /// Checks if a position is within snap proximity of a cell (distance-based).
+        /// </summary>
+        protected virtual bool IsWithinSnapProximity(Vector2 position, Cell cell)
         {
             RectTransform cellRect = cell.GetRectTransform();
             Vector2 cellPos = cellRect.anchoredPosition;
-            float halfSize = elementSize / 2f;
-
-            return position.x >= cellPos.x - halfSize &&
-                   position.x <= cellPos.x + halfSize &&
-                   position.y >= cellPos.y - halfSize &&
-                   position.y <= cellPos.y + halfSize;
+            float distance = Vector2.Distance(position, cellPos);
+            return distance <= snapProximityDistance;
         }
 
         protected virtual void SnapToCell(DraggableElement element, Cell cell)
@@ -248,19 +250,30 @@ namespace Kavkazim.UI
                 }
             }
 
-            // If cell already has an element, swap them
+            // If cell already has an element, return it to lower section
             DraggableElement existingElement = cell.GetElement();
             if (existingElement != null)
             {
-                // Swap positions
-                Vector2 tempPos = element.GetRectTransform().anchoredPosition;
-                element.GetRectTransform().anchoredPosition = existingElement.GetRectTransform().anchoredPosition;
-                existingElement.GetRectTransform().anchoredPosition = tempPos;
+                // Return existing element to lower section with random position
+                RectTransform existingRect = existingElement.GetRectTransform();
+                existingRect.SetParent(lowerSection);
+                // Restore anchors for lower section (center-bottom)
+                existingRect.anchorMin = new Vector2(0.5f, 0f);
+                existingRect.anchorMax = new Vector2(0.5f, 0f);
+                Vector2 randomPos = GenerateRandomPositions(1)[0];
+                existingRect.anchoredPosition = randomPos;
+                cell.SetElement(null);
             }
 
-            // Place element in cell
-            element.GetRectTransform().SetParent(upperSection);
-            element.GetRectTransform().anchoredPosition = cell.GetRectTransform().anchoredPosition;
+            // Place element in cell - match anchors to cell's anchors
+            RectTransform elementRect = element.GetRectTransform();
+            RectTransform cellRect = cell.GetRectTransform();
+            
+            elementRect.SetParent(upperSection);
+            // Set element's anchors to match the cell's anchors so positioning works correctly
+            elementRect.anchorMin = cellRect.anchorMin;
+            elementRect.anchorMax = cellRect.anchorMax;
+            elementRect.anchoredPosition = cellRect.anchoredPosition;
             cell.SetElement(element);
         }
 
@@ -277,9 +290,13 @@ namespace Kavkazim.UI
             }
 
             // Return to lower section with a random position
-            element.GetRectTransform().SetParent(lowerSection);
+            RectTransform elementRect = element.GetRectTransform();
+            elementRect.SetParent(lowerSection);
+            // Restore anchors for lower section (center-bottom)
+            elementRect.anchorMin = new Vector2(0.5f, 0f);
+            elementRect.anchorMax = new Vector2(0.5f, 0f);
             Vector2 newPos = GenerateRandomPositions(1)[0];
-            element.GetRectTransform().anchoredPosition = newPos;
+            elementRect.anchoredPosition = newPos;
         }
 
         public virtual void ShowPopup()
@@ -330,13 +347,27 @@ namespace Kavkazim.UI
         {
             if (game != null && rectTransform != null)
             {
+                RectTransform parentRect = rectTransform.parent as RectTransform;
+                Canvas canvas = game.GetComponentInParent<Canvas>();
+                Camera cam = canvas != null && canvas.renderMode != RenderMode.ScreenSpaceOverlay 
+                    ? canvas.worldCamera : null;
+                
                 RectTransformUtility.ScreenPointToLocalPointInRectangle(
-                    rectTransform.parent as RectTransform,
+                    parentRect,
                     eventData.position,
-                    game.GetComponentInParent<Canvas>().worldCamera,
+                    cam,
                     out Vector2 localPoint);
                 
-                rectTransform.anchoredPosition = localPoint;
+                // Calculate anchor position in parent's local space (relative to parent's center/pivot)
+                Vector2 parentSize = parentRect.rect.size;
+                Vector2 anchorCenter = (rectTransform.anchorMin + rectTransform.anchorMax) / 2f;
+                Vector2 anchorLocalPos = new Vector2(
+                    (anchorCenter.x - 0.5f) * parentSize.x,
+                    (anchorCenter.y - 0.5f) * parentSize.y
+                );
+                
+                // Set anchoredPosition so element center follows cursor exactly
+                rectTransform.anchoredPosition = localPoint - anchorLocalPos;
                 game.OnElementDrag(this, eventData.position);
             }
         }
@@ -356,6 +387,8 @@ namespace Kavkazim.UI
         private RectTransform rectTransform;
         private DraggableElement currentElement;
         private Image backgroundImage;
+        private Color normalColor = new Color(1f, 1f, 1f, 0.2f);
+        private Color highlightColor = new Color(0.2f, 0.8f, 0.2f, 0.5f);
 
         public void Initialize(int idx, SortGame sortGame)
         {
@@ -368,7 +401,7 @@ namespace Kavkazim.UI
                 backgroundImage = gameObject.AddComponent<Image>();
             
             // Set a semi-transparent background to show cell boundaries
-            backgroundImage.color = new Color(1f, 1f, 1f, 0.2f);
+            backgroundImage.color = normalColor;
         }
 
         public RectTransform GetRectTransform() => rectTransform;
@@ -378,6 +411,17 @@ namespace Kavkazim.UI
         public void SetElement(DraggableElement element)
         {
             currentElement = element;
+        }
+
+        /// <summary>
+        /// Sets visual highlight state for the cell (used during drag proximity feedback).
+        /// </summary>
+        public void SetHighlight(bool highlighted)
+        {
+            if (backgroundImage != null)
+            {
+                backgroundImage.color = highlighted ? highlightColor : normalColor;
+            }
         }
     }
 }

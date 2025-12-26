@@ -62,7 +62,7 @@ namespace Minigames
             Image contentImage = _contentPanel.AddComponent<Image>();
             contentImage.color = new Color(0.2f, 0.2f, 0.2f, 1f);
             RectTransform contentRect = _contentPanel.GetComponent<RectTransform>();
-            contentRect.sizeDelta = new Vector2(600, 400); // Default size, can be overridden
+            contentRect.sizeDelta = new Vector2(1000, 700); // Default size, can be overridden
             contentRect.anchoredPosition = Vector2.zero;
             contentRect.anchorMin = new Vector2(0.5f, 0.5f);
             contentRect.anchorMax = new Vector2(0.5f, 0.5f);

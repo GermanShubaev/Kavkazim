@@ -40,7 +40,8 @@ namespace Minigames
         [SerializeField] private bool createAdditionalTriggers = true;
         [SerializeField] private AdditionalTriggerData[] additionalTriggers = new AdditionalTriggerData[]
         {
-            new AdditionalTriggerData { position = new Vector2(3, 10), radius = 2f, gameType = MinigameType.PraySortGame }
+            new AdditionalTriggerData { position = new Vector2(3, 10), radius = 2f, gameType = MinigameType.PraySortGame },
+            new AdditionalTriggerData { position = new Vector2(-25, 13), radius = 2f, gameType = MinigameType.LezginkaSort }
         };
 
         [System.Serializable]
