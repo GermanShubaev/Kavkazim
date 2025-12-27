@@ -8,6 +8,8 @@ namespace Minigames
         LezginkaSort,
         EmptyPopup,
         PraySortGame,
+        PapakhaClick,
+        DishClick,
         Game4,
         Game5,
         Game6,

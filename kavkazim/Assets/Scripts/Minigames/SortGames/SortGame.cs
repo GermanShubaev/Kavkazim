@@ -102,7 +102,9 @@ namespace Kavkazim.UI
                 if (element == null)
                     element = elementObj.AddComponent<DraggableElement>();
                 
-                element.Initialize(i, this, GetElementImage(i)); // Override GetElementImage in derived classes
+                // Initialize with index, image, and correct cell index
+                // Override GetElementImage and GetCorrectCellForElement in derived classes
+                element.Initialize(i, this, GetElementImage(i), GetCorrectCellForElement(i));
                 elements.Add(element);
             }
         }
@@ -154,6 +156,16 @@ namespace Kavkazim.UI
         {
             // Override in derived classes to provide specific images
             return null;
+        }
+
+        /// <summary>
+        /// Returns the correct cell index for an element at the given index.
+        /// Override in derived classes to customize element-to-cell mapping.
+        /// By default, element index matches its correct cell index (element 0 goes to cell 0, etc.).
+        /// </summary>
+        protected virtual int GetCorrectCellForElement(int elementIndex)
+        {
+            return elementIndex;
         }
 
         public virtual void OnElementDragStart(DraggableElement element)
@@ -275,6 +287,42 @@ namespace Kavkazim.UI
             elementRect.anchorMax = cellRect.anchorMax;
             elementRect.anchoredPosition = cellRect.anchoredPosition;
             cell.SetElement(element);
+
+            // Check if all elements are correctly placed
+            CheckWinCondition();
+        }
+
+        /// <summary>
+        /// Checks if all cells contain their correct elements.
+        /// </summary>
+        protected virtual void CheckWinCondition()
+        {
+            // All cells must have an element with matching correctCellIndex
+            foreach (Cell cell in cells)
+            {
+                DraggableElement element = cell.GetElement();
+                
+                // If any cell is empty, game is not complete
+                if (element == null)
+                    return;
+                
+                // If element's correctCellIndex doesn't match cell's index, game is not complete
+                if (element.GetCorrectCellIndex() != cell.GetIndex())
+                    return;
+            }
+
+            // All elements are correctly placed - game complete!
+            OnGameComplete();
+        }
+
+        /// <summary>
+        /// Called when all elements are correctly placed in their matching cells.
+        /// Override in derived classes for custom completion behavior.
+        /// </summary>
+        protected virtual void OnGameComplete()
+        {
+            Debug.Log("SortGame: All elements correctly placed! Game complete.");
+            HidePopup();
         }
 
         protected virtual void ReturnToLowerSection(DraggableElement element)
@@ -316,13 +364,20 @@ namespace Kavkazim.UI
     public class DraggableElement : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandler
     {
         private int index;
+        private int correctCellIndex; // The cell index where this element should be placed
         protected SortGame game;
         protected RectTransform rectTransform;
         private Image image;
 
         public void Initialize(int idx, SortGame sortGame, Sprite sprite)
         {
+            Initialize(idx, sortGame, sprite, idx); // Default: correctCellIndex matches index
+        }
+
+        public void Initialize(int idx, SortGame sortGame, Sprite sprite, int correctCell)
+        {
             index = idx;
+            correctCellIndex = correctCell;
             game = sortGame;
             rectTransform = GetComponent<RectTransform>();
             
@@ -336,6 +391,7 @@ namespace Kavkazim.UI
 
         public RectTransform GetRectTransform() => rectTransform;
         public int GetIndex() => index;
+        public int GetCorrectCellIndex() => correctCellIndex;
 
         public void OnBeginDrag(PointerEventData eventData)
         {
