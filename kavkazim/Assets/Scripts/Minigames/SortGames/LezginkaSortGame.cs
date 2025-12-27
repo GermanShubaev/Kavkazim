@@ -501,11 +501,14 @@ namespace Minigames
         {
             string lowerName = spriteName.ToLower();
 
-            if (lowerName.Contains("feet_1")) return 1;
-            if (lowerName.Contains("feet_2")) return 2;
-            if (lowerName.Contains("hands_1")) return 3;
-            if (lowerName.Contains("hands_2")) return 4;
-            if (lowerName.Contains("hands_3")) return 5;
+            if (lowerName.Contains("lezginka_hands_1")) return 1;
+            if (lowerName.Contains("lezginka_hands_2")) return 2;
+            if (lowerName.Contains("lezginka_hands_1")) return 3;
+            if (lowerName.Contains("lezginka_hands_3")) return 4;
+            if (lowerName.Contains("left_foot_up")) return 5;
+            if (lowerName.Contains("left_foot_forward")) return 6;
+            if (lowerName.Contains("right_foot_up")) return 7;
+            if (lowerName.Contains("right_foot_forward")) return 8;
 
             Debug.LogWarning($"[LezginkaElement] Unknown sprite name: {spriteName}, defaulting to order 0");
             return 0;
