@@ -1,10 +1,10 @@
 fileFormatVersion: 2
-guid: 292418d5376f8d940b5263197a4324e4
+guid: bba7adebd216b2f4cbfb4255d6526dd6
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: 6130379463899576125
-    second: 2d_map_upgrade_0
+      213: -9112194640296128592
+    second: shashlik_fried_chicken_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -47,7 +47,7 @@ TextureImporter:
   lightmap: 0
   compressionQuality: 50
   spriteMode: 2
-  spriteExtrude: 0
+  spriteExtrude: 1
   spriteMeshType: 1
   alignment: 0
   spritePivot: {x: 0.5, y: 0.5}
@@ -87,7 +87,7 @@ TextureImporter:
     buildTarget: Standalone
     maxTextureSize: 2048
     resizeAlgorithm: 0
-    textureFormat: 10
+    textureFormat: -1
     textureCompression: 1
     compressionQuality: 50
     crunchedCompression: 0
@@ -100,13 +100,13 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: 2d_map_upgrade_0
+      name: shashlik_fried_chicken_0
       rect:
         serializedVersion: 2
-        x: 0
-        y: 0
-        width: 2432
-        height: 2080
+        x: 774
+        y: 323
+        width: 490
+        height: 474
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -115,8 +115,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: d37751c64ab731550800000000000000
-      internalID: 6130379463899576125
+      spriteID: 0bf4eecc04bfa8180800000000000000
+      internalID: -9112194640296128592
       vertices: []
       indices: 
       edges: []
@@ -135,7 +135,7 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      2d_map_upgrade_0: 6130379463899576125
+      shashlik_fried_chicken_0: -9112194640296128592
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

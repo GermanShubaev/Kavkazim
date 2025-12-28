@@ -107,7 +107,7 @@ namespace Minigames
             numberOfElements = _targetOrder.Length;
             elementSize = 300f; // 4x original (100 * 4)
             cellSpacing = 30f; // Increased spacing for larger elements
-            minDistanceBetweenElements = 450f; // Increased for larger elements
+            minDistanceBetweenElements = 200f; // Reduced to fit elements in lower section
             snapProximityDistance = 200f; // Increased snap distance for larger cells
             
             SetupUpperSection();
@@ -152,7 +152,7 @@ namespace Minigames
             _wordElements.Clear();
             List<Sprite> shuffledSprites = new List<Sprite>(_targetOrder);
             Shuffle(shuffledSprites);
-            List<Vector2> positions = GenerateRandomPositions(numberOfElements);
+            List<Vector2> positions = GenerateRandomPositionsForPray(numberOfElements);
 
             for (int i = 0; i < numberOfElements; i++)
             {
@@ -163,8 +163,8 @@ namespace Minigames
                 
                 wordRect.sizeDelta = new Vector2(elementSize, elementSize);
                 wordRect.anchoredPosition = positions[i];
-                wordRect.anchorMin = new Vector2(0.5f, 0f);
-                wordRect.anchorMax = new Vector2(0.5f, 0f);
+                wordRect.anchorMin = new Vector2(0.5f, 0.5f);
+                wordRect.anchorMax = new Vector2(0.5f, 0.5f);
                 wordRect.pivot = new Vector2(0.5f, 0.5f);
 
                 // Add Image component to display the sprite
@@ -177,6 +177,65 @@ namespace Minigames
                 wordElement.Initialize(sprite, i, this);
                 _wordElements.Add(wordElement);
             }
+        }
+
+        /// <summary>
+        /// Generate random positions within the lower section bounds.
+        /// Uses screen-based calculation since anchors define the section size.
+        /// </summary>
+        private List<Vector2> GenerateRandomPositionsForPray(int count)
+        {
+            List<Vector2> positions = new List<Vector2>();
+            
+            // Calculate bounds based on screen size and anchors
+            // Lower section is anchors (0,0) to (1, 0.5) of content panel
+            // Content panel is anchors (0.125, 0.125) to (0.875, 0.875) of screen
+            float screenWidth = Screen.width;
+            float screenHeight = Screen.height;
+            
+            // Content panel size (75% of screen)
+            float contentWidth = screenWidth * 0.75f;
+            float contentHeight = screenHeight * 0.75f;
+            
+            // Lower section is bottom half of content panel
+            float sectionWidth = contentWidth;
+            float sectionHeight = contentHeight * 0.5f;
+            
+            // Calculate bounds with margin for element size
+            float margin = elementSize / 2f + 20f;
+            float halfWidth = sectionWidth / 2f - margin;
+            float halfHeight = sectionHeight / 2f - margin;
+
+            int maxAttempts = 1000;
+            for (int i = 0; i < count; i++)
+            {
+                Vector2 position = Vector2.zero;
+                bool validPosition = false;
+                int attempts = 0;
+
+                while (!validPosition && attempts < maxAttempts)
+                {
+                    position = new Vector2(
+                        Random.Range(-halfWidth, halfWidth),
+                        Random.Range(-halfHeight, halfHeight)
+                    );
+
+                    validPosition = true;
+                    foreach (Vector2 existingPos in positions)
+                    {
+                        if (Vector2.Distance(position, existingPos) < minDistanceBetweenElements)
+                        {
+                            validPosition = false;
+                            break;
+                        }
+                    }
+                    attempts++;
+                }
+
+                positions.Add(position);
+            }
+
+            return positions;
         }
 
         protected override Sprite GetElementImage(int index)
@@ -208,55 +267,41 @@ namespace Minigames
 
         private void CheckWinCondition()
         {
-            if (cells == null || cells.Count != 6)
+            if (cells == null || cells.Count == 0)
                 return;
 
-            // Check if all cells have elements
-            bool allFilled = true;
-            int[] placedValues = new int[6];
+            // Check if all cells have elements in their correct positions
+            bool allCorrect = true;
             
             for (int i = 0; i < cells.Count; i++)
             {
                 Cell cell = cells[i];
                 DraggableElement element = cell.GetElement();
                 
+                // If any cell is empty, game is not complete
                 if (element == null)
                 {
-                    allFilled = false;
-                    break;
+                    if (_resultText != null)
+                        _resultText.text = "";
+                    return;
                 }
 
                 PrayWordElement wordElement = element.GetComponent<PrayWordElement>();
                 if (wordElement == null)
                 {
-                    allFilled = false;
-                    break;
+                    if (_resultText != null)
+                        _resultText.text = "";
+                    return;
                 }
                 
-                placedValues[i] = wordElement.OrderValue;
+                // Check if element's order value matches expected position
+                // Cell 0 should have OrderValue 1, Cell 1 should have OrderValue 2, etc.
+                int expectedOrderValue = i + 1;
+                if (wordElement.OrderValue != expectedOrderValue)
+                {
+                    allCorrect = false;
+                }
             }
-
-            if (!allFilled)
-            {
-                if (_resultText != null)
-                    _resultText.text = "";
-                return;
-            }
-
-            // Check correct order (right to left: cell 0 = value 1, cell 1 = value 2, etc.)
-            // Positions 3 and 5 (cell indices 2 and 4) are interchangeable for malachei images
-            bool allCorrect = true;
-            
-            // Check fixed positions
-            if (placedValues[0] != 1) allCorrect = false; // pray_shalom must be in cell 0
-            if (placedValues[1] != 2) allCorrect = false; // pray_alechem must be in cell 1
-            if (placedValues[3] != 4) allCorrect = false; // pray_hashalom must be in cell 3
-            if (placedValues[5] != 6) allCorrect = false; // pray_elion must be in cell 5
-            
-            // Check interchangeable malachei positions (cells 2 and 4 should have values 3 and 5 in any order)
-            bool malacheiCorrect = (placedValues[2] == 3 && placedValues[4] == 5) ||
-                                   (placedValues[2] == 5 && placedValues[4] == 3);
-            if (!malacheiCorrect) allCorrect = false;
 
             if (allCorrect)
             {

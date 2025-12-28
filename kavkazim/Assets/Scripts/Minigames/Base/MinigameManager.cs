@@ -45,7 +45,8 @@ namespace Minigames
             new AdditionalTriggerData { position = new Vector2(37, 18), radius = 2f, gameType = MinigameType.PapakhaClick },
             new AdditionalTriggerData { position = new Vector2(53, 5), radius = 2f, gameType = MinigameType.DishClick },
             new AdditionalTriggerData { position = new Vector2(51, 12), radius = 2f, gameType = MinigameType.WolfClick },
-            new AdditionalTriggerData { position = new Vector2(-10, -2), radius = 8f, gameType = MinigameType.TakedownClick }
+            new AdditionalTriggerData { position = new Vector2(-10, -2), radius = 8f, gameType = MinigameType.TakedownClick },
+            new AdditionalTriggerData { position = new Vector2(7, 45), radius = 2f, gameType = MinigameType.ShashlikSort }
         };
 
         [System.Serializable]

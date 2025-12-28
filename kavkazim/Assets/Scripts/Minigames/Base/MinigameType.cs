@@ -12,6 +12,7 @@ namespace Minigames
         DishClick,
         WolfClick,
         TakedownClick,
+        ShashlikSort,
         Game4,
         Game5,
         Game6,

@@ -105,7 +105,7 @@ namespace Minigames
             cellSize = 250f;
             cellSpacing = 30f;
             rowSpacing = 25f;
-            minDistanceBetweenElements = 350f;
+            minDistanceBetweenElements = 200f; // Reduced to fit elements in lower section
             snapProximityDistance = 200f;
 
             SetupCellGrid();
@@ -175,7 +175,7 @@ namespace Minigames
 
             List<Sprite> shuffledSprites = new List<Sprite>(_loadedImages);
             Shuffle(shuffledSprites);
-            List<Vector2> positions = GenerateRandomPositions(numberOfElements);
+            List<Vector2> positions = GenerateRandomPositionsForLezginka(numberOfElements);
 
             for (int i = 0; i < numberOfElements; i++)
             {
@@ -186,9 +186,9 @@ namespace Minigames
 
                 elementRect.sizeDelta = new Vector2(elementSize, elementSize);
                 elementRect.anchoredPosition = positions[i];
-                // Use bottom-center anchor like PraySortGame elements
-                elementRect.anchorMin = new Vector2(0.5f, 0f);
-                elementRect.anchorMax = new Vector2(0.5f, 0f);
+                // Use center anchor so positions are relative to section center
+                elementRect.anchorMin = new Vector2(0.5f, 0.5f);
+                elementRect.anchorMax = new Vector2(0.5f, 0.5f);
                 elementRect.pivot = new Vector2(0.5f, 0.5f);
 
                 Image image = elementObj.AddComponent<Image>();
@@ -199,6 +199,65 @@ namespace Minigames
                 element.Initialize(sprite, i, this);
                 _elements.Add(element);
             }
+        }
+
+        /// <summary>
+        /// Generate random positions within the lower section bounds.
+        /// Uses screen-based calculation since anchors define the section size.
+        /// </summary>
+        private List<Vector2> GenerateRandomPositionsForLezginka(int count)
+        {
+            List<Vector2> positions = new List<Vector2>();
+            
+            // Calculate bounds based on screen size and anchors
+            // Lower section is anchors (0,0) to (1, 0.5) of content panel
+            // Content panel is anchors (0.125, 0.125) to (0.875, 0.875) of screen
+            float screenWidth = Screen.width;
+            float screenHeight = Screen.height;
+            
+            // Content panel size (75% of screen)
+            float contentWidth = screenWidth * 0.75f;
+            float contentHeight = screenHeight * 0.75f;
+            
+            // Lower section is bottom half of content panel
+            float sectionWidth = contentWidth;
+            float sectionHeight = contentHeight * 0.5f;
+            
+            // Calculate bounds with margin for element size
+            float margin = elementSize / 2f + 20f;
+            float halfWidth = sectionWidth / 2f - margin;
+            float halfHeight = sectionHeight / 2f - margin;
+
+            int maxAttempts = 1000;
+            for (int i = 0; i < count; i++)
+            {
+                Vector2 position = Vector2.zero;
+                bool validPosition = false;
+                int attempts = 0;
+
+                while (!validPosition && attempts < maxAttempts)
+                {
+                    position = new Vector2(
+                        Random.Range(-halfWidth, halfWidth),
+                        Random.Range(-halfHeight, halfHeight)
+                    );
+
+                    validPosition = true;
+                    foreach (Vector2 existingPos in positions)
+                    {
+                        if (Vector2.Distance(position, existingPos) < minDistanceBetweenElements)
+                        {
+                            validPosition = false;
+                            break;
+                        }
+                    }
+                    attempts++;
+                }
+
+                positions.Add(position);
+            }
+
+            return positions;
         }
 
         private void Shuffle<T>(IList<T> list)
@@ -224,11 +283,10 @@ namespace Minigames
             if (cells == null || cells.Count == 0 || _loadedImages == null)
                 return;
 
-            int imageCount = _loadedImages.Length; // 5 images
+            int imageCount = _loadedImages.Length;
             
-            // Check if the first N cells (where N = number of images) have elements in correct order
-            bool allFilled = true;
-            int[] placedValues = new int[imageCount];
+            // Check if all elements are in their correct cells
+            bool allCorrect = true;
 
             for (int i = 0; i < imageCount; i++)
             {
@@ -237,37 +295,28 @@ namespace Minigames
                 Cell cell = cells[i];
                 DraggableElement element = cell.GetElement();
 
+                // If any cell is empty, game is not complete
                 if (element == null)
                 {
-                    allFilled = false;
-                    break;
+                    if (_resultText != null)
+                        _resultText.text = "";
+                    return;
                 }
 
                 LezginkaElement lezginkaElement = element.GetComponent<LezginkaElement>();
                 if (lezginkaElement == null)
                 {
-                    allFilled = false;
-                    break;
+                    if (_resultText != null)
+                        _resultText.text = "";
+                    return;
                 }
 
-                placedValues[i] = lezginkaElement.OrderValue;
-            }
-
-            if (!allFilled)
-            {
-                if (_resultText != null)
-                    _resultText.text = "";
-                return;
-            }
-
-            // Check if elements are in correct order (1, 2, 3, 4, 5)
-            bool allCorrect = true;
-            for (int i = 0; i < imageCount; i++)
-            {
-                if (placedValues[i] != i + 1)
+                // Check if element's order value matches expected position
+                // Cell 0 should have OrderValue 1, Cell 1 should have OrderValue 2, etc.
+                int expectedOrderValue = i + 1;
+                if (lezginkaElement.OrderValue != expectedOrderValue)
                 {
                     allCorrect = false;
-                    break;
                 }
             }
 

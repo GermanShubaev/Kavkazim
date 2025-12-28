@@ -1,0 +1,715 @@
+using System.Collections.Generic;
+using UnityEngine;
+using UnityEngine.UI;
+using UnityEngine.EventSystems;
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
+
+namespace Minigames
+{
+    /// <summary>
+    /// A minigame where players recreate a shashlik skewer by clicking ingredient buttons in the correct order.
+    /// The target skewer shows 5 random ingredients, and players must match it on the empty skewer above.
+    /// </summary>
+    public class ShashlikSortGame : MonoBehaviour, IMinigame
+    {
+        [Header("Popup Settings")]
+        [SerializeField] private int canvasSortingOrder = 200;
+        [SerializeField] private Color backgroundColor = new Color(0, 0, 0, 0.7f);
+        [SerializeField] private bool showCloseButton = true;
+
+        [Header("Game Settings")]
+        [SerializeField] private int numberOfSlots = 5;
+        [SerializeField] private Vector2 ingredientSize = new Vector2(100, 100);
+        [SerializeField] private float ingredientSpacing = 120f;
+
+        private GameObject _popupWindow;
+        private Canvas _canvas;
+        private GameObject _backgroundPanel;
+        private GameObject _contentPanel;
+        private Button _closeButton;
+        private Text _resultText;
+
+        // Images
+        private Sprite _skewerSprite;
+        private Dictionary<string, Sprite> _ingredientSprites = new Dictionary<string, Sprite>();
+        private string[] _ingredientNames = { "meat", "tomato", "onion", "tofu", "fried_chicken" };
+
+        // Game state
+        private List<string> _targetSequence = new List<string>(); // The sequence to match
+        private List<string> _playerSequence = new List<string>(); // Player's current sequence
+        private List<Image> _playerSkewerSlots = new List<Image>(); // Visual slots on player's skewer
+        private List<Button> _ingredientButtons = new List<Button>();
+        
+        // Two-phase game state
+        private bool _isMemorizationPhase = true;
+        private GameObject _memorizationPanel;
+        private GameObject _gameplayPanel;
+
+        public bool IsActive => _popupWindow != null && _popupWindow.activeSelf;
+        public GameObject PopupWindow => _popupWindow;
+
+        private void Awake()
+        {
+            LoadImages();
+        }
+
+        private void LoadImages()
+        {
+            #if UNITY_EDITOR
+            // Load skewer
+            string skewerPath = "Assets/Art/Images/shashlik/shashlik_skewer.png";
+            _skewerSprite = AssetDatabase.LoadAssetAtPath<Sprite>(skewerPath);
+            if (_skewerSprite == null)
+            {
+                Texture2D tex = AssetDatabase.LoadAssetAtPath<Texture2D>(skewerPath);
+                if (tex != null)
+                    _skewerSprite = Sprite.Create(tex, new Rect(0, 0, tex.width, tex.height), new Vector2(0.5f, 0.5f));
+            }
+
+            // Load ingredients
+            foreach (string ingredient in _ingredientNames)
+            {
+                string path = $"Assets/Art/Images/shashlik/shashlik_{ingredient}.png";
+                Sprite sprite = AssetDatabase.LoadAssetAtPath<Sprite>(path);
+                if (sprite == null)
+                {
+                    Texture2D tex = AssetDatabase.LoadAssetAtPath<Texture2D>(path);
+                    if (tex != null)
+                        sprite = Sprite.Create(tex, new Rect(0, 0, tex.width, tex.height), new Vector2(0.5f, 0.5f));
+                }
+                if (sprite != null)
+                {
+                    _ingredientSprites[ingredient] = sprite;
+                    Debug.Log($"[ShashlikSortGame] Loaded shashlik_{ingredient}.png");
+                }
+            }
+            #endif
+
+            // Fallback to Resources
+            if (_skewerSprite == null)
+            {
+                _skewerSprite = Resources.Load<Sprite>("Art/Images/shashlik/shashlik_skewer");
+                if (_skewerSprite == null)
+                    _skewerSprite = Resources.Load<Sprite>("shashlik/shashlik_skewer");
+            }
+
+            foreach (string ingredient in _ingredientNames)
+            {
+                if (!_ingredientSprites.ContainsKey(ingredient))
+                {
+                    Sprite sprite = Resources.Load<Sprite>($"Art/Images/shashlik/shashlik_{ingredient}");
+                    if (sprite == null)
+                        sprite = Resources.Load<Sprite>($"shashlik/shashlik_{ingredient}");
+                    if (sprite != null)
+                        _ingredientSprites[ingredient] = sprite;
+                }
+            }
+
+            if (_skewerSprite == null)
+                Debug.LogError("[ShashlikSortGame] Failed to load shashlik_skewer.png");
+            
+            Debug.Log($"[ShashlikSortGame] Loaded {_ingredientSprites.Count} ingredient sprites");
+        }
+
+        public void StartGame()
+        {
+            if (IsActive)
+            {
+                Debug.LogWarning($"{GetType().Name} is already active!");
+                return;
+            }
+
+            CreatePopupWindow();
+            _popupWindow.SetActive(true);
+        }
+
+        public void CloseGame()
+        {
+            if (!IsActive) return;
+
+            _targetSequence.Clear();
+            _playerSequence.Clear();
+            _playerSkewerSlots.Clear();
+            _ingredientButtons.Clear();
+
+            if (_popupWindow != null)
+            {
+                Destroy(_popupWindow);
+                _popupWindow = null;
+            }
+
+            _canvas = null;
+            _backgroundPanel = null;
+            _contentPanel = null;
+            _closeButton = null;
+            _resultText = null;
+            _memorizationPanel = null;
+            _gameplayPanel = null;
+            _isMemorizationPhase = true;
+        }
+
+        private void CreatePopupWindow()
+        {
+            // Create root canvas
+            _popupWindow = new GameObject($"{GetType().Name}Popup");
+            _popupWindow.transform.SetParent(null);
+
+            _canvas = _popupWindow.AddComponent<Canvas>();
+            _canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+            _canvas.sortingOrder = canvasSortingOrder;
+            _popupWindow.AddComponent<CanvasScaler>();
+            _popupWindow.AddComponent<GraphicRaycaster>();
+
+            if (EventSystem.current == null)
+            {
+                GameObject eventSystem = new GameObject("EventSystem");
+                eventSystem.AddComponent<EventSystem>();
+                eventSystem.AddComponent<UnityEngine.InputSystem.UI.InputSystemUIInputModule>();
+            }
+
+            // Background overlay
+            _backgroundPanel = new GameObject("Background");
+            _backgroundPanel.transform.SetParent(_popupWindow.transform, false);
+            Image bgImage = _backgroundPanel.AddComponent<Image>();
+            bgImage.color = backgroundColor;
+            RectTransform bgRect = _backgroundPanel.GetComponent<RectTransform>();
+            bgRect.anchorMin = Vector2.zero;
+            bgRect.anchorMax = Vector2.one;
+            bgRect.sizeDelta = Vector2.zero;
+
+            // Content panel (75% of screen)
+            _contentPanel = new GameObject("ContentPanel");
+            _contentPanel.transform.SetParent(_popupWindow.transform, false);
+            Image contentImage = _contentPanel.AddComponent<Image>();
+            contentImage.color = new Color(0.15f, 0.15f, 0.2f, 0.95f);
+            RectTransform contentRect = _contentPanel.GetComponent<RectTransform>();
+            contentRect.anchorMin = new Vector2(0.125f, 0.125f);
+            contentRect.anchorMax = new Vector2(0.875f, 0.875f);
+            contentRect.sizeDelta = Vector2.zero;
+            contentRect.anchoredPosition = Vector2.zero;
+
+            // Generate random target sequence
+            GenerateTargetSequence();
+
+            // Create the two phases
+            _isMemorizationPhase = true;
+            CreateMemorizationPhase();
+            CreateGameplayPhase();
+
+            // Start with memorization phase visible, gameplay hidden
+            _memorizationPanel.SetActive(true);
+            _gameplayPanel.SetActive(false);
+
+            // Close button
+            if (showCloseButton)
+                CreateCloseButton();
+        }
+
+        private void CreateMemorizationPhase()
+        {
+            // Container for memorization phase
+            _memorizationPanel = new GameObject("MemorizationPanel");
+            _memorizationPanel.transform.SetParent(_contentPanel.transform, false);
+            RectTransform panelRect = _memorizationPanel.AddComponent<RectTransform>();
+            panelRect.anchorMin = Vector2.zero;
+            panelRect.anchorMax = Vector2.one;
+            panelRect.sizeDelta = Vector2.zero;
+            panelRect.anchoredPosition = Vector2.zero;
+
+            // Title
+            GameObject titleObj = new GameObject("Title");
+            titleObj.transform.SetParent(_memorizationPanel.transform, false);
+            Text titleText = titleObj.AddComponent<Text>();
+            titleText.text = "Memorize the Shashlik!";
+            titleText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            titleText.fontSize = 36;
+            titleText.fontStyle = FontStyle.Bold;
+            titleText.alignment = TextAnchor.MiddleCenter;
+            titleText.color = Color.yellow;
+            RectTransform titleRect = titleObj.GetComponent<RectTransform>();
+            titleRect.anchorMin = new Vector2(0, 0.85f);
+            titleRect.anchorMax = new Vector2(1, 0.95f);
+            titleRect.sizeDelta = Vector2.zero;
+
+            // Target skewer to memorize
+            CreateTargetSkewerInPanel(_memorizationPanel, 0.35f, 0.75f);
+
+            // GO! Button
+            CreateGoButton();
+        }
+
+        private void CreateGameplayPhase()
+        {
+            // Container for gameplay phase
+            _gameplayPanel = new GameObject("GameplayPanel");
+            _gameplayPanel.transform.SetParent(_contentPanel.transform, false);
+            RectTransform panelRect = _gameplayPanel.AddComponent<RectTransform>();
+            panelRect.anchorMin = Vector2.zero;
+            panelRect.anchorMax = Vector2.one;
+            panelRect.sizeDelta = Vector2.zero;
+            panelRect.anchoredPosition = Vector2.zero;
+
+            // Title
+            GameObject titleObj = new GameObject("Title");
+            titleObj.transform.SetParent(_gameplayPanel.transform, false);
+            Text titleText = titleObj.AddComponent<Text>();
+            titleText.text = "Recreate the Shashlik!";
+            titleText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            titleText.fontSize = 32;
+            titleText.fontStyle = FontStyle.Bold;
+            titleText.alignment = TextAnchor.MiddleCenter;
+            titleText.color = Color.white;
+            RectTransform titleRect = titleObj.GetComponent<RectTransform>();
+            titleRect.anchorMin = new Vector2(0, 0.92f);
+            titleRect.anchorMax = new Vector2(1, 1);
+            titleRect.sizeDelta = Vector2.zero;
+
+            // Result text
+            CreateResultText();
+
+            // Player's empty skewer
+            CreatePlayerSkewer();
+
+            // Ingredient buttons (all ingredients)
+            CreateIngredientButtons();
+        }
+
+        private void CreateGoButton()
+        {
+            GameObject goBtnObj = new GameObject("GoButton");
+            goBtnObj.transform.SetParent(_memorizationPanel.transform, false);
+
+            Image btnImage = goBtnObj.AddComponent<Image>();
+            btnImage.color = new Color(0.2f, 0.7f, 0.3f, 1f);
+
+            Button goButton = goBtnObj.AddComponent<Button>();
+            goButton.targetGraphic = btnImage;
+
+            ColorBlock colors = goButton.colors;
+            colors.normalColor = new Color(0.2f, 0.7f, 0.3f, 1f);
+            colors.highlightedColor = new Color(0.3f, 0.8f, 0.4f, 1f);
+            colors.pressedColor = new Color(0.15f, 0.5f, 0.2f, 1f);
+            goButton.colors = colors;
+
+            RectTransform btnRect = goBtnObj.GetComponent<RectTransform>();
+            btnRect.anchorMin = new Vector2(0.35f, 0.1f);
+            btnRect.anchorMax = new Vector2(0.65f, 0.25f);
+            btnRect.sizeDelta = Vector2.zero;
+            btnRect.anchoredPosition = Vector2.zero;
+
+            // Text
+            GameObject textObj = new GameObject("Text");
+            textObj.transform.SetParent(goBtnObj.transform, false);
+            Text goText = textObj.AddComponent<Text>();
+            goText.text = "GO!";
+            goText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            goText.fontSize = 48;
+            goText.fontStyle = FontStyle.Bold;
+            goText.alignment = TextAnchor.MiddleCenter;
+            goText.color = Color.white;
+            RectTransform textRect = textObj.GetComponent<RectTransform>();
+            textRect.anchorMin = Vector2.zero;
+            textRect.anchorMax = Vector2.one;
+            textRect.sizeDelta = Vector2.zero;
+
+            goButton.onClick.AddListener(OnGoButtonClicked);
+        }
+
+        private void OnGoButtonClicked()
+        {
+            _isMemorizationPhase = false;
+            _memorizationPanel.SetActive(false);
+            _gameplayPanel.SetActive(true);
+        }
+
+        private void CreateTargetSkewerInPanel(GameObject parent, float yMin, float yMax)
+        {
+            // Container for target skewer
+            GameObject targetSkewerContainer = new GameObject("TargetSkewerContainer");
+            targetSkewerContainer.transform.SetParent(parent.transform, false);
+            RectTransform containerRect = targetSkewerContainer.AddComponent<RectTransform>();
+            containerRect.anchorMin = new Vector2(0, yMin);
+            containerRect.anchorMax = new Vector2(1, yMax);
+            containerRect.sizeDelta = Vector2.zero;
+            containerRect.anchoredPosition = Vector2.zero;
+
+            // Skewer image
+            GameObject skewerObj = new GameObject("TargetSkewer");
+            skewerObj.transform.SetParent(targetSkewerContainer.transform, false);
+            Image skewerImage = skewerObj.AddComponent<Image>();
+            skewerImage.sprite = _skewerSprite;
+            skewerImage.preserveAspect = true;
+            RectTransform skewerRect = skewerObj.GetComponent<RectTransform>();
+            skewerRect.anchorMin = new Vector2(0.1f, 0.1f);
+            skewerRect.anchorMax = new Vector2(0.9f, 0.9f);
+            skewerRect.sizeDelta = Vector2.zero;
+
+            // Place target ingredients on skewer
+            float startX = -ingredientSpacing * 2;
+            for (int i = 0; i < numberOfSlots; i++)
+            {
+                string ingredient = _targetSequence[i];
+                if (!_ingredientSprites.ContainsKey(ingredient)) continue;
+
+                GameObject ingredientObj = new GameObject($"TargetIngredient_{i}");
+                ingredientObj.transform.SetParent(skewerObj.transform, false);
+                Image ingredientImage = ingredientObj.AddComponent<Image>();
+                ingredientImage.sprite = _ingredientSprites[ingredient];
+                ingredientImage.preserveAspect = true;
+
+                RectTransform ingredientRect = ingredientObj.GetComponent<RectTransform>();
+                ingredientRect.anchorMin = new Vector2(0.5f, 0.5f);
+                ingredientRect.anchorMax = new Vector2(0.5f, 0.5f);
+                ingredientRect.sizeDelta = ingredientSize;
+                ingredientRect.anchoredPosition = new Vector2(startX + i * ingredientSpacing, 0);
+            }
+        }
+
+        private void CreateResultText()
+        {
+            GameObject resultObj = new GameObject("ResultText");
+            resultObj.transform.SetParent(_gameplayPanel.transform, false);
+
+            _resultText = resultObj.AddComponent<Text>();
+            _resultText.text = "";
+            _resultText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            _resultText.fontSize = 28;
+            _resultText.fontStyle = FontStyle.Bold;
+            _resultText.alignment = TextAnchor.MiddleCenter;
+            _resultText.color = Color.green;
+
+            RectTransform resultRect = resultObj.GetComponent<RectTransform>();
+            resultRect.anchorMin = new Vector2(0, 0.85f);
+            resultRect.anchorMax = new Vector2(1, 0.92f);
+            resultRect.sizeDelta = Vector2.zero;
+            resultRect.anchoredPosition = Vector2.zero;
+        }
+
+        private void GenerateTargetSequence()
+        {
+            _targetSequence.Clear();
+            List<string> availableIngredients = new List<string>(_ingredientNames);
+
+            // Shuffle and pick 5 random ingredients (can repeat)
+            for (int i = 0; i < numberOfSlots; i++)
+            {
+                int randomIndex = Random.Range(0, availableIngredients.Count);
+                _targetSequence.Add(availableIngredients[randomIndex]);
+            }
+
+            Debug.Log($"[ShashlikSortGame] Target sequence: {string.Join(", ", _targetSequence)}");
+        }
+
+        private void CreatePlayerSkewer()
+        {
+            // Container for player's skewer (now takes more vertical space since no target skewer)
+            GameObject playerSkewerContainer = new GameObject("PlayerSkewerContainer");
+            playerSkewerContainer.transform.SetParent(_gameplayPanel.transform, false);
+            RectTransform containerRect = playerSkewerContainer.AddComponent<RectTransform>();
+            containerRect.anchorMin = new Vector2(0, 0.45f);
+            containerRect.anchorMax = new Vector2(1, 0.85f);
+            containerRect.sizeDelta = Vector2.zero;
+            containerRect.anchoredPosition = Vector2.zero;
+
+            // Label
+            GameObject labelObj = new GameObject("Label");
+            labelObj.transform.SetParent(playerSkewerContainer.transform, false);
+            Text labelText = labelObj.AddComponent<Text>();
+            labelText.text = "Your Skewer:";
+            labelText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            labelText.fontSize = 24;
+            labelText.alignment = TextAnchor.MiddleCenter;
+            labelText.color = Color.white;
+            RectTransform labelRect = labelObj.GetComponent<RectTransform>();
+            labelRect.anchorMin = new Vector2(0, 0.85f);
+            labelRect.anchorMax = new Vector2(1, 1);
+            labelRect.sizeDelta = Vector2.zero;
+
+            // Skewer image
+            GameObject skewerObj = new GameObject("PlayerSkewer");
+            skewerObj.transform.SetParent(playerSkewerContainer.transform, false);
+            Image skewerImage = skewerObj.AddComponent<Image>();
+            skewerImage.sprite = _skewerSprite;
+            skewerImage.preserveAspect = true;
+            RectTransform skewerRect = skewerObj.GetComponent<RectTransform>();
+            skewerRect.anchorMin = new Vector2(0.1f, 0.1f);
+            skewerRect.anchorMax = new Vector2(0.9f, 0.8f);
+            skewerRect.sizeDelta = Vector2.zero;
+
+            // Create ingredient slots on the skewer
+            _playerSkewerSlots.Clear();
+            float startX = -ingredientSpacing * 2;
+            for (int i = 0; i < numberOfSlots; i++)
+            {
+                GameObject slotObj = new GameObject($"PlayerSlot_{i}");
+                slotObj.transform.SetParent(skewerObj.transform, false);
+                Image slotImage = slotObj.AddComponent<Image>();
+                slotImage.color = new Color(1, 1, 1, 0); // Transparent until filled
+                slotImage.preserveAspect = true;
+
+                RectTransform slotRect = slotObj.GetComponent<RectTransform>();
+                slotRect.anchorMin = new Vector2(0.5f, 0.5f);
+                slotRect.anchorMax = new Vector2(0.5f, 0.5f);
+                slotRect.sizeDelta = ingredientSize;
+                slotRect.anchoredPosition = new Vector2(startX + i * ingredientSpacing, 0);
+
+                _playerSkewerSlots.Add(slotImage);
+            }
+        }
+
+        private void CreateIngredientButtons()
+        {
+            // Container for buttons (lower area)
+            GameObject buttonContainer = new GameObject("ButtonContainer");
+            buttonContainer.transform.SetParent(_gameplayPanel.transform, false);
+            RectTransform containerRect = buttonContainer.AddComponent<RectTransform>();
+            containerRect.anchorMin = new Vector2(0, 0.05f);
+            containerRect.anchorMax = new Vector2(1, 0.40f);
+            containerRect.sizeDelta = Vector2.zero;
+            containerRect.anchoredPosition = Vector2.zero;
+
+            // Label
+            GameObject labelObj = new GameObject("Label");
+            labelObj.transform.SetParent(buttonContainer.transform, false);
+            Text labelText = labelObj.AddComponent<Text>();
+            labelText.text = "Click ingredients in order:";
+            labelText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            labelText.fontSize = 22;
+            labelText.alignment = TextAnchor.MiddleCenter;
+            labelText.color = Color.white;
+            RectTransform labelRect = labelObj.GetComponent<RectTransform>();
+            labelRect.anchorMin = new Vector2(0, 0.85f);
+            labelRect.anchorMax = new Vector2(1, 1);
+            labelRect.sizeDelta = Vector2.zero;
+
+            // Use ALL ingredients (not just unique ones from target) to make it harder
+            List<string> buttonIngredients = new List<string>(_ingredientNames);
+            
+            // Shuffle button order
+            for (int i = buttonIngredients.Count - 1; i > 0; i--)
+            {
+                int j = Random.Range(0, i + 1);
+                string temp = buttonIngredients[i];
+                buttonIngredients[i] = buttonIngredients[j];
+                buttonIngredients[j] = temp;
+            }
+
+            // Create buttons
+            _ingredientButtons.Clear();
+            float buttonSize = 100f;
+            float buttonSpacing = 20f;
+            float totalWidth = buttonIngredients.Count * buttonSize + (buttonIngredients.Count - 1) * buttonSpacing;
+            float startX = -totalWidth / 2f + buttonSize / 2f;
+
+            for (int i = 0; i < buttonIngredients.Count; i++)
+            {
+                string ingredient = buttonIngredients[i];
+                if (!_ingredientSprites.ContainsKey(ingredient)) continue;
+
+                GameObject buttonObj = new GameObject($"Button_{ingredient}");
+                buttonObj.transform.SetParent(buttonContainer.transform, false);
+
+                // Button background
+                Image buttonBg = buttonObj.AddComponent<Image>();
+                buttonBg.color = new Color(0.3f, 0.3f, 0.3f, 1f);
+
+                Button button = buttonObj.AddComponent<Button>();
+                button.targetGraphic = buttonBg;
+
+                ColorBlock colors = button.colors;
+                colors.normalColor = new Color(0.3f, 0.3f, 0.3f, 1f);
+                colors.highlightedColor = new Color(0.4f, 0.4f, 0.4f, 1f);
+                colors.pressedColor = new Color(0.2f, 0.2f, 0.2f, 1f);
+                button.colors = colors;
+
+                RectTransform buttonRect = buttonObj.GetComponent<RectTransform>();
+                buttonRect.anchorMin = new Vector2(0.5f, 0.45f);
+                buttonRect.anchorMax = new Vector2(0.5f, 0.45f);
+                buttonRect.sizeDelta = new Vector2(buttonSize, buttonSize);
+                buttonRect.anchoredPosition = new Vector2(startX + i * (buttonSize + buttonSpacing), 0);
+
+                // Ingredient image on button
+                GameObject imgObj = new GameObject("Image");
+                imgObj.transform.SetParent(buttonObj.transform, false);
+                Image ingredientImg = imgObj.AddComponent<Image>();
+                ingredientImg.sprite = _ingredientSprites[ingredient];
+                ingredientImg.preserveAspect = true;
+                ingredientImg.raycastTarget = false;
+                RectTransform imgRect = imgObj.GetComponent<RectTransform>();
+                imgRect.anchorMin = new Vector2(0.1f, 0.1f);
+                imgRect.anchorMax = new Vector2(0.9f, 0.9f);
+                imgRect.sizeDelta = Vector2.zero;
+
+                // Click handler
+                string capturedIngredient = ingredient;
+                button.onClick.AddListener(() => OnIngredientButtonClicked(capturedIngredient));
+
+                _ingredientButtons.Add(button);
+            }
+
+            // Add Undo button below the ingredient buttons
+            CreateUndoButton(buttonContainer);
+        }
+
+        private void CreateUndoButton(GameObject parent)
+        {
+            GameObject undoObj = new GameObject("UndoButton");
+            undoObj.transform.SetParent(parent.transform, false);
+
+            Image undoBg = undoObj.AddComponent<Image>();
+            undoBg.color = new Color(0.8f, 0.4f, 0.2f, 1f);
+
+            Button undoButton = undoObj.AddComponent<Button>();
+            undoButton.targetGraphic = undoBg;
+
+            ColorBlock colors = undoButton.colors;
+            colors.normalColor = new Color(0.8f, 0.4f, 0.2f, 1f);
+            colors.highlightedColor = new Color(0.9f, 0.5f, 0.3f, 1f);
+            colors.pressedColor = new Color(0.6f, 0.3f, 0.15f, 1f);
+            undoButton.colors = colors;
+
+            RectTransform undoRect = undoObj.GetComponent<RectTransform>();
+            undoRect.anchorMin = new Vector2(0.5f, 0.1f);
+            undoRect.anchorMax = new Vector2(0.5f, 0.1f);
+            undoRect.sizeDelta = new Vector2(100, 40);
+            undoRect.anchoredPosition = Vector2.zero;
+
+            // Text
+            GameObject textObj = new GameObject("Text");
+            textObj.transform.SetParent(undoObj.transform, false);
+            Text undoText = textObj.AddComponent<Text>();
+            undoText.text = "Undo";
+            undoText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            undoText.fontSize = 20;
+            undoText.alignment = TextAnchor.MiddleCenter;
+            undoText.color = Color.white;
+            RectTransform textRect = textObj.GetComponent<RectTransform>();
+            textRect.anchorMin = Vector2.zero;
+            textRect.anchorMax = Vector2.one;
+            textRect.sizeDelta = Vector2.zero;
+
+            undoButton.onClick.AddListener(OnUndoClicked);
+        }
+
+        private void OnIngredientButtonClicked(string ingredient)
+        {
+            if (_playerSequence.Count >= numberOfSlots) return;
+
+            // Add to player's sequence
+            _playerSequence.Add(ingredient);
+
+            // Update visual
+            int slotIndex = _playerSequence.Count - 1;
+            if (slotIndex < _playerSkewerSlots.Count && _ingredientSprites.ContainsKey(ingredient))
+            {
+                _playerSkewerSlots[slotIndex].sprite = _ingredientSprites[ingredient];
+                _playerSkewerSlots[slotIndex].color = Color.white;
+            }
+
+            Debug.Log($"[ShashlikSortGame] Added {ingredient}, sequence: {string.Join(", ", _playerSequence)}");
+
+            // Check if complete
+            if (_playerSequence.Count == numberOfSlots)
+            {
+                CheckWinCondition();
+            }
+        }
+
+        private void OnUndoClicked()
+        {
+            if (_playerSequence.Count == 0) return;
+
+            // Remove last ingredient
+            int lastIndex = _playerSequence.Count - 1;
+            _playerSequence.RemoveAt(lastIndex);
+
+            // Clear visual
+            if (lastIndex < _playerSkewerSlots.Count)
+            {
+                _playerSkewerSlots[lastIndex].sprite = null;
+                _playerSkewerSlots[lastIndex].color = new Color(1, 1, 1, 0);
+            }
+
+            // Clear result text
+            if (_resultText != null)
+                _resultText.text = "";
+
+            Debug.Log($"[ShashlikSortGame] Undo, sequence: {string.Join(", ", _playerSequence)}");
+        }
+
+        private void CheckWinCondition()
+        {
+            bool correct = true;
+            for (int i = 0; i < numberOfSlots; i++)
+            {
+                if (_playerSequence[i] != _targetSequence[i])
+                {
+                    correct = false;
+                    break;
+                }
+            }
+
+            if (correct)
+            {
+                if (_resultText != null)
+                {
+                    _resultText.text = "Perfect! Delicious Shashlik!";
+                    _resultText.color = Color.green;
+                }
+                StartCoroutine(CloseAfterDelay(2f));
+            }
+            else
+            {
+                if (_resultText != null)
+                {
+                    _resultText.text = "Not quite right... Try again!";
+                    _resultText.color = Color.red;
+                }
+            }
+        }
+
+        private System.Collections.IEnumerator CloseAfterDelay(float delay)
+        {
+            yield return new WaitForSeconds(delay);
+            CloseGame();
+        }
+
+        private void CreateCloseButton()
+        {
+            GameObject closeBtnObj = new GameObject("CloseButton");
+            closeBtnObj.transform.SetParent(_contentPanel.transform, false);
+            _closeButton = closeBtnObj.AddComponent<Button>();
+            Image btnImage = closeBtnObj.AddComponent<Image>();
+            btnImage.color = new Color(0.8f, 0.2f, 0.2f, 1f);
+
+            RectTransform btnRect = closeBtnObj.GetComponent<RectTransform>();
+            btnRect.sizeDelta = new Vector2(40, 40);
+            btnRect.anchorMin = new Vector2(1, 1);
+            btnRect.anchorMax = new Vector2(1, 1);
+            btnRect.anchoredPosition = new Vector2(-20, -20);
+
+            GameObject txtObj = new GameObject("Text");
+            txtObj.transform.SetParent(closeBtnObj.transform, false);
+            Text txt = txtObj.AddComponent<Text>();
+            txt.text = "X";
+            txt.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            txt.fontSize = 24;
+            txt.alignment = TextAnchor.MiddleCenter;
+            txt.color = Color.white;
+            RectTransform txtRect = txtObj.GetComponent<RectTransform>();
+            txtRect.anchorMin = Vector2.zero;
+            txtRect.anchorMax = Vector2.one;
+            txtRect.sizeDelta = Vector2.zero;
+
+            _closeButton.onClick.AddListener(CloseGame);
+        }
+
+        private void OnDestroy()
+        {
+            CloseGame();
+        }
+    }
+}
+

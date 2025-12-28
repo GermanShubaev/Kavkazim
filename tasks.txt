@@ -3,19 +3,16 @@ Main Menu
 2.host
 3.leave - exit app
 
-Game
-1.Movement
-2.Kill ability 
-
-Todo
-	Create 2d map - Amir
-Crewmate :
-	Create 8 mini games - Amir
-	Progress bar
-
-Voting System :
-	Implement + clock
-	Most voted is killed
-	
-Impostor :
-Kill turns into ghost instead of kick - German
+features :
+1.3 tasks minigames left
+2.2 multi room tasks
+3.block tasks for impostors
+4.implement progress bar for tasks
+5.minimap 
+6.add visual cue for tasks on the map and minimap
+7.voting system 
+8.cams?
+9.sabotage?
+bugs :
+1.colliders irregular - fix Movement
+2.
