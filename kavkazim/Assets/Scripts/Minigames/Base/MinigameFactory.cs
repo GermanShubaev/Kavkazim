@@ -21,6 +21,8 @@ namespace Minigames
                 MinigameType.PraySortGame => minigameObj.AddComponent<PraySortGame>(),
                 MinigameType.PapakhaClick => minigameObj.AddComponent<PapakhaClickGame>(),
                 MinigameType.DishClick => minigameObj.AddComponent<DishClickGame>(),
+                MinigameType.WolfClick => minigameObj.AddComponent<WolfClickGame>(),
+                MinigameType.TakedownClick => minigameObj.AddComponent<TakedownClickGame>(),
                 MinigameType.Game4 => minigameObj.AddComponent<PlaceholderMinigame>(),
                 MinigameType.Game5 => minigameObj.AddComponent<PlaceholderMinigame>(),
                 MinigameType.Game6 => minigameObj.AddComponent<PlaceholderMinigame>(),

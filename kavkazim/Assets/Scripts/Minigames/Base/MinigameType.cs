@@ -10,6 +10,8 @@ namespace Minigames
         PraySortGame,
         PapakhaClick,
         DishClick,
+        WolfClick,
+        TakedownClick,
         Game4,
         Game5,
         Game6,
