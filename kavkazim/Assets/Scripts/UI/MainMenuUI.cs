@@ -29,6 +29,9 @@ namespace UI
         // Popup elements
         private GameObject _codePopup;
         private TMP_InputField _codeInput;
+        
+        // Error display
+        private Text _errorText;
 
         private void Awake()
         {
@@ -54,6 +57,73 @@ namespace UI
             leaveLobbyButton.interactable = true; // Force enable in case it's disabled in Inspector
 
             CreateRoomCodePopup();
+            CreateErrorDisplay();
+            
+            // Subscribe to disconnect events to show rejection reason
+            NetworkManager.Singleton.OnClientDisconnectCallback += OnClientDisconnect;
+        }
+        
+        private void OnDestroy()
+        {
+            if (NetworkManager.Singleton != null)
+            {
+                NetworkManager.Singleton.OnClientDisconnectCallback -= OnClientDisconnect;
+            }
+        }
+        
+        private void OnClientDisconnect(ulong clientId)
+        {
+            // Only care about local client being disconnected
+            if (clientId == NetworkManager.Singleton.LocalClientId && !NetworkManager.Singleton.IsServer)
+            {
+                string reason = NetworkManager.Singleton.DisconnectReason;
+                if (!string.IsNullOrEmpty(reason))
+                {
+                    ShowError(reason);
+                }
+                
+                // Leave Unity Lobby when disconnected so user can try again
+                _ = _bootstrap.LeaveLobbyAsync();
+            }
+        }
+        
+        private void CreateErrorDisplay()
+        {
+            // Create error text at bottom of screen
+            Canvas canvas = GetComponentInParent<Canvas>() ?? FindFirstObjectByType<Canvas>();
+            if (canvas == null) return;
+            
+            GameObject errorObj = new GameObject("ErrorText");
+            errorObj.transform.SetParent(canvas.transform, false);
+            _errorText = errorObj.AddComponent<Text>();
+            _errorText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            _errorText.fontSize = 22;
+            _errorText.color = Color.red;
+            _errorText.alignment = TextAnchor.MiddleCenter;
+            _errorText.text = "";
+            
+            RectTransform rect = errorObj.GetComponent<RectTransform>();
+            rect.anchorMin = new Vector2(0.1f, 0.05f);
+            rect.anchorMax = new Vector2(0.9f, 0.12f);
+            rect.offsetMin = Vector2.zero;
+            rect.offsetMax = Vector2.zero;
+        }
+        
+        private void ShowError(string message)
+        {
+            if (_errorText != null)
+            {
+                _errorText.text = message;
+                // Auto-hide after 5 seconds
+                CancelInvoke(nameof(ClearError));
+                Invoke(nameof(ClearError), 5f);
+            }
+            Debug.LogWarning($"[MainMenuUI] Error: {message}");
+        }
+        
+        private void ClearError()
+        {
+            if (_errorText != null) _errorText.text = "";
         }
 
         private void CreateRoomCodePopup()
@@ -189,11 +259,18 @@ namespace UI
                 await _auth.InitializeAsync();
                 await _auth.SignInAnonymouslyAsync(nameInput.text);
 
+                // Save player name to PlayerPrefs for lobby system
+                string playerName = nameInput.text.Trim();
+                if (string.IsNullOrEmpty(playerName)) playerName = "Player";
+                PlayerPrefs.SetString("PlayerName", playerName);
+                PlayerPrefs.Save();
+
                 bool ok = await _bootstrap.HostWithRelayAsync("Kavkazim Lobby", 10);
                 if (ok)
                 {
+                    // Load GameSession scene (contains both lobby area and gameplay area)
                     NetworkManager.Singleton.SceneManager.LoadScene(
-                        "Gameplay",
+                        "GameSession",
                         LoadSceneMode.Single
                     );
                     leaveLobbyButton.interactable = true;
@@ -209,11 +286,21 @@ namespace UI
         private async Task OnJoinWithCode()
         {
             HideRoomCodePopup();
+            ClearError();
             SetUIInteractable(false);
             try
             {
                 await _auth.InitializeAsync();
                 await _auth.SignInAnonymouslyAsync(nameInput.text);
+
+                // Save player name to PlayerPrefs for lobby system.
+                string playerName = nameInput.text.Trim();
+                if (string.IsNullOrEmpty(playerName)) playerName = "Player";
+                PlayerPrefs.SetString("PlayerName", playerName);
+                PlayerPrefs.Save();
+                
+                // Set connection data to include player name for duplicate validation
+                NetworkManager.Singleton.NetworkConfig.ConnectionData = System.Text.Encoding.UTF8.GetBytes(playerName);
 
                 bool ok = false;
                 string code = _codeInput.text.Trim();
@@ -225,9 +312,36 @@ namespace UI
                     {
                         ok = await _bootstrap.JoinByCodeAsync(code);
                     }
+                    catch (Unity.Services.Lobbies.LobbyServiceException e)
+                    {
+                        Debug.Log($"[MainMenuUI] LobbyException (will retry): {e.Reason}");
+                        
+                        // If already a member, leave and try again
+                        if (e.Message.Contains("already a member") || e.Message.Contains("PlayerAlreadyJoined"))
+                        {
+                            Debug.Log("Already in lobby, leaving and retrying...");
+                            await _bootstrap.LeaveLobbyAsync();
+                            try
+                            {
+                                ok = await _bootstrap.JoinByCodeAsync(code);
+                            }
+                            catch
+                            {
+                                ShowError("Could Not Find Lobby");
+                                return;
+                            }
+                        }
+                        else
+                        {
+                            ShowError("Could Not Find Lobby");
+                            return;
+                        }
+                    }
                     catch (System.Exception e)
                     {
-                        Debug.LogError($"Join by code failed: {e.Message}");
+                        Debug.LogError($"Join Exception: {e.Message}");
+                        ShowError("Could Not Find Lobby");
+                        return;
                     }
                 }
                 else
@@ -237,9 +351,15 @@ namespace UI
                     {
                         ok = await _bootstrap.QuickJoinAsync();
                     }
+                    catch (Unity.Services.Lobbies.LobbyServiceException e) when (e.Reason == Unity.Services.Lobbies.LobbyExceptionReason.NoOpenLobbies)
+                    {
+                        ShowError("No open lobbies available");
+                        return;
+                    }
                     catch (System.Exception e)
                     {
-                        Debug.LogError($"Quick Join failed: {e.Message}");
+                        ShowError($"Quick Join failed: {e.Message}");
+                        return;
                     }
                 }
 
@@ -249,7 +369,7 @@ namespace UI
                 }
                 else
                 {
-                    Debug.LogWarning("Join failed");
+                    ShowError("Failed to join lobby");
                 }
             }
             finally { SetUIInteractable(true); }

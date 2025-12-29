@@ -2,7 +2,7 @@ using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-namespace Kavkazim.Netcode
+namespace Netcode
 {
     /// <summary>
     /// Handles client disconnection - returns clients to main menu if host disconnects.
@@ -59,8 +59,11 @@ namespace Kavkazim.Netcode
                 NetworkManager.Singleton.Shutdown();
             }
 
-            // Return to main menu
-            SceneManager.LoadScene("MainMenu");
+            // Return to main menu (avoid reloading if already there)
+            if (SceneManager.GetActiveScene().name != "MainMenu")
+            {
+                SceneManager.LoadScene("MainMenu");
+            }
         }
     }
 }

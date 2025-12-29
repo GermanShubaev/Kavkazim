@@ -4,6 +4,7 @@ using UnityEngine.InputSystem;
 using TMPro;
 using Unity.Services.Authentication;
 using System.Collections;
+using System.Collections.Generic;
 using UI;
 
 namespace Kavkazim.Netcode
@@ -25,9 +26,21 @@ namespace Kavkazim.Netcode
         public NetworkVariable<Unity.Collections.FixedString32Bytes> PlayerName = 
             new NetworkVariable<Unity.Collections.FixedString32Bytes>();
 
-        // Networked Role variable
+        // Networked Role variable - OWNER ONLY read permission for security
+        // Only the server and the owning client can read the true role
         public NetworkVariable<PlayerRoleType> Role = 
-            new NetworkVariable<PlayerRoleType>(PlayerRoleType.Innocent);
+            new NetworkVariable<PlayerRoleType>(
+                PlayerRoleType.Innocent,
+                NetworkVariableReadPermission.Owner,
+                NetworkVariableWritePermission.Server
+            );
+
+        // Local cache of perceived roles for each player (what THIS client sees)
+        // Key: NetworkObjectId, Value: Perceived role
+        private Dictionary<ulong, PlayerRoleType> _perceivedRoles = new Dictionary<ulong, PlayerRoleType>();
+        
+        // The role this client perceives for THIS player (set via RPC)
+        public PlayerRoleType PerceivedRole { get; private set; } = PlayerRoleType.Innocent;
 
         private TextMeshPro _nameLabel;
         public PlayerRole CurrentRole { get; private set; }
@@ -39,50 +52,53 @@ namespace Kavkazim.Netcode
             // Setup name label
             SetupNameLabel();
 
-            // Initialize Role
-            UpdateRole(Role.Value);
-            Role.OnValueChanged += (oldVal, newVal) => UpdateRole(newVal);
+            // Initialize visuals with default Innocent appearance
+            // Actual perceived role will be set via RPC from server
+            UpdateVisuals(PerceivedRole);
 
-            // If we are the owner, we set the name from Auth service
+            // If we are the owner, set up local player specifics
             if (IsOwner)
             {
-                // Spawn Gameplay UI
+                // PlayerAvatar is only spawned when match starts, so spawn GameplayUI
                 if (GameObject.FindFirstObjectByType<GameplayUI>() == null)
                 {
                     GameObject uiGo = new GameObject("GameplayUIManager");
-                    uiGo.transform.SetParent(transform); // Parent to player to persist across scenes
+                    uiGo.transform.SetParent(transform); // Parent to player to persist
                     uiGo.AddComponent<GameplayUI>();
                 }
 
-                // Assign random role if we are the server (Host)
-                if (IsServer)
-                {
-                    // Simple random role assignment for testing
-                    // 50% chance to be Kavkazi
-                    Role.Value = Random.value > 0.5f ? PlayerRoleType.Kavkazi : PlayerRoleType.Innocent;
-                }
+                // Role assignment is handled by PlayerSpawnHandler on the server
                 
-                // Set name - use RPC to avoid write permission error
-                string pName = "";
-                try 
+                // Only set name if server hasn't already set it
+                // (Server sets name from GameSessionManager PlayerSessionData)
+                if (string.IsNullOrEmpty(PlayerName.Value.ToString()))
                 {
-                    if (AuthenticationService.Instance.IsSignedIn)
+                    // Get name from PlayerPrefs (set during MainMenu connect)
+                    string pName = PlayerPrefs.GetString("PlayerName", "");
+                    
+                    // Fallback to Auth service if PlayerPrefs is empty
+                    if (string.IsNullOrEmpty(pName))
                     {
-                        pName = AuthenticationService.Instance.PlayerName;
-                        // Remove #1234 suffix if present
-                        if (!string.IsNullOrEmpty(pName))
+                        try 
                         {
-                            var parts = pName.Split('#');
-                            if (parts.Length > 0) pName = parts[0];
+                            if (AuthenticationService.Instance.IsSignedIn)
+                            {
+                                pName = AuthenticationService.Instance.PlayerName;
+                                if (!string.IsNullOrEmpty(pName))
+                                {
+                                    var parts = pName.Split('#');
+                                    if (parts.Length > 0) pName = parts[0];
+                                }
+                            }
                         }
+                        catch { }
                     }
-                }
-                catch { }
 
-                if (string.IsNullOrEmpty(pName)) pName = $"Player {OwnerClientId}";
-                
-                // Request the server to set our name
-                SetPlayerNameServerRpc(pName);
+                    if (string.IsNullOrEmpty(pName)) pName = $"Player {OwnerClientId}";
+                    
+                    // Request the server to set our name on the avatar
+                    SetPlayerNameServerRpc(pName);
+                }
 
                 // Initialize Camera
                 TryFindCamera();
@@ -101,9 +117,13 @@ namespace Kavkazim.Netcode
             PlayerName.Value = name;
         }
 
-        private void UpdateRole(PlayerRoleType roleType)
+        /// <summary>
+        /// Updates visuals based on PERCEIVED role (not true role).
+        /// Called when we receive role perception update from server.
+        /// </summary>
+        private void UpdateVisuals(PlayerRoleType perceivedRole)
         {
-            switch (roleType)
+            switch (perceivedRole)
             {
                 case PlayerRoleType.Kavkazi:
                     CurrentRole = new KavkaziRole(this);
@@ -115,7 +135,68 @@ namespace Kavkazim.Netcode
             }
             
             CurrentRole.SetupVisuals();
-            Debug.Log($"[PlayerAvatar] Role set to {roleType}");
+            Debug.Log($"[PlayerAvatar] Visuals set to perceived role: {perceivedRole}");
+        }
+
+        /// <summary>
+        /// SERVER ONLY: Get the true role of this player.
+        /// Use this on the server for game logic (killing, voting, etc.)
+        /// </summary>
+        public PlayerRoleType GetTrueRole()
+        {
+            return Role.Value;
+        }
+
+        /// <summary>
+        /// Targeted ClientRpc to receive perceived role for a specific player.
+        /// Called by server to tell THIS client what role they should see for a player.
+        /// </summary>
+        /// <param name="targetNetworkObjectId">The NetworkObjectId of the player being described</param>
+        /// <param name="perceivedRole">The role this client should perceive for that player</param>
+        [Rpc(SendTo.SpecifiedInParams)]
+        public void ReceivePerceivedRoleClientRpc(ulong targetNetworkObjectId, PlayerRoleType perceivedRole, RpcParams rpcParams = default)
+        {
+            // Store in our local perception cache
+            _perceivedRoles[targetNetworkObjectId] = perceivedRole;
+            
+            // If this is about ourselves, update our perceived role
+            if (targetNetworkObjectId == NetworkObjectId)
+            {
+                PerceivedRole = perceivedRole;
+                UpdateVisuals(perceivedRole);
+                Debug.Log($"[PlayerAvatar] Received my perceived role: {perceivedRole}");
+            }
+            else
+            {
+                // Find the target player and update their visuals
+                if (NetworkManager.Singleton.SpawnManager.SpawnedObjects.TryGetValue(
+                    targetNetworkObjectId, out NetworkObject targetNetObj))
+                {
+                    PlayerAvatar targetAvatar = targetNetObj.GetComponent<PlayerAvatar>();
+                    if (targetAvatar != null)
+                    {
+                        targetAvatar.ApplyPerceivedRole(perceivedRole);
+                    }
+                }
+                Debug.Log($"[PlayerAvatar] Received perceived role for player {targetNetworkObjectId}: {perceivedRole}");
+            }
+        }
+
+        /// <summary>
+        /// Apply a perceived role to this avatar (called by other avatars receiving RPC).
+        /// </summary>
+        public void ApplyPerceivedRole(PlayerRoleType perceivedRole)
+        {
+            PerceivedRole = perceivedRole;
+            UpdateVisuals(perceivedRole);
+        }
+
+        /// <summary>
+        /// Get the perceived role for a player from our local cache.
+        /// </summary>
+        public PlayerRoleType GetPerceivedRoleFor(ulong networkObjectId)
+        {
+            return _perceivedRoles.TryGetValue(networkObjectId, out var role) ? role : PlayerRoleType.Innocent;
         }
 
         public void SetBodyColor(Color c)
@@ -150,32 +231,10 @@ namespace Kavkazim.Netcode
             transform.rotation = startRot;
         }
 
-        [Rpc(SendTo.Server)]
-        public void RequestKillServerRpc(ulong targetId)
-        {
-            if (!IsServer) return;
-
-            if (NetworkManager.Singleton.SpawnManager.SpawnedObjects.TryGetValue(targetId, out NetworkObject targetObj))
-            {
-                // Kill the target. For now, just despawn or disable.
-                // Let's just disable the object for now to simulate death
-                targetObj.gameObject.SetActive(false);
-                Debug.Log($"[Server] Player {targetId} killed by {OwnerClientId}");
-                
-                // Notify clients (Optional: Play sound/effect)
-                KillClientRpc(targetId);
-            }
-        }
-
-        [Rpc(SendTo.ClientsAndHost)]
-        private void KillClientRpc(ulong targetId)
-        {
-             if (NetworkManager.Singleton.SpawnManager.SpawnedObjects.TryGetValue(targetId, out NetworkObject targetObj))
-            {
-                // Visual feedback for death on all clients
-                targetObj.gameObject.SetActive(false);
-            }
-        }
+        // NOTE: Kill functionality has been moved to KillerAbility and PlayerState components.
+        // - KillerAbility.RequestKillServerRpc() handles the kill request
+        // - PlayerState manages the alive/ghost state
+        // PerformSlashAnimation() is kept here for visual feedback
 
         private void SetupNameLabel()
         {
