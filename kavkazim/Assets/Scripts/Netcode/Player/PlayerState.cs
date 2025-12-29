@@ -1,3 +1,4 @@
+using System;
 using Unity.Netcode;
 using UnityEngine;
 
@@ -10,6 +11,12 @@ namespace Netcode.Player
     [RequireComponent(typeof(NetworkObject))]
     public class PlayerState : NetworkBehaviour
     {
+        /// <summary>
+        /// Event fired on the server when any player is killed.
+        /// Used by GameSessionManager to check win conditions.
+        /// </summary>
+        public static event Action<PlayerState> OnPlayerKilled;
+
         [Header("Layer Configuration")]
         [Tooltip("Layer name for alive players (must exist in Tags & Layers)")]
         [SerializeField] private string aliveLayerName = "Alive";
@@ -193,6 +200,9 @@ namespace Netcode.Player
             
             IsAlive.Value = false;
             Debug.Log($"[PlayerState] SERVER: Player {OwnerClientId} has been killed.");
+            
+            // Fire event for win condition checking
+            OnPlayerKilled?.Invoke(this);
         }
 
         /// <summary>

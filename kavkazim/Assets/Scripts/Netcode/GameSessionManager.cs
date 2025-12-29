@@ -4,7 +4,10 @@ using System.Collections.Generic;
 using Unity.Collections;
 using Unity.Netcode;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using Netcode.Player;
+using Kavkazim.Netcode.WinConditions;
+using Kavkazim.Netcode.Validation;
 
 namespace Kavkazim.Netcode
 {
@@ -21,6 +24,19 @@ namespace Kavkazim.Netcode
     {
         /// <summary>Singleton instance for easy access.</summary>
         public static GameSessionManager Instance { get; private set; }
+        
+        /// <summary>
+        /// Cached win result that persists across scene loads.
+        /// Set before loading WinScreen scene, read by WinScreenSceneController.
+        /// </summary>
+        public static WinResultData CachedWinResult { get; set; }
+        
+        /// <summary>
+        /// Cached player names that persist across scene loads.
+        /// Key = ClientId, Value = PlayerName
+        /// Set before loading WinScreen, restored when returning to lobby.
+        /// </summary>
+        public static Dictionary<ulong, string> CachedPlayerNames { get; private set; } = new Dictionary<ulong, string>();
 
         [Header("Configuration")]
         [SerializeField] private float postMatchDuration = 5f;
@@ -44,6 +60,13 @@ namespace Kavkazim.Netcode
             NetworkVariableWritePermission.Server
         );
 
+        /// <summary>Win result data synced to all clients when game ends.</summary>
+        public NetworkVariable<WinResultData> WinResult = new(
+            WinResultData.Empty,
+            NetworkVariableReadPermission.Everyone,
+            NetworkVariableWritePermission.Server
+        );
+
         // ========== EVENTS FOR UI ==========
         
         /// <summary>Fired when player list changes (join, leave, ready, name).</summary>
@@ -54,6 +77,14 @@ namespace Kavkazim.Netcode
         
         /// <summary>Fired when match phase changes.</summary>
         public event Action<MatchPhase> OnPhaseChanged;
+        
+        /// <summary>Fired when game ends with a win result. Used by UI.</summary>
+        public event Action<WinResultData> OnGameEnded;
+        
+        // ========== WIN CONDITION SYSTEM & VALIDATION ==========
+        
+        private WinConditionEvaluator _winEvaluator;
+        private LobbyValidator _lobbyValidator;
 
         // ========== LIFECYCLE ==========
 
@@ -70,6 +101,10 @@ namespace Kavkazim.Netcode
             
             // Initialize NetworkList (must be done in Awake before OnNetworkSpawn)
             Players = new NetworkList<PlayerSessionData>();
+            
+            // Initialize win condition evaluator with default conditions
+            _winEvaluator = WinConditionEvaluator.CreateDefault();
+            _lobbyValidator = new LobbyValidator();
         }
 
         public override void OnNetworkSpawn()
@@ -80,9 +115,16 @@ namespace Kavkazim.Netcode
             Players.OnListChanged += HandlePlayersListChanged;
             Settings.OnValueChanged += HandleSettingsChanged;
             CurrentPhase.OnValueChanged += HandlePhaseChanged;
+            WinResult.OnValueChanged += HandleWinResultChanged;
             
             // Subscribe to network events
             NetworkManager.Singleton.OnClientDisconnectCallback += OnClientDisconnected;
+            
+            // Server: Subscribe to player death events for win condition checking
+            if (IsServer)
+            {
+                PlayerState.OnPlayerKilled += OnPlayerKilledForWinCheck;
+            }
             
             // Server: Initialize settings and add host player
             if (IsServer)
@@ -92,24 +134,45 @@ namespace Kavkazim.Netcode
                     Settings.Value = LobbySettings.Default;
                 }
                 
-                // Add the host player if not already in list
-                // (OnClientConnected fires before GameSessionManager exists for the host)
-                ulong hostId = NetworkManager.ServerClientId;
-                bool hostExists = false;
-                foreach (var p in Players)
+                // Check if returning from WinScreen - restore players from cache
+                // CachedWinResult.HasEnded is set when transitioning to WinScreen
+                if (CachedWinResult.HasEnded || CurrentPhase.Value == MatchPhase.PostMatch)
                 {
-                    if (p.ClientId == hostId)
+                    Players.Clear();
+                    
+                    // Restore all players from cached names
+                    foreach (var kvp in CachedPlayerNames)
                     {
-                        hostExists = true;
-                        break;
+                        AddPlayer(kvp.Key, kvp.Value);
                     }
+                    
+                    // Clear cached data
+                    WinResult.Value = WinResultData.Empty;
+                    CachedWinResult = WinResultData.Empty;
+                    CachedPlayerNames.Clear();
+                    CurrentPhase.Value = MatchPhase.LobbyOpen;
                 }
-                
-                if (!hostExists)
+                else
                 {
-                    string hostName = PlayerPrefs.GetString("PlayerName", $"Player {hostId}");
-                    AddPlayer(hostId, hostName);
-                    Debug.Log($"[GameSessionManager] Added host player: {hostName}");
+                    // Normal startup - add host if not already in list
+                    ulong hostId = NetworkManager.ServerClientId;
+                    bool hostExists = false;
+                    foreach (var p in Players)
+                    {
+                        if (p.ClientId == hostId)
+                        {
+                            hostExists = true;
+                            break;
+                        }
+                    }
+                    
+                    if (!hostExists)
+                    {
+                        string prefsKey = "PlayerName" + GetParrelSyncSuffix();
+                        string hostName = PlayerPrefs.GetString(prefsKey, $"Player {hostId}");
+                        AddPlayer(hostId, hostName);
+                        Debug.Log($"[GameSessionManager] Added host player: {hostName}");
+                    }
                 }
             }
             
@@ -121,8 +184,21 @@ namespace Kavkazim.Netcode
             // Client (non-host): Submit name to server
             if (IsClient && !IsServer)
             {
-                string playerName = PlayerPrefs.GetString("PlayerName", $"Player {NetworkManager.LocalClientId}");
-                SubmitPlayerNameServerRpc(playerName);
+                // If returning from WinScreen, do NOT submit name from PlayerPrefs
+                // The server has already restored our correct name from the cache
+                bool isReturning = CachedWinResult.HasEnded || CurrentPhase.Value == MatchPhase.PostMatch;
+                
+                if (isReturning)
+                {
+                     // Clear our local cache flag so future normal joins work
+                     CachedWinResult = WinResultData.Empty;
+                }
+                else
+                {
+                    string prefsKey = "PlayerName" + GetParrelSyncSuffix();
+                    string playerName = PlayerPrefs.GetString(prefsKey, $"Player {NetworkManager.LocalClientId}");
+                    SubmitPlayerNameServerRpc(playerName);
+                }
             }
         }
 
@@ -131,10 +207,17 @@ namespace Kavkazim.Netcode
             Players.OnListChanged -= HandlePlayersListChanged;
             Settings.OnValueChanged -= HandleSettingsChanged;
             CurrentPhase.OnValueChanged -= HandlePhaseChanged;
+            WinResult.OnValueChanged -= HandleWinResultChanged;
             
             if (NetworkManager.Singleton != null)
             {
                 NetworkManager.Singleton.OnClientDisconnectCallback -= OnClientDisconnected;
+            }
+            
+            // Unsubscribe from player death events
+            if (IsServer)
+            {
+                PlayerState.OnPlayerKilled -= OnPlayerKilledForWinCheck;
             }
         }
 
@@ -166,6 +249,28 @@ namespace Kavkazim.Netcode
             OnPhaseChanged?.Invoke(newValue);
         }
 
+        private void HandleWinResultChanged(WinResultData previousValue, WinResultData newValue)
+        {
+            if (newValue.HasEnded)
+            {
+                Debug.Log($"[GameSessionManager] Win result received: {newValue.GetWinningTeamDisplay()}");
+                OnGameEnded?.Invoke(newValue);
+            }
+        }
+
+        /// <summary>
+        /// Called when any player is killed. Server-only.
+        /// Triggers win condition evaluation.
+        /// </summary>
+        private void OnPlayerKilledForWinCheck(PlayerState killedPlayer)
+        {
+            if (!IsServer) return;
+            if (CurrentPhase.Value != MatchPhase.MatchInProgress) return;
+            
+            Debug.Log($"[GameSessionManager] Player killed, checking win conditions...");
+            CheckWinConditions();
+        }
+
         private void OnClientDisconnected(ulong clientId)
         {
             if (!IsServer) return;
@@ -179,6 +284,15 @@ namespace Kavkazim.Netcode
                 {
                     Debug.Log($"[GameSessionManager] Removing player: {Players[i].PlayerName}");
                     Players.RemoveAt(i);
+                    // Players list change will trigger HandlePlayersListChanged
+                    // But we want to run auto-clamp logic on Server immediately after modifying the list?
+                    // HandlePlayersListChanged runs on everyone.
+                    // We should do auto-clamp here manually or in OnListChanged if IsServer.
+                    // Doing it here is safer/clearer for "logic consequent to action".
+                    if (IsServer && CurrentPhase.Value == MatchPhase.LobbyOpen)
+                    {
+                        ValidateAndClampSettings();
+                    }
                     break;
                 }
             }
@@ -187,6 +301,11 @@ namespace Kavkazim.Netcode
             if (CurrentPhase.Value == MatchPhase.MatchInProgress)
             {
                 DespawnPlayerAvatar(clientId);
+                
+                // CRITICAL: Check win conditions after a player disconnects
+                // Disconnecting might change the balance (e.g. Kavkazi majority)
+                Debug.Log($"[GameSessionManager] Player {clientId} disconnected during match, checking win conditions...");
+                CheckWinConditions();
             }
         }
 
@@ -276,8 +395,9 @@ namespace Kavkazim.Netcode
                 return;
             }
             
-            // Validate and clamp settings
-            newSettings = ValidateSettings(newSettings);
+            // Validate and clamp settings via Validator
+            var ctx = new LobbyRuntimeContext { CurrentPlayerCount = Players.Count };
+            newSettings = _lobbyValidator.Sanitize(newSettings, ctx);
             Settings.Value = newSettings;
             
             Debug.Log($"[GameSessionManager] Settings updated: {newSettings}");
@@ -332,13 +452,20 @@ namespace Kavkazim.Netcode
                 return;
             }
             
-            // Validate Kavkazi count
-            int kavkaziCount = Settings.Value.KavkaziCount;
-            if (kavkaziCount >= eligibleCount)
+            // Use Validator for comprehensive checks
+            var ctx = new LobbyRuntimeContext { CurrentPlayerCount = eligibleCount }; // Use eligible count for start check
+            var validationResult = _lobbyValidator.Validate(Settings.Value, ctx);
+            
+            if (!validationResult.IsValid)
             {
-                Debug.LogWarning($"[GameSessionManager] Too many Kavkazi ({kavkaziCount}) for {eligibleCount} players");
+                foreach(var error in validationResult.Errors)
+                {
+                    Debug.LogWarning($"[GameSessionManager] Start blocked: {error.Message}");
+                }
                 return;
             }
+            
+            int kavkaziCount = Settings.Value.KavkaziCount;
             
             // All checks passed - start the game!
             Debug.Log($"[GameSessionManager] Starting game with {eligibleCount} players, {kavkaziCount} Kavkazi");
@@ -393,6 +520,17 @@ namespace Kavkazim.Netcode
             
             Players.Add(newPlayer);
             
+            // Auto-clamp settings if needed (e.g. increase player cap if host forced join?)
+            // Usually we don't change settings on join unless necessary?
+            // "if host lowers max below current players -> either block or auto-clamp back up"
+            // If new player joins, current count increases. If it exceeds MaxPlayers, we might clamp MaxPlayers?
+            // Although usually networking layer prevents join if full.
+            // But let's run sanitize just in case.
+            if (CurrentPhase.Value == MatchPhase.LobbyOpen)
+            {
+                 ValidateAndClampSettings();
+            }
+
             Debug.Log($"[GameSessionManager] Added player: {newPlayer}");
         }
 
@@ -401,6 +539,15 @@ namespace Kavkazim.Netcode
         /// Call this when a win condition is met.
         /// </summary>
         public void EndMatch()
+        {
+            EndMatch(null);
+        }
+
+        /// <summary>
+        /// End the current match with a specific win result.
+        /// </summary>
+        /// <param name="winResult">The win result, or null for no winner.</param>
+        public void EndMatch(WinConditions.WinResult winResult)
         {
             if (!IsServer) return;
             
@@ -412,8 +559,144 @@ namespace Kavkazim.Netcode
             
             Debug.Log("[GameSessionManager] Ending match...");
             
-            // Destroy all PlayerAvatars
+            // Set win result NetworkVariable for UI sync
+            if (winResult != null)
+            {
+                string winnerNames = string.Join(",", winResult.WinnerNames);
+                WinResult.Value = new WinResultData
+                {
+                    WinningTeam = (byte)winResult.WinningTeamEnum,
+                    WinnerNames = winnerNames,
+                    ReasonKey = winResult.ReasonKey,
+                    HasEnded = true
+                };
+                Debug.Log($"[GameSessionManager] Win: {winResult.WinningTeamEnum} - {winResult.ReasonKey}");
+            }
+            else
+            {
+                // No winner (e.g., match aborted)
+                WinResult.Value = new WinResultData
+                {
+                    WinningTeam = 0,
+                    WinnerNames = "",
+                    ReasonKey = "match_aborted",
+                    HasEnded = true
+                };
+            }
+            
+            // Set phase to PostMatch
+            CurrentPhase.Value = MatchPhase.PostMatch;
+            
+            // Cache the win result for the WinScreen scene to read
+            // (GameSessionManager gets destroyed on scene load)
+            CachedWinResult = WinResult.Value;
+            
+            // Cache all player names before scene transition
+            // This ensures correct names are restored when returning to lobby
+            CachedPlayerNames.Clear();
+            foreach (var player in Players)
+            {
+                CachedPlayerNames[player.ClientId] = player.PlayerName.ToString();
+            }
+            
+            // Sync win result to all clients BEFORE scene loads
+            CacheWinResultClientRpc(WinResult.Value);
+            
+            // Sync player names to all clients BEFORE scene loads
+            // Send each player name individually since Dictionary can't be sent via RPC
+            // Create a copy to avoid collection modification during enumeration
+            var cachedNames = new List<KeyValuePair<ulong, string>>(CachedPlayerNames);
+            foreach (var kvp in cachedNames)
+            {
+                CachePlayerNameClientRpc(kvp.Key, kvp.Value);
+            }
+            
+            // Despawn all player avatars before scene transition
             DespawnAllAvatars();
+            
+            // Load WinScreen scene for all clients
+            LoadWinScreenScene();
+        }
+
+        /// <summary>
+        /// ClientRpc to cache win result on all clients before scene transition.
+        /// </summary>
+        [Rpc(SendTo.ClientsAndHost)]
+        private void CacheWinResultClientRpc(WinResultData winResult)
+        {
+            CachedWinResult = winResult;
+            Debug.Log($"[GameSessionManager] Client received win result: {winResult.GetWinningTeamDisplay()}");
+        }
+
+        /// <summary>
+        /// ClientRpc to cache a player name on all clients before scene transition.
+        /// </summary>
+        [Rpc(SendTo.ClientsAndHost)]
+        private void CachePlayerNameClientRpc(ulong clientId, string playerName)
+        {
+            CachedPlayerNames[clientId] = playerName;
+        }
+
+        /// <summary>
+        /// Loads the WinScreen scene for all connected clients.
+        /// </summary>
+        private void LoadWinScreenScene()
+        {
+            if (!IsServer) return;
+            
+            // Use Netcode's scene management for synchronized loading
+            if (NetworkManager.SceneManager != null)
+            {
+                Debug.Log("[GameSessionManager] Loading WinScreen scene for all clients...");
+                
+                // Subscribe to scene load events for debugging
+                NetworkManager.SceneManager.OnLoadComplete -= OnSceneLoadComplete;
+                NetworkManager.SceneManager.OnLoadComplete += OnSceneLoadComplete;
+                
+                var status = NetworkManager.SceneManager.LoadScene("WinScreen", LoadSceneMode.Single);
+                
+                if (status != SceneEventProgressStatus.Started)
+                {
+                    Debug.LogError($"[GameSessionManager] Failed to start loading WinScreen scene! Status: {status}");
+                    Debug.LogError("[GameSessionManager] Make sure WinScreen scene is added to Build Settings!");
+                }
+            }
+            else
+            {
+                Debug.LogError("[GameSessionManager] NetworkManager.SceneManager is null!");
+            }
+        }
+
+        /// <summary>
+        /// Called when a scene load completes for a client.
+        /// </summary>
+        private void OnSceneLoadComplete(ulong clientId, string sceneName, LoadSceneMode loadSceneMode)
+        {
+            Debug.Log($"[GameSessionManager] Scene '{sceneName}' loaded for client {clientId}");
+        }
+
+        /// <summary>
+        /// SERVER RPC: Request return to lobby. Called from win screen button.
+        /// </summary>
+        [Rpc(SendTo.Server)]
+        public void ReturnToLobbyServerRpc(RpcParams rpcParams = default)
+        {
+            if (CurrentPhase.Value != MatchPhase.PostMatch)
+            {
+                Debug.LogWarning("[GameSessionManager] ReturnToLobby called but not in PostMatch");
+                return;
+            }
+            
+            Debug.Log("[GameSessionManager] Returning to lobby (requested by client)...");
+            PerformReturnToLobby();
+        }
+
+        /// <summary>
+        /// Performs the actual return to lobby logic.
+        /// </summary>
+        private void PerformReturnToLobby()
+        {
+            if (!IsServer) return;
             
             // Reset all players for next round
             for (int i = 0; i < Players.Count; i++)
@@ -429,39 +712,99 @@ namespace Kavkazim.Netcode
                 Players[i] = player;
             }
             
-            // Show post-match results briefly
-            CurrentPhase.Value = MatchPhase.PostMatch;
+            // Reset win result
+            WinResult.Value = WinResultData.Empty;
             
-            // Return to lobby after delay
-            StartCoroutine(ReturnToLobbyCoroutine());
+            // Return to lobby phase
+            CurrentPhase.Value = MatchPhase.LobbyOpen;
+            
+            // Load GameSession scene (lobby) for all clients
+            if (NetworkManager.SceneManager != null)
+            {
+                Debug.Log("[GameSessionManager] Loading GameSession scene (lobby)...");
+                NetworkManager.SceneManager.LoadScene("GameSession", LoadSceneMode.Single);
+            }
+            else
+            {
+                Debug.LogError("[GameSessionManager] NetworkManager.SceneManager is null!");
+            }
+        }
+
+        /// <summary>
+        /// Check all win conditions and end match if one is met.
+        /// Server only.
+        /// </summary>
+        public void CheckWinConditions()
+        {
+            if (!IsServer) return;
+            if (CurrentPhase.Value != MatchPhase.MatchInProgress) return;
+            
+            var snapshot = BuildGameSnapshot();
+            
+            if (_winEvaluator.TryEvaluate(snapshot, out var result))
+            {
+                Debug.Log($"[GameSessionManager] Win condition met: {result.WinningTeamEnum}");
+                EndMatch(result);
+            }
+        }
+
+        /// <summary>
+        /// Builds a GameSnapshot from current player state.
+        /// </summary>
+        public GameSnapshot BuildGameSnapshot()
+        {
+            var playerSnapshots = new List<PlayerSnapshot>();
+            
+            // Find all PlayerAvatars to get their alive state and roles
+            if (NetworkManager.SpawnManager != null)
+            {
+                foreach (var netObj in NetworkManager.SpawnManager.SpawnedObjects.Values)
+                {
+                    var avatar = netObj.GetComponent<PlayerAvatar>();
+                    if (avatar == null) continue;
+                    
+                    var playerState = netObj.GetComponent<PlayerState>();
+                    if (playerState == null) continue;
+                    
+                    // Get player name from session data
+                    string playerName = $"Player {avatar.OwnerClientId}";
+                    if (TryGetPlayer(avatar.OwnerClientId, out var sessionData))
+                    {
+                        playerName = sessionData.PlayerName.ToString();
+                    }
+                    
+                    // Convert PlayerRoleType to Team
+                    var team = avatar.GetTrueRole() == PlayerRoleType.Kavkazi 
+                        ? TeamEnum.Kavkazi 
+                        : TeamEnum.Innocent;
+                    
+                    playerSnapshots.Add(new PlayerSnapshot(
+                        avatar.OwnerClientId,
+                        playerName,
+                        team,
+                        playerState.IsAlive.Value
+                    ));
+                }
+            }
+            
+            return new GameSnapshot(playerSnapshots);
         }
 
         // ========== HELPER METHODS ==========
 
-        private LobbySettings ValidateSettings(LobbySettings s)
+        private void ValidateAndClampSettings()
         {
-            // Clamp to valid ranges
-            s.MaxPlayers = Mathf.Clamp(s.MaxPlayers, 4, 15);
-            s.KavkaziCount = Mathf.Clamp(s.KavkaziCount, 1, 3);
-            s.VotingTime = Mathf.Clamp(s.VotingTime, 30f, 180f);
-            s.MoveSpeed = Mathf.Clamp(s.MoveSpeed, 0.5f, 5f);
-            s.KillCooldown = Mathf.Clamp(s.KillCooldown, 5f, 60f);
-            s.MissionsPerInnocent = Mathf.Clamp(s.MissionsPerInnocent, 1, 10);
+            if (!IsServer) return;
             
-            // Kavkazi count must be less than current player count (if any)
-            int currentPlayerCount = GetEligiblePlayerCount();
-            if (currentPlayerCount > 0 && s.KavkaziCount >= currentPlayerCount)
+            var ctx = new LobbyRuntimeContext { CurrentPlayerCount = Players.Count };
+            var currentSettings = Settings.Value;
+            var sanitized = _lobbyValidator.Sanitize(currentSettings, ctx);
+            
+            if (!sanitized.Equals(currentSettings))
             {
-                s.KavkaziCount = Mathf.Max(1, currentPlayerCount - 1);
+                Debug.Log("[GameSessionManager] Auto-clamping settings due to player count change...");
+                Settings.Value = sanitized;
             }
-            
-            // MaxPlayers cannot go below current connected count
-            if (s.MaxPlayers < Players.Count)
-            {
-                s.MaxPlayers = Players.Count;
-            }
-            
-            return s;
         }
 
         /// <summary>
@@ -590,6 +933,82 @@ namespace Kavkazim.Netcode
                 EndMatch();
             }
         }
+
+        [ContextMenu("Debug: Force Kavkazi Win")]
+        private void DebugForceKavkaziWin()
+        {
+            if (Application.isPlaying && IsServer && CurrentPhase.Value == MatchPhase.MatchInProgress)
+            {
+                var snapshot = BuildGameSnapshot();
+                var result = WinConditions.WinResult.FromSnapshot(snapshot, TeamEnum.Kavkazi, "debug_forced");
+                Debug.Log("[GameSessionManager] DEBUG: Forcing Kavkazi win");
+                EndMatch(result);
+            }
+        }
+
+        [ContextMenu("Debug: Force Innocent Win")]
+        private void DebugForceInnocentWin()
+        {
+            if (Application.isPlaying && IsServer && CurrentPhase.Value == MatchPhase.MatchInProgress)
+            {
+                var snapshot = BuildGameSnapshot();
+                var result = WinConditions.WinResult.FromSnapshot(snapshot, TeamEnum.Innocent, "debug_forced");
+                Debug.Log("[GameSessionManager] DEBUG: Forcing Innocent win");
+                EndMatch(result);
+            }
+        }
+
+        [ContextMenu("Debug: Check Win Conditions")]
+        private void DebugCheckWinConditions()
+        {
+            if (Application.isPlaying && IsServer)
+            {
+                var snapshot = BuildGameSnapshot();
+                Debug.Log($"=== Game Snapshot ===");
+                Debug.Log($"  Alive Kavkazi: {snapshot.AliveKavkaziCount}");
+                Debug.Log($"  Alive Innocent: {snapshot.AliveInnocentCount}");
+                Debug.Log($"  Total Alive: {snapshot.TotalAliveCount}");
+                
+                if (_winEvaluator.TryEvaluate(snapshot, out var result))
+                {
+                    Debug.Log($"  WIN DETECTED: {result.WinningTeamEnum} - {result.ReasonKey}");
+                }
+                else
+                {
+                    Debug.Log($"  No win condition met");
+                }
+            }
+        }
 #endif
+
+        /// <summary>
+        /// Gets a unique suffix for ParrelSync clones to prevent PlayerPrefs sharing.
+        /// </summary>
+        private static string GetParrelSyncSuffix()
+        {
+#if UNITY_EDITOR
+            try
+            {
+                var clonesManagerType = System.Type.GetType("ParrelSync.ClonesManager, ParrelSync");
+                if (clonesManagerType != null)
+                {
+                    var isCloneMethod = clonesManagerType.GetMethod("IsClone", 
+                        System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static);
+                    if (isCloneMethod != null && (bool)isCloneMethod.Invoke(null, null))
+                    {
+                        var getArgMethod = clonesManagerType.GetMethod("GetArgument", 
+                            System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static);
+                        string arg = getArgMethod?.Invoke(null, null) as string ?? "";
+                        return string.IsNullOrEmpty(arg) ? "_clone" : $"_clone{arg}";
+                    }
+                }
+            }
+            catch
+            {
+                // ParrelSync not available
+            }
+#endif
+            return "";
+        }
     }
 }

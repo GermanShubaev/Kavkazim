@@ -4,6 +4,7 @@ using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
+using Kavkazim.Netcode.Validation;
 
 namespace UI
 {
@@ -48,6 +49,10 @@ namespace UI
         private Text _killCooldownValue;
         private Text _missionsValue;
         
+        // Validation UI
+        private Text _validationErrorText;
+        private LobbyValidator _validator;
+
         // Buttons
         private Button _startGameButton;
         private Button _readyButton;
@@ -127,6 +132,7 @@ namespace UI
         private void CreateUI()
         {
             _roundedSprite = CreateRoundedRectSprite(64, 8);
+            _validator = new LobbyValidator();
 
             // Ensure EventSystem exists
             if (FindFirstObjectByType<UnityEngine.EventSystems.EventSystem>() == null)
@@ -190,6 +196,12 @@ namespace UI
 
             // Update room code display
             UpdateRoomCode();
+            
+            // Validation Error Text - Bottom center of lobby, above buttons
+            _validationErrorText = CreateText(_lobbyPanel.transform, "ValidationError", "", 16, FontStyle.Bold, 
+                new Vector2(0.2f, 0.12f), new Vector2(0.8f, 0.18f), Vector2.zero).GetComponent<Text>();
+            _validationErrorText.color = new Color(1f, 0.4f, 0.4f); // Red
+            _validationErrorText.alignment = TextAnchor.MiddleCenter;
         }
 
         private void CreatePlayerListPanel()
@@ -537,6 +549,9 @@ namespace UI
             _moveSpeedValue.text = settings.MoveSpeed.ToString("F1");
             _killCooldownValue.text = settings.KillCooldown.ToString("F0");
             _missionsValue.text = settings.MissionsPerInnocent.ToString();
+            
+            // Update player list header because MaxPlayers might have changed
+            RefreshPlayerList();
 
             // Update slider interactability
             UpdateSliderInteractability();
@@ -629,6 +644,38 @@ namespace UI
             if (_moveSpeedSlider != null) _moveSpeedSlider.interactable = canEdit;
             if (_killCooldownSlider != null) _killCooldownSlider.interactable = canEdit;
             if (_missionsSlider != null) _missionsSlider.interactable = canEdit;
+            
+            CheckValidation();
+        }
+        
+        private void CheckValidation()
+        {
+            if (GameSessionManager.Instance == null) return;
+            
+            // Run validation
+            var ctx = new LobbyRuntimeContext { CurrentPlayerCount = GameSessionManager.Instance.GetEligiblePlayerCount() };
+            var result = _validator.Validate(GameSessionManager.Instance.Settings.Value, ctx);
+            
+            if (!result.IsValid)
+            {
+                if (_validationErrorText != null)
+                {
+                     _validationErrorText.text = "Error: " + result.Errors[0].Message;
+                }
+                if (_startGameButton != null && _isHost)
+                {
+                    _startGameButton.interactable = false;
+                }
+            }
+            else
+            {
+                if (_validationErrorText != null) _validationErrorText.text = "";
+                // Re-evaluate normal start conditions (ready checks, etc.)
+                if (_startGameButton != null && _isHost)
+                {
+                     _startGameButton.interactable = CanStartGame();
+                }
+            }
         }
 
         private bool CanStartGame()
@@ -666,6 +713,29 @@ namespace UI
                 KillCooldown = _killCooldownSlider.value,
                 MissionsPerInnocent = Mathf.RoundToInt(_missionsSlider.value)
             };
+            
+            // Sanitize locally to prevent visual desync (Server keeps old value, Client sees new invalid value)
+            var ctx = new LobbyRuntimeContext { CurrentPlayerCount = GameSessionManager.Instance.GetEligiblePlayerCount() };
+            var sanitized = _validator.Sanitize(settings, ctx);
+            
+            if (!sanitized.Equals(settings))
+            {
+                // Settings were clamped. Update local UI immediately to reflect this.
+                settings = sanitized;
+                
+                // Temporarily remove listeners to prevent loop (though strictly not needed if we just set value)
+                // But RefreshSettings does simply set values.
+                // We'll just manually update sliders to match clamped match.
+                SetSliderWithoutNotify(_maxPlayersSlider, settings.MaxPlayers);
+                SetSliderWithoutNotify(_kavkaziCountSlider, settings.KavkaziCount);
+                SetSliderWithoutNotify(_votingTimeSlider, settings.VotingTime);
+                SetSliderWithoutNotify(_moveSpeedSlider, settings.MoveSpeed);
+                SetSliderWithoutNotify(_killCooldownSlider, settings.KillCooldown);
+                SetSliderWithoutNotify(_missionsSlider, settings.MissionsPerInnocent);
+                
+                // Use the clamped values for display
+                RefreshSettings(); 
+            }
 
             GameSessionManager.Instance.UpdateSettingsServerRpc(settings);
         }
