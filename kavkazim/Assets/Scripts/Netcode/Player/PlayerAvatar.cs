@@ -74,7 +74,9 @@ namespace Kavkazim.Netcode
                 if (string.IsNullOrEmpty(PlayerName.Value.ToString()))
                 {
                     // Get name from PlayerPrefs (set during MainMenu connect)
-                    string pName = PlayerPrefs.GetString("PlayerName", "");
+                    // Use unique key for ParrelSync clones
+                    string prefsKey = "PlayerName" + GetParrelSyncSuffix();
+                    string pName = PlayerPrefs.GetString(prefsKey, "");
                     
                     // Fallback to Auth service if PlayerPrefs is empty
                     if (string.IsNullOrEmpty(pName))
@@ -278,6 +280,36 @@ namespace Kavkazim.Netcode
             Vector3 desiredPos = transform.position + cameraOffset;
             Vector3 smoothedPos = Vector3.Lerp(_mainCamera.transform.position, desiredPos, cameraSmoothSpeed * Time.deltaTime);
             _mainCamera.transform.position = smoothedPos;
+        }
+        
+        /// <summary>
+        /// Gets a unique suffix for ParrelSync clones to prevent PlayerPrefs sharing.
+        /// </summary>
+        private static string GetParrelSyncSuffix()
+        {
+#if UNITY_EDITOR
+            try
+            {
+                var clonesManagerType = System.Type.GetType("ParrelSync.ClonesManager, ParrelSync");
+                if (clonesManagerType != null)
+                {
+                    var isCloneMethod = clonesManagerType.GetMethod("IsClone", 
+                        System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static);
+                    if (isCloneMethod != null && (bool)isCloneMethod.Invoke(null, null))
+                    {
+                        var getArgMethod = clonesManagerType.GetMethod("GetArgument", 
+                            System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static);
+                        string arg = getArgMethod?.Invoke(null, null) as string ?? "";
+                        return string.IsNullOrEmpty(arg) ? "_clone" : $"_clone{arg}";
+                    }
+                }
+            }
+            catch
+            {
+                // ParrelSync not available
+            }
+#endif
+            return "";
         }
     }
 }
