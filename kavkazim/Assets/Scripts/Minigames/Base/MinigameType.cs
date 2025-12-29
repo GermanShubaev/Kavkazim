@@ -13,6 +13,7 @@ namespace Minigames
         WolfClick,
         TakedownClick,
         ShashlikSort,
+        RemoteCommonClick,
         Game4,
         Game5,
         Game6,
