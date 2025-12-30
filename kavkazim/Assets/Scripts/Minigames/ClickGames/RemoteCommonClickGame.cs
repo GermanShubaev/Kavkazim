@@ -16,13 +16,13 @@ namespace Minigames
         [Header("Remote Settings")]
         [SerializeField] private int minTemperature = 16;
         [SerializeField] private int maxTemperature = 30;
-        [SerializeField] private int startTemperature = 24;
-        [SerializeField] private int targetTemperature = 18;
+        [SerializeField] private int startTemperature = 18;
+        [SerializeField] private int targetTemperature = 25;
         
         [SerializeField] private int minFanSpeed = 1;
         [SerializeField] private int maxFanSpeed = 4;
-        [SerializeField] private int startFanSpeed = 1;
-        [SerializeField] private int targetFanSpeed = 3;
+        [SerializeField] private int startFanSpeed = 4;
+        [SerializeField] private int targetFanSpeed = 1;
 
         [Header("Button Positions (normalized 0-1)")]
         [SerializeField] private Vector2 tempUpButtonPos = new Vector2(0.25f, 0.45f);
@@ -32,8 +32,8 @@ namespace Minigames
         [SerializeField] private Vector2 buttonSize = new Vector2(80, 50);
 
         [Header("Display Positions (normalized 0-1)")]
-        [SerializeField] private Vector2 tempDisplayPos = new Vector2(0.35f, 0.68f);
-        [SerializeField] private Vector2 fanDisplayPos = new Vector2(0.65f, 0.55f);
+        [SerializeField] private Vector2 tempDisplayPos = new Vector2(0.5f, 0.68f);
+        [SerializeField] private Vector2 fanDisplayPos = new Vector2(0.5f, 0.55f);
 
         private Sprite _remoteSprite;
         private Image _remoteImage;
@@ -156,60 +156,47 @@ namespace Minigames
 
         private void CreateTemperatureDisplay()
         {
-            GameObject tempDisplayObj = new GameObject("TemperatureDisplay");
-            tempDisplayObj.transform.SetParent(_contentPanel.transform, false);
-
-            // Background panel for better visibility
-            Image bgImage = tempDisplayObj.AddComponent<Image>();
-            bgImage.color = new Color(0.1f, 0.1f, 0.15f, 0.9f);
-            bgImage.raycastTarget = false;
-
-            RectTransform tempRect = tempDisplayObj.GetComponent<RectTransform>();
-            tempRect.anchorMin = new Vector2(tempDisplayPos.x - 0.08f, tempDisplayPos.y - 0.04f);
-            tempRect.anchorMax = new Vector2(tempDisplayPos.x + 0.08f, tempDisplayPos.y + 0.04f);
-            tempRect.offsetMin = Vector2.zero;
-            tempRect.offsetMax = Vector2.zero;
-
-            // Temperature text
-            GameObject textObj = new GameObject("TempText");
-            textObj.transform.SetParent(tempDisplayObj.transform, false);
+            // Temperature text directly on top of the remote display (no background)
+            GameObject textObj = new GameObject("TemperatureDisplay");
+            textObj.transform.SetParent(_contentPanel.transform, false);
 
             _temperatureText = textObj.AddComponent<Text>();
             _temperatureText.text = $"{_currentTemperature}°C";
             _temperatureText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-            _temperatureText.fontSize = 36;
+            _temperatureText.fontSize = 80;
             _temperatureText.fontStyle = FontStyle.Bold;
             _temperatureText.alignment = TextAnchor.MiddleCenter;
-            _temperatureText.color = new Color(0.3f, 0.9f, 1f); // Cyan-ish LCD color
+            _temperatureText.color = Color.black;
+
+            // Add outline for better visibility
+            Outline outline = textObj.AddComponent<Outline>();
+            outline.effectColor = Color.white;
+            outline.effectDistance = new Vector2(1, 1);
 
             RectTransform textRect = textObj.GetComponent<RectTransform>();
-            textRect.anchorMin = Vector2.zero;
-            textRect.anchorMax = Vector2.one;
+            textRect.anchorMin = new Vector2(tempDisplayPos.x - 0.1f, tempDisplayPos.y - 0.05f);
+            textRect.anchorMax = new Vector2(tempDisplayPos.x + 0.1f, tempDisplayPos.y + 0.05f);
             textRect.offsetMin = Vector2.zero;
             textRect.offsetMax = Vector2.zero;
         }
 
         private void CreateFanSpeedDisplay()
         {
+            // Container for fan speed lines (no background, directly on the photo)
             _fanSpeedContainer = new GameObject("FanSpeedDisplay");
             _fanSpeedContainer.transform.SetParent(_contentPanel.transform, false);
 
-            // Background panel
-            Image bgImage = _fanSpeedContainer.AddComponent<Image>();
-            bgImage.color = new Color(0.1f, 0.1f, 0.15f, 0.9f);
-            bgImage.raycastTarget = false;
-
-            RectTransform containerRect = _fanSpeedContainer.GetComponent<RectTransform>();
-            containerRect.anchorMin = new Vector2(fanDisplayPos.x - 0.08f, fanDisplayPos.y - 0.04f);
-            containerRect.anchorMax = new Vector2(fanDisplayPos.x + 0.08f, fanDisplayPos.y + 0.04f);
+            RectTransform containerRect = _fanSpeedContainer.AddComponent<RectTransform>();
+            containerRect.anchorMin = new Vector2(fanDisplayPos.x - 0.06f, fanDisplayPos.y - 0.03f);
+            containerRect.anchorMax = new Vector2(fanDisplayPos.x + 0.06f, fanDisplayPos.y + 0.03f);
             containerRect.offsetMin = Vector2.zero;
             containerRect.offsetMax = Vector2.zero;
 
-            // Create vertical bars for fan speed
+            // Create thin black vertical lines for fan speed
             _fanSpeedBars = new Image[maxFanSpeed];
-            float barWidth = 0.18f;
-            float spacing = 0.22f;
-            float startX = 0.1f;
+            float barWidth = 0.04f; // Thin lines
+            float spacing = 0.24f;
+            float startX = 0.02f;
 
             for (int i = 0; i < maxFanSpeed; i++)
             {
@@ -217,15 +204,15 @@ namespace Minigames
                 barObj.transform.SetParent(_fanSpeedContainer.transform, false);
 
                 Image barImage = barObj.AddComponent<Image>();
-                barImage.color = new Color(0.2f, 0.2f, 0.25f); // Dim by default
+                barImage.color = new Color(0.7f, 0.7f, 0.7f); // Light gray when inactive
                 barImage.raycastTarget = false;
 
                 RectTransform barRect = barObj.GetComponent<RectTransform>();
                 float xPos = startX + i * spacing;
                 // Make bars progressively taller
-                float height = 0.3f + (i * 0.15f);
-                barRect.anchorMin = new Vector2(xPos, 0.2f);
-                barRect.anchorMax = new Vector2(xPos + barWidth, 0.2f + height);
+                float height = 0.4f + (i * 0.15f);
+                barRect.anchorMin = new Vector2(xPos, 0.1f);
+                barRect.anchorMax = new Vector2(xPos + barWidth, 0.1f + height);
                 barRect.offsetMin = Vector2.zero;
                 barRect.offsetMax = Vector2.zero;
 
@@ -362,14 +349,14 @@ namespace Minigames
             {
                 _temperatureText.text = $"{_currentTemperature}°C";
                 
-                // Color feedback - green when at target
+                // Color feedback - green when at target, black otherwise
                 if (_currentTemperature == targetTemperature)
                     _temperatureText.color = Color.green;
                 else
-                    _temperatureText.color = new Color(0.3f, 0.9f, 1f);
+                    _temperatureText.color = Color.black;
             }
 
-            // Update fan speed display (vertical bars)
+            // Update fan speed display (thin black vertical lines)
             if (_fanSpeedBars != null)
             {
                 for (int i = 0; i < _fanSpeedBars.Length; i++)
@@ -378,16 +365,16 @@ namespace Minigames
                     {
                         if (i < _currentFanSpeed)
                         {
-                            // Active bar
+                            // Active bar - black (or green when at target)
                             if (_currentFanSpeed == targetFanSpeed)
                                 _fanSpeedBars[i].color = Color.green;
                             else
-                                _fanSpeedBars[i].color = new Color(0.3f, 0.9f, 1f);
+                                _fanSpeedBars[i].color = Color.black;
                         }
                         else
                         {
-                            // Inactive bar
-                            _fanSpeedBars[i].color = new Color(0.2f, 0.2f, 0.25f);
+                            // Inactive bar - light gray
+                            _fanSpeedBars[i].color = new Color(0.7f, 0.7f, 0.7f);
                         }
                     }
                 }

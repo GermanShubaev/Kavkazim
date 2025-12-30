@@ -23,6 +23,7 @@ namespace Minigames
         [SerializeField] private int numberOfSlots = 5;
         [SerializeField] private Vector2 ingredientSize = new Vector2(100, 100);
         [SerializeField] private float ingredientSpacing = 120f;
+        [SerializeField] private int totalRounds = 3;
 
         private GameObject _popupWindow;
         private Canvas _canvas;
@@ -46,6 +47,11 @@ namespace Minigames
         private bool _isMemorizationPhase = true;
         private GameObject _memorizationPanel;
         private GameObject _gameplayPanel;
+        
+        // Round tracking
+        private int _currentRound = 1;
+        private Text _roundText;
+        private Text _memorizationRoundText;
 
         public bool IsActive => _popupWindow != null && _popupWindow.activeSelf;
         public GameObject PopupWindow => _popupWindow;
@@ -148,6 +154,9 @@ namespace Minigames
             _memorizationPanel = null;
             _gameplayPanel = null;
             _isMemorizationPhase = true;
+            _currentRound = 1;
+            _roundText = null;
+            _memorizationRoundText = null;
         }
 
         private void CreatePopupWindow()
@@ -218,6 +227,20 @@ namespace Minigames
             panelRect.sizeDelta = Vector2.zero;
             panelRect.anchoredPosition = Vector2.zero;
 
+            // Round indicator
+            GameObject roundObj = new GameObject("RoundText");
+            roundObj.transform.SetParent(_memorizationPanel.transform, false);
+            _memorizationRoundText = roundObj.AddComponent<Text>();
+            _memorizationRoundText.text = $"Round {_currentRound} of {totalRounds}";
+            _memorizationRoundText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            _memorizationRoundText.fontSize = 24;
+            _memorizationRoundText.alignment = TextAnchor.MiddleCenter;
+            _memorizationRoundText.color = Color.cyan;
+            RectTransform roundRect = roundObj.GetComponent<RectTransform>();
+            roundRect.anchorMin = new Vector2(0, 0.92f);
+            roundRect.anchorMax = new Vector2(1, 1);
+            roundRect.sizeDelta = Vector2.zero;
+
             // Title
             GameObject titleObj = new GameObject("Title");
             titleObj.transform.SetParent(_memorizationPanel.transform, false);
@@ -229,8 +252,8 @@ namespace Minigames
             titleText.alignment = TextAnchor.MiddleCenter;
             titleText.color = Color.yellow;
             RectTransform titleRect = titleObj.GetComponent<RectTransform>();
-            titleRect.anchorMin = new Vector2(0, 0.85f);
-            titleRect.anchorMax = new Vector2(1, 0.95f);
+            titleRect.anchorMin = new Vector2(0, 0.82f);
+            titleRect.anchorMax = new Vector2(1, 0.92f);
             titleRect.sizeDelta = Vector2.zero;
 
             // Target skewer to memorize
@@ -251,6 +274,20 @@ namespace Minigames
             panelRect.sizeDelta = Vector2.zero;
             panelRect.anchoredPosition = Vector2.zero;
 
+            // Round indicator
+            GameObject roundObj = new GameObject("RoundText");
+            roundObj.transform.SetParent(_gameplayPanel.transform, false);
+            _roundText = roundObj.AddComponent<Text>();
+            _roundText.text = $"Round {_currentRound} of {totalRounds}";
+            _roundText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            _roundText.fontSize = 24;
+            _roundText.alignment = TextAnchor.MiddleCenter;
+            _roundText.color = Color.cyan;
+            RectTransform roundRect = roundObj.GetComponent<RectTransform>();
+            roundRect.anchorMin = new Vector2(0, 0.92f);
+            roundRect.anchorMax = new Vector2(1, 1);
+            roundRect.sizeDelta = Vector2.zero;
+
             // Title
             GameObject titleObj = new GameObject("Title");
             titleObj.transform.SetParent(_gameplayPanel.transform, false);
@@ -262,8 +299,8 @@ namespace Minigames
             titleText.alignment = TextAnchor.MiddleCenter;
             titleText.color = Color.white;
             RectTransform titleRect = titleObj.GetComponent<RectTransform>();
-            titleRect.anchorMin = new Vector2(0, 0.92f);
-            titleRect.anchorMax = new Vector2(1, 1);
+            titleRect.anchorMin = new Vector2(0, 0.82f);
+            titleRect.anchorMax = new Vector2(1, 0.92f);
             titleRect.sizeDelta = Vector2.zero;
 
             // Result text
@@ -274,6 +311,9 @@ namespace Minigames
 
             // Ingredient buttons (all ingredients)
             CreateIngredientButtons();
+
+            // Go Back button
+            CreateGoBackButton();
         }
 
         private void CreateGoButton()
@@ -322,6 +362,54 @@ namespace Minigames
             _isMemorizationPhase = false;
             _memorizationPanel.SetActive(false);
             _gameplayPanel.SetActive(true);
+        }
+
+        private void CreateGoBackButton()
+        {
+            GameObject goBackObj = new GameObject("GoBackButton");
+            goBackObj.transform.SetParent(_gameplayPanel.transform, false);
+
+            Image btnImage = goBackObj.AddComponent<Image>();
+            btnImage.color = new Color(0.3f, 0.5f, 0.8f, 1f);
+
+            Button goBackButton = goBackObj.AddComponent<Button>();
+            goBackButton.targetGraphic = btnImage;
+
+            ColorBlock colors = goBackButton.colors;
+            colors.normalColor = new Color(0.3f, 0.5f, 0.8f, 1f);
+            colors.highlightedColor = new Color(0.4f, 0.6f, 0.9f, 1f);
+            colors.pressedColor = new Color(0.2f, 0.4f, 0.6f, 1f);
+            goBackButton.colors = colors;
+
+            RectTransform btnRect = goBackObj.GetComponent<RectTransform>();
+            btnRect.anchorMin = new Vector2(0.02f, 0.92f);
+            btnRect.anchorMax = new Vector2(0.15f, 0.98f);
+            btnRect.sizeDelta = Vector2.zero;
+            btnRect.anchoredPosition = Vector2.zero;
+
+            // Text
+            GameObject textObj = new GameObject("Text");
+            textObj.transform.SetParent(goBackObj.transform, false);
+            Text goBackText = textObj.AddComponent<Text>();
+            goBackText.text = "← Back";
+            goBackText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            goBackText.fontSize = 18;
+            goBackText.fontStyle = FontStyle.Bold;
+            goBackText.alignment = TextAnchor.MiddleCenter;
+            goBackText.color = Color.white;
+            RectTransform textRect = textObj.GetComponent<RectTransform>();
+            textRect.anchorMin = Vector2.zero;
+            textRect.anchorMax = Vector2.one;
+            textRect.sizeDelta = Vector2.zero;
+
+            goBackButton.onClick.AddListener(OnGoBackClicked);
+        }
+
+        private void OnGoBackClicked()
+        {
+            _isMemorizationPhase = true;
+            _gameplayPanel.SetActive(false);
+            _memorizationPanel.SetActive(true);
         }
 
         private void CreateTargetSkewerInPanel(GameObject parent, float yMin, float yMax)
@@ -653,12 +741,26 @@ namespace Minigames
 
             if (correct)
             {
-                if (_resultText != null)
+                if (_currentRound >= totalRounds)
                 {
-                    _resultText.text = "Perfect! Delicious Shashlik!";
-                    _resultText.color = Color.green;
+                    // All rounds complete!
+                    if (_resultText != null)
+                    {
+                        _resultText.text = "All rounds complete! Master Chef!";
+                        _resultText.color = Color.green;
+                    }
+                    StartCoroutine(CloseAfterDelay(2f));
                 }
-                StartCoroutine(CloseAfterDelay(2f));
+                else
+                {
+                    // Move to next round
+                    if (_resultText != null)
+                    {
+                        _resultText.text = $"Round {_currentRound} complete! Get ready...";
+                        _resultText.color = Color.green;
+                    }
+                    StartCoroutine(StartNextRound());
+                }
             }
             else
             {
@@ -668,6 +770,61 @@ namespace Minigames
                     _resultText.color = Color.red;
                 }
             }
+        }
+
+        private System.Collections.IEnumerator StartNextRound()
+        {
+            yield return new WaitForSeconds(1.5f);
+
+            _currentRound++;
+            
+            // Clear player's sequence and slots
+            _playerSequence.Clear();
+            foreach (var slot in _playerSkewerSlots)
+            {
+                if (slot != null)
+                {
+                    slot.sprite = null;
+                    slot.color = new Color(1, 1, 1, 0);
+                }
+            }
+
+            // Clear result text
+            if (_resultText != null)
+                _resultText.text = "";
+
+            // Update round indicators
+            UpdateRoundIndicators();
+
+            // Generate new target sequence
+            GenerateTargetSequence();
+
+            // Rebuild the memorization panel with new skewer
+            RebuildMemorizationSkewer();
+
+            // Switch back to memorization phase
+            _isMemorizationPhase = true;
+            _gameplayPanel.SetActive(false);
+            _memorizationPanel.SetActive(true);
+        }
+
+        private void UpdateRoundIndicators()
+        {
+            if (_roundText != null)
+                _roundText.text = $"Round {_currentRound} of {totalRounds}";
+            if (_memorizationRoundText != null)
+                _memorizationRoundText.text = $"Round {_currentRound} of {totalRounds}";
+        }
+
+        private void RebuildMemorizationSkewer()
+        {
+            // Find and destroy the old skewer container
+            Transform oldSkewer = _memorizationPanel.transform.Find("TargetSkewerContainer");
+            if (oldSkewer != null)
+                Destroy(oldSkewer.gameObject);
+
+            // Create new skewer with new ingredients
+            CreateTargetSkewerInPanel(_memorizationPanel, 0.35f, 0.75f);
         }
 
         private System.Collections.IEnumerator CloseAfterDelay(float delay)

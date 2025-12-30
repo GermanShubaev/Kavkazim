@@ -1,10 +1,8 @@
 using System.Collections.Generic;
-using System.Linq;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
 using Kavkazim.UI;
-using Minigames;
 #if UNITY_EDITOR
 using UnityEditor;
 #endif

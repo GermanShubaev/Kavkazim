@@ -342,16 +342,12 @@ namespace Minigames
     /// </summary>
     public class ClickableStain : MonoBehaviour, IPointerClickHandler
     {
-        private int _index;
         private ClickGame _game;
-        private ClickGame.StainData _data;
         private bool _isRemoved = false;
 
         public void Initialize(int index, ClickGame game, ClickGame.StainData data)
         {
-            _index = index;
             _game = game;
-            _data = data;
         }
 
         public void OnPointerClick(PointerEventData eventData)
@@ -362,9 +358,6 @@ namespace Minigames
             _isRemoved = true;
             _game.OnStainClicked(this);
         }
-
-        public int GetIndex() => _index;
-        public ClickGame.StainData GetData() => _data;
     }
 }
 
