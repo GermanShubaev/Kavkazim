@@ -470,29 +470,6 @@ namespace UI
             }
         }
 
-        /// <summary>
-        /// Handles E key input to trigger emergency meeting.
-        /// </summary>
-        private void HandleEmergencyButtonInput()
-        {
-            if (_localPlayerState == null)
-                return;
-
-            // Only process input if player is alive
-            if (!_localPlayerState.IsAlive.Value)
-                return;
-
-            // E key to use emergency button
-            if (Input.GetKeyDown(KeyCode.E))
-            {
-                // Try to use emergency button if available
-                if (EmergencyButton.Instance != null)
-                {
-                    EmergencyButton.Instance.TryCallEmergencyMeeting(_localPlayerState);
-                }
-            }
-        }
-
         private void TogglePanel()
         {
             _isPanelOpen = !_isPanelOpen;
