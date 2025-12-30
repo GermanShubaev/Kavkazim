@@ -260,9 +260,11 @@ namespace UI
                 await _auth.SignInAnonymouslyAsync(nameInput.text);
 
                 // Save player name to PlayerPrefs for lobby system
+                // Use unique key for ParrelSync clones to prevent shared names
                 string playerName = nameInput.text.Trim();
                 if (string.IsNullOrEmpty(playerName)) playerName = "Player";
-                PlayerPrefs.SetString("PlayerName", playerName);
+                string prefsKey = "PlayerName" + GetParrelSyncSuffix();
+                PlayerPrefs.SetString(prefsKey, playerName);
                 PlayerPrefs.Save();
 
                 bool ok = await _bootstrap.HostWithRelayAsync("Kavkazim Lobby", 10);
@@ -294,9 +296,11 @@ namespace UI
                 await _auth.SignInAnonymouslyAsync(nameInput.text);
 
                 // Save player name to PlayerPrefs for lobby system.
+                // Use unique key for ParrelSync clones to prevent shared names
                 string playerName = nameInput.text.Trim();
                 if (string.IsNullOrEmpty(playerName)) playerName = "Player";
-                PlayerPrefs.SetString("PlayerName", playerName);
+                string prefsKey = "PlayerName" + GetParrelSyncSuffix();
+                PlayerPrefs.SetString(prefsKey, playerName);
                 PlayerPrefs.Save();
                 
                 // Set connection data to include player name for duplicate validation
@@ -389,6 +393,37 @@ namespace UI
             nameInput.interactable = state;
             hostButton.interactable = state;
             quickJoinButton.interactable = state;
+        }
+        
+        /// <summary>
+        /// Gets a unique suffix for ParrelSync clones to prevent PlayerPrefs sharing.
+        /// Uses reflection to avoid compile errors when ParrelSync is not installed.
+        /// </summary>
+        private static string GetParrelSyncSuffix()
+        {
+#if UNITY_EDITOR
+            try
+            {
+                var clonesManagerType = System.Type.GetType("ParrelSync.ClonesManager, ParrelSync");
+                if (clonesManagerType != null)
+                {
+                    var isCloneMethod = clonesManagerType.GetMethod("IsClone", 
+                        System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static);
+                    if (isCloneMethod != null && (bool)isCloneMethod.Invoke(null, null))
+                    {
+                        var getArgMethod = clonesManagerType.GetMethod("GetArgument", 
+                            System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static);
+                        string arg = getArgMethod?.Invoke(null, null) as string ?? "";
+                        return string.IsNullOrEmpty(arg) ? "_clone" : $"_clone{arg}";
+                    }
+                }
+            }
+            catch
+            {
+                // ParrelSync not available - use default key
+            }
+#endif
+            return "";
         }
     }
 }

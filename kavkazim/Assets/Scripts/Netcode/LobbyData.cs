@@ -132,4 +132,95 @@ namespace Kavkazim.Netcode
         public override string ToString() => 
             $"{PlayerName} (Client {ClientId}){(IsHost ? " [HOST]" : "")}{(IsReady ? " ✓" : "")}{(JoinedDuringMatch ? " [WAITING]" : "")}";
     }
+
+    /// <summary>
+    /// Network-serializable win result for broadcasting game outcomes.
+    /// </summary>
+    [Serializable]
+    public struct WinResultData : INetworkSerializable, IEquatable<WinResultData>
+    {
+        /// <summary>The winning team (0=None, 1=Innocent, 2=Kavkazi).</summary>
+        public byte WinningTeam;
+        
+        /// <summary>
+        /// Serialized winner names as comma-separated string.
+        /// Max 512 bytes for network efficiency.
+        /// </summary>
+        public FixedString512Bytes WinnerNames;
+        
+        /// <summary>
+        /// Reason key for UI display.
+        /// Examples: "imposter_majority", "all_imposters_eliminated"
+        /// </summary>
+        public FixedString64Bytes ReasonKey;
+        
+        /// <summary>True if game has ended (prevents re-triggering).</summary>
+        public bool HasEnded;
+
+        /// <summary>Creates an empty/default win result.</summary>
+        public static WinResultData Empty => new WinResultData
+        {
+            WinningTeam = 0,
+            WinnerNames = "",
+            ReasonKey = "",
+            HasEnded = false
+        };
+
+        public void NetworkSerialize<T>(BufferSerializer<T> serializer) where T : IReaderWriter
+        {
+            serializer.SerializeValue(ref WinningTeam);
+            serializer.SerializeValue(ref WinnerNames);
+            serializer.SerializeValue(ref ReasonKey);
+            serializer.SerializeValue(ref HasEnded);
+        }
+
+        public bool Equals(WinResultData other) =>
+            WinningTeam == other.WinningTeam &&
+            WinnerNames.Equals(other.WinnerNames) &&
+            ReasonKey.Equals(other.ReasonKey) &&
+            HasEnded == other.HasEnded;
+
+        public override bool Equals(object obj) => obj is WinResultData other && Equals(other);
+        
+        public override int GetHashCode() => HashCode.Combine(WinningTeam, HasEnded);
+        
+        /// <summary>
+        /// Parses winner names from the comma-separated string.
+        /// </summary>
+        public string[] GetWinnerNamesList()
+        {
+            string names = WinnerNames.ToString();
+            if (string.IsNullOrEmpty(names)) return System.Array.Empty<string>();
+            return names.Split(',');
+        }
+        
+        /// <summary>
+        /// Gets display text for the winning team.
+        /// </summary>
+        public string GetWinningTeamDisplay()
+        {
+            return WinningTeam switch
+            {
+                1 => "Innocents",
+                2 => "Kavkazis",
+                _ => "Unknown"
+            };
+        }
+        
+        /// <summary>
+        /// Gets localized reason text (basic implementation).
+        /// </summary>
+        public string GetReasonDisplay()
+        {
+            string key = ReasonKey.ToString();
+            return key switch
+            {
+                "imposter_majority" => "Kavkazis achieved majority!",
+                "all_imposters_eliminated" => "All Kavkazis have been eliminated!",
+                "missions_complete" => "All missions completed!",
+                "sabotage" => "Critical sabotage successful!",
+                _ => key
+            };
+        }
+    }
 }

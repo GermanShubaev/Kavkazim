@@ -6,9 +6,12 @@ Main Menu
 Game
 1.Movement
 2.Kill ability 
+3. Winning screen and logic - TODO
+4.Movement fix bugs - TODO
 
 Todo
 	Create 2d map - Amir
+	Animation to players - TODO
 Crewmate :
 	Create 8 mini games - Amir
 	Progress bar
@@ -19,3 +22,6 @@ Voting System :
 	
 Impostor :
 Kill turns into ghost instead of kick - German
+
+UI Lobby:
+	bug fixes / create Lobby as seperate scene
