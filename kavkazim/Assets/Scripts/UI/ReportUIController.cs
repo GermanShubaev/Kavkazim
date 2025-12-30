@@ -4,7 +4,7 @@ using Netcode.Player;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace UI
+namespace Kavkazim.UI
 {
     /// <summary>
     /// Controls the Report UI icon display.
@@ -131,15 +131,18 @@ namespace UI
 
             _reportContainer.SetActive(true);
 
+            // Check if player has already reported this game
+            bool hasUsedReport = ReportService.HasPlayerReported(playerState.OwnerClientId);
+            
             // Check if there's something reportable in range (body OR emergency button)
-            bool canReport = ReportService.HasReportableInRange(playerState.transform.position);
+            bool canReport = !hasUsedReport && ReportService.HasReportableInRange(playerState.transform.position);
 
-            // Visual feedback: orange when can report, gray when not
+            // Visual feedback: orange when can report, gray when not (or already reported)
             if (_reportFill != null)
             {
                 _reportFill.color = canReport 
                     ? new Color(1f, 0.6f, 0f, 0.9f)   // Orange - can report
-                    : new Color(0.4f, 0.4f, 0.4f, 0.6f); // Gray - nothing to report
+                    : new Color(0.4f, 0.4f, 0.4f, 0.6f); // Gray - nothing to report / used report
             }
         }
 

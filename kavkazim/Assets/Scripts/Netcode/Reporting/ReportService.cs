@@ -102,7 +102,7 @@ namespace Kavkazim.Netcode.Reporting
             if (nearestBody != null)
             {
                 // Report the dead body
-                nearestBody.RequestReportServerRpc(reporterName, reporter.OwnerClientId);
+                nearestBody.RequestReportServerRpc();
                 return;
             }
             

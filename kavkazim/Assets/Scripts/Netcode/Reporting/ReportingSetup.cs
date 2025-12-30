@@ -79,6 +79,13 @@ namespace Kavkazim.Netcode.Reporting
                 Debug.Log("[ReportingSetup] Created DeadBodySpawner.");
             }
 
+            // Apply configuration
+            if (config != null)
+            {
+                ReportService.SetReportRange(config.reportRange);
+                DeadBody.SetReportRange(config.reportRange);
+            }
+
             Debug.Log("[ReportingSetup] Reporting systems initialized successfully.");
         }
 

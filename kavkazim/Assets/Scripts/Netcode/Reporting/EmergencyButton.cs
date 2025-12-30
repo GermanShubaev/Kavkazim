@@ -40,12 +40,13 @@ namespace Kavkazim.Netcode.Reporting
             _instance = this;
         }
 
-        private void OnDestroy()
+        public override void OnDestroy()
         {
             if (_instance == this)
             {
                 _instance = null;
             }
+            base.OnDestroy();
         }
 
         /// <summary>
@@ -105,25 +106,19 @@ namespace Kavkazim.Netcode.Reporting
                 return;
             }
 
-            // Get caller name
-            string callerName = $"Player {caller.OwnerClientId}";
-            PlayerAvatar avatar = caller.GetComponent<PlayerAvatar>();
-            if (avatar != null && !string.IsNullOrEmpty(avatar.PlayerName.Value.ToString()))
-            {
-                callerName = avatar.PlayerName.Value.ToString();
-            }
-
-            // Send RPC to server
-            RequestEmergencyMeetingServerRpc(callerName, caller.OwnerClientId);
+            // Send RPC to server (name resolved server-side)
+            RequestEmergencyMeetingServerRpc();
         }
 
         /// <summary>
         /// Server RPC to request an emergency meeting.
+        /// Allow any client to call this (Everyone permission).
         /// </summary>
-        [Rpc(SendTo.Server)]
-        private void RequestEmergencyMeetingServerRpc(string callerName, ulong callerClientId)
+        [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Everyone)]
+        private void RequestEmergencyMeetingServerRpc(RpcParams rpcParams = default)
         {
-            Debug.Log($"[EmergencyButton] SERVER: Received emergency meeting request from {callerName}");
+            ulong callerClientId = rpcParams.Receive.SenderClientId;
+            Debug.Log($"[EmergencyButton] SERVER: Received emergency meeting request from ClientID: {callerClientId}");
 
             // Check if player has already reported this game
             if (ReportService.HasPlayerReported(callerClientId))
@@ -162,6 +157,14 @@ namespace Kavkazim.Netcode.Reporting
                 return;
             }
 
+            // Resolve name server-side
+            string callerName = $"Player {callerClientId}";
+            var avatar = caller.GetComponent<PlayerAvatar>();
+            if (avatar != null && !string.IsNullOrEmpty(avatar.PlayerName.Value.ToString()))
+            {
+                callerName = avatar.PlayerName.Value.ToString();
+            }
+
             // Mark player as having reported (one report per game)
             ReportService.MarkPlayerAsReported(callerClientId);
 
@@ -170,20 +173,24 @@ namespace Kavkazim.Netcode.Reporting
             _isOnCooldown.Value = true;
 
             // Announce to all clients
-            AnnounceEmergencyMeetingClientRpc(callerName);
+            AnnounceEmergencyMeetingClientRpc(callerName, callerClientId);
 
             Debug.Log($"[EmergencyButton] SERVER: Emergency meeting validated successfully.");
         }
 
         /// <summary>
         /// Client RPC to announce the emergency meeting.
+        /// Also syncs the "has reported" state to all clients.
         /// </summary>
-        [Rpc(SendTo.ClientsAndHost)]
-        private void AnnounceEmergencyMeetingClientRpc(string callerName)
+        [ClientRpc]
+        private void AnnounceEmergencyMeetingClientRpc(string callerName, ulong callerClientId)
         {
             // Use ReportService for consistent logging
             ReportService.NotifyEmergencyMeeting(callerName);
             OnEmergencyMeetingCalled?.Invoke(callerName);
+            
+            // Mark this player as having reported on all clients
+            ReportService.MarkPlayerAsReported(callerClientId);
         }
 
         private void Update()

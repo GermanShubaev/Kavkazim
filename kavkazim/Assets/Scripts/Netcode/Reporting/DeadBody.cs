@@ -25,6 +25,9 @@ namespace Kavkazim.Netcode.Reporting
         
         // Report range (set from config)
         private static float _reportRange = 2.5f;
+
+        // Cached sprite to avoid excessive allocations
+        private static Sprite _cachedCircleSprite;
         
         // IReportable implementation
         public ulong VictimPlayerId => _victimPlayerId.Value;
@@ -58,8 +61,12 @@ namespace Kavkazim.Netcode.Reporting
             // Create sprite if none assigned
             if (spriteRenderer.sprite == null)
             {
-                spriteRenderer.sprite = CreateCircleSprite(64);
-                Debug.Log("[DeadBody] Created circle sprite.");
+                if (_cachedCircleSprite == null)
+                {
+                    _cachedCircleSprite = CreateCircleSprite(64);
+                    Debug.Log("[DeadBody] Created and cached circle sprite.");
+                }
+                spriteRenderer.sprite = _cachedCircleSprite;
             }
             
             // Set the color
@@ -95,7 +102,7 @@ namespace Kavkazim.Netcode.Reporting
             }
             
             _victimPlayerId.Value = victimPlayerId;
-            _victimName.Value = victimName;
+            _victimName.Value = new FixedString32Bytes(victimName);
             _timeOfDeath.Value = Time.time;
             transform.position = position;
             
@@ -113,11 +120,13 @@ namespace Kavkazim.Netcode.Reporting
         /// <summary>
         /// ServerRpc to request reporting this body.
         /// Called by client via ReportService.
+        /// Allow any client to report (Everyone permission).
         /// </summary>
-        [Rpc(SendTo.Server)]
-        public void RequestReportServerRpc(string reporterName, ulong reporterClientId)
+        [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Everyone)]
+        public void RequestReportServerRpc(RpcParams rpcParams = default)
         {
-            Debug.Log($"[DeadBody] SERVER: Received report request from {reporterName} for body of {VictimName}");
+            ulong reporterClientId = rpcParams.Receive.SenderClientId;
+            Debug.Log($"[DeadBody] SERVER: Received report request from ClientID: {reporterClientId} for body of {VictimName}");
             
             // Validate body is still reportable
             if (_hasBeenReported.Value)
@@ -126,7 +135,7 @@ namespace Kavkazim.Netcode.Reporting
                 return;
             }
             
-            // Find reporter to validate distance
+            // Find reporter to validate distance and get name
             PlayerState reporter = FindPlayerByClientId(reporterClientId);
             if (reporter == null)
             {
@@ -148,12 +157,20 @@ namespace Kavkazim.Netcode.Reporting
                 Debug.LogWarning($"[DeadBody] SERVER: Report rejected - out of range ({distance:F2} > {_reportRange}).");
                 return;
             }
+
+            // Resolve reporter name reliably on server
+            string reporterName = $"Player {reporterClientId}";
+            var avatar = reporter.GetComponent<PlayerAvatar>();
+            if (avatar != null && !string.IsNullOrEmpty(avatar.PlayerName.Value.ToString()))
+            {
+                reporterName = avatar.PlayerName.Value.ToString();
+            }
             
             // Mark body as reported
             _hasBeenReported.Value = true;
             
             // Notify all clients
-            AnnounceReportClientRpc(reporterName, VictimName);
+            AnnounceReportClientRpc(reporterName, reporterClientId, VictimName);
             
             // Notify the static service
             ReportService.NotifyBodyReported(reporterName, VictimName);
@@ -163,11 +180,15 @@ namespace Kavkazim.Netcode.Reporting
 
         /// <summary>
         /// Client RPC to announce the report.
+        /// Also syncs the "has reported" state to all clients.
         /// </summary>
-        [Rpc(SendTo.ClientsAndHost)]
-        private void AnnounceReportClientRpc(string reporterName, string victimName)
+        [ClientRpc]
+        private void AnnounceReportClientRpc(string reporterName, ulong reporterClientId, string victimName)
         {
             Debug.Log($"REPORT, Found Body by \"{reporterName}\"");
+            
+            // Mark this player as having reported on all clients
+            ReportService.MarkPlayerAsReported(reporterClientId);
         }
 
         /// <summary>

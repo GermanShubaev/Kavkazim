@@ -104,7 +104,7 @@ namespace Kavkazim.Netcode.Reporting
             
             // Get victim info
             Vector3 spawnPosition = victim.transform.position + spawnOffset;
-            ulong victimPlayerId = victim.NetworkObjectId;
+            ulong victimPlayerId = victim.OwnerClientId; // Use OwnerClientId (Player ID) consistently
             
             // Get victim name from PlayerAvatar if available
             string victimName = $"Player {victim.OwnerClientId}";

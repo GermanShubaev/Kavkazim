@@ -6,6 +6,7 @@ using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
+using Kavkazim.UI;
 
 namespace UI
 {
@@ -436,7 +437,8 @@ namespace UI
         }
 
         /// <summary>
-        /// Handles report input from keyboard (or future: button).
+        /// Handles report input from keyboard.
+        /// Also handles Emergency Button interaction via ReportService.
         /// </summary>
         private void HandleReportInput()
         {
