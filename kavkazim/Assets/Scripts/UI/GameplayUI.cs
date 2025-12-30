@@ -1,4 +1,5 @@
 using Kavkazim.Netcode;
+using Kavkazim.Netcode.Reporting;
 using Netcode;
 using Netcode.Player;
 using Unity.Netcode;
@@ -21,6 +22,11 @@ namespace UI
         private Text _cooldownText;
         private KillerAbility _localKillerAbility;
         private PlayerAvatar _localAvatar;
+        
+        // Report system
+        private ReportUIController _reportUIController;
+        private IReportInput _reportInput;
+        private PlayerState _localPlayerState;
 
         private void Start()
         {
@@ -43,6 +49,8 @@ namespace UI
         private void Update()
         {
             UpdateCooldownUI();
+            UpdateReportUI();
+            HandleReportInput(); // L key handles both body reports AND emergency meetings
         }
 
         private void OnSceneChanged(Scene oldScene, Scene newScene)
@@ -130,6 +138,9 @@ namespace UI
             
             // 5. Create Kill Cooldown UI (Bottom Left)
             CreateCooldownUI();
+            
+            // 6. Create Report UI (positioned above Kill icon)
+            CreateReportUI();
         }
 
         private void CreateCooldownUI()
@@ -390,6 +401,96 @@ namespace UI
             textRect.sizeDelta = Vector2.zero;
 
             return btnObj;
+        }
+
+        /// <summary>
+        /// Creates the Report UI component.
+        /// </summary>
+        private void CreateReportUI()
+        {
+            _reportUIController = new ReportUIController(_canvasObj.transform);
+            _reportUIController.CreateUI();
+            
+            // Initialize keyboard input (can be swapped for mobile button later)
+            _reportInput = new KeyboardReportInput(KeyCode.L);
+            
+            Debug.Log("[GameplayUI] Report UI created with L key input.");
+        }
+
+        /// <summary>
+        /// Updates the Report UI state each frame.
+        /// </summary>
+        private void UpdateReportUI()
+        {
+            // Try to find local player if not cached
+            if (_localPlayerState == null)
+            {
+                TryFindLocalPlayerState();
+            }
+            
+            // Update report UI visibility and state
+            if (_reportUIController != null)
+            {
+                _reportUIController.UpdateUI(_localPlayerState);
+            }
+        }
+
+        /// <summary>
+        /// Handles report input from keyboard (or future: button).
+        /// </summary>
+        private void HandleReportInput()
+        {
+            if (_reportInput == null || _localPlayerState == null)
+                return;
+            
+            // Only process input if player is alive
+            if (!_localPlayerState.IsAlive.Value)
+                return;
+            
+            if (_reportInput.WantsToReport())
+            {
+                // Attempt to report via static ReportService
+                ReportService.TryReport(_localPlayerState);
+            }
+        }
+
+        /// <summary>
+        /// Tries to find the local player's PlayerState.
+        /// </summary>
+        private void TryFindLocalPlayerState()
+        {
+            PlayerState[] players = FindObjectsByType<PlayerState>(FindObjectsSortMode.None);
+            foreach (var player in players)
+            {
+                if (player.IsOwner)
+                {
+                    _localPlayerState = player;
+                    break;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Handles E key input to trigger emergency meeting.
+        /// </summary>
+        private void HandleEmergencyButtonInput()
+        {
+            if (_localPlayerState == null)
+                return;
+
+            // Only process input if player is alive
+            if (!_localPlayerState.IsAlive.Value)
+                return;
+
+            // E key to use emergency button
+            if (Input.GetKeyDown(KeyCode.E))
+            {
+                // Try to use emergency button if available
+                if (EmergencyButton.Instance != null)
+                {
+                    EmergencyButton.Instance.TryCallEmergencyMeeting(_localPlayerState);
+                }
+            }
         }
 
         private void TogglePanel()

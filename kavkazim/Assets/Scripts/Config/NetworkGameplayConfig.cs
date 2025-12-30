@@ -20,5 +20,9 @@ namespace Kavkazim.Config
         [Header("Ghost")]
         [Tooltip("Sprite alpha for ghost players (0 = invisible, 1 = fully visible)")]
         [Range(0.1f, 0.7f)] public float ghostAlpha = 0.5f;
+
+        [Header("Report")]
+        [Tooltip("Maximum distance to report a dead body")]
+        [Range(0.5f, 5f)] public float reportRange = 2.5f;
     }
 }

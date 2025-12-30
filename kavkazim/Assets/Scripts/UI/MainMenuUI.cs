@@ -136,7 +136,7 @@ namespace UI
             Canvas canvas = _codePopup.AddComponent<Canvas>();
             canvas.renderMode = RenderMode.ScreenSpaceOverlay;
             canvas.sortingOrder = 100; // On top
-            _codePopup.AddComponent<UnityEngine.UI.GraphicRaycaster>();
+            _codePopup.AddComponent<GraphicRaycaster>();
 
             // Semi-transparent background
             GameObject bg = new GameObject("Background");
@@ -169,7 +169,7 @@ namespace UI
             titleText.alignment = TextAnchor.MiddleCenter;
             titleText.color = Color.white;
             RectTransform titleRect = titleObj.GetComponent<RectTransform>();
-            titleRect.sizeDelta = new Vector2(380, 40);
+            titleRect.sizeDelta = new Vector2(700, 100);
             titleRect.anchoredPosition = new Vector2(0, 60);
 
             // Input Field
