@@ -3,25 +3,17 @@ Main Menu
 2.host
 3.leave - exit app
 
-Game
-1.Movement
-2.Kill ability 
-3. Winning screen and logic - TODO
-4.Movement fix bugs - TODO
+what we have :
+1.Lobby
+2.general player actions 
+2.1 movement, report body 
+2.2 crewmate abilities - tasks
+2.3 kavkazi abilities - kill
 
-Todo
-	Create 2d map - Amir
-	Animation to players - TODO
-Crewmate :
-	Create 8 mini games - Amir
-	Progress bar
-
-Voting System :
-	Implement + clock
-	Most voted is killed
-	
-Impostor :
-Kill turns into ghost instead of kick - German
-
-UI Lobby:
-	bug fixes / create Lobby as seperate scene
+what we need :
+1.Winning screen and logic
+2.Movement fix bugs
+3.create 2-3 more tasks and common tasks
+4.tasks progress bar
+5.call meeting abilty + voting screen
+6.sabotage(?)
