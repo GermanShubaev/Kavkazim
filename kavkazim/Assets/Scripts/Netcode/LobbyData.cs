@@ -43,6 +43,13 @@ namespace Kavkazim.Netcode
         
         /// <summary>Number of missions each Innocent must complete (1-10).</summary>
         public int MissionsPerInnocent;
+        
+        /// <summary>
+        /// Developer test mode - allows playing alone with no other players.
+        /// When enabled: no minimum player requirement, win conditions disabled.
+        /// Only available in Editor/Development builds.
+        /// </summary>
+        public bool TestMode;
 
         /// <summary>
         /// Default lobby settings.
@@ -54,7 +61,8 @@ namespace Kavkazim.Netcode
             VotingTime = 60f,
             MoveSpeed = 3.5f,
             KillCooldown = 15f,
-            MissionsPerInnocent = 3
+            MissionsPerInnocent = 3,
+            TestMode = false
         };
 
         public void NetworkSerialize<T>(BufferSerializer<T> serializer) where T : IReaderWriter
@@ -65,6 +73,7 @@ namespace Kavkazim.Netcode
             serializer.SerializeValue(ref MoveSpeed);
             serializer.SerializeValue(ref KillCooldown);
             serializer.SerializeValue(ref MissionsPerInnocent);
+            serializer.SerializeValue(ref TestMode);
         }
 
         public bool Equals(LobbySettings other) =>
@@ -73,7 +82,8 @@ namespace Kavkazim.Netcode
             Math.Abs(VotingTime - other.VotingTime) < 0.01f &&
             Math.Abs(MoveSpeed - other.MoveSpeed) < 0.01f &&
             Math.Abs(KillCooldown - other.KillCooldown) < 0.01f &&
-            MissionsPerInnocent == other.MissionsPerInnocent;
+            MissionsPerInnocent == other.MissionsPerInnocent &&
+            TestMode == other.TestMode;
 
         public override bool Equals(object obj) => obj is LobbySettings other && Equals(other);
         

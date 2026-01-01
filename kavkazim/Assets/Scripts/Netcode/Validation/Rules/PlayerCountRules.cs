@@ -19,7 +19,8 @@ namespace Kavkazim.Netcode.Validation.Rules
             // Requirement: "Prevents starting... block Start if currentPlayers < minPlayers"
             // This is a START condition, not purely a settings configuration condition.
             // But if we use the validator for "CanStart", we should include it.
-            if (ctx.CurrentPlayerCount < MIN_PLAYERS_TO_START)
+            // Skip this check in test mode - allows playing alone
+            if (!ctx.IsTestMode && ctx.CurrentPlayerCount < MIN_PLAYERS_TO_START)
             {
                yield return new ValidationError("StartGame", $"Need at least {MIN_PLAYERS_TO_START} players to start");
             }

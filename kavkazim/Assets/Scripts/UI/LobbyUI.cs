@@ -49,6 +49,11 @@ namespace UI
         private Text _killCooldownValue;
         private Text _missionsValue;
         
+        // Test Mode UI (Editor/Development builds only)
+        private Toggle _testModeToggle;
+        private GameObject _testModeContainer;
+        private Text _testModeStatusText;
+        
         // Validation UI
         private Text _validationErrorText;
         private LobbyValidator _validator;
@@ -293,6 +298,112 @@ namespace UI
                 1, 10, 3, yOffset);
             _missionsSlider.wholeNumbers = true;
             _missionsSlider.onValueChanged.AddListener(v => OnSettingChanged());
+            
+            // Test Mode Toggle (Editor/Development builds only)
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            yOffset += yStep;
+            CreateTestModeToggle(settingsPanel.transform, yOffset);
+#endif
+        }
+        
+        private void CreateTestModeToggle(Transform parent, float yPos)
+        {
+            _testModeContainer = new GameObject("TestModeContainer");
+            _testModeContainer.transform.SetParent(parent, false);
+            RectTransform containerRect = _testModeContainer.AddComponent<RectTransform>();
+            containerRect.anchorMin = new Vector2(0.05f, 1);
+            containerRect.anchorMax = new Vector2(0.95f, 1);
+            containerRect.pivot = new Vector2(0.5f, 1);
+            containerRect.anchoredPosition = new Vector2(0, yPos);
+            containerRect.sizeDelta = new Vector2(0, 50);
+
+            // Label - left side
+            GameObject labelObj = new GameObject("Label");
+            labelObj.transform.SetParent(_testModeContainer.transform, false);
+            RectTransform labelRect = labelObj.AddComponent<RectTransform>();
+            labelRect.anchorMin = new Vector2(0, 0);
+            labelRect.anchorMax = new Vector2(0.4f, 1);
+            labelRect.offsetMin = Vector2.zero;
+            labelRect.offsetMax = Vector2.zero;
+            
+            Text labelText = labelObj.AddComponent<Text>();
+            labelText.text = "TEST MODE";
+            labelText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            labelText.fontSize = 16;
+            labelText.fontStyle = FontStyle.Bold;
+            labelText.color = new Color(1f, 0.6f, 0.2f); // Orange to indicate dev feature
+            labelText.alignment = TextAnchor.MiddleLeft;
+
+            // Toggle Button - creates a clickable button that acts as toggle
+            GameObject toggleBtn = new GameObject("TestModeToggleBtn");
+            toggleBtn.transform.SetParent(_testModeContainer.transform, false);
+            RectTransform toggleBtnRect = toggleBtn.AddComponent<RectTransform>();
+            toggleBtnRect.anchorMin = new Vector2(0.42f, 0.2f);
+            toggleBtnRect.anchorMax = new Vector2(0.58f, 0.8f);
+            toggleBtnRect.offsetMin = Vector2.zero;
+            toggleBtnRect.offsetMax = Vector2.zero;
+            
+            Image btnBgImg = toggleBtn.AddComponent<Image>();
+            btnBgImg.sprite = _roundedSprite;
+            btnBgImg.type = Image.Type.Sliced;
+            btnBgImg.color = new Color(0.25f, 0.25f, 0.3f);
+
+            // Checkmark (child of toggle button)
+            GameObject checkmark = new GameObject("Checkmark");
+            checkmark.transform.SetParent(toggleBtn.transform, false);
+            RectTransform checkRect = checkmark.AddComponent<RectTransform>();
+            checkRect.anchorMin = new Vector2(0.1f, 0.1f);
+            checkRect.anchorMax = new Vector2(0.9f, 0.9f);
+            checkRect.offsetMin = Vector2.zero;
+            checkRect.offsetMax = Vector2.zero;
+            
+            Image checkImg = checkmark.AddComponent<Image>();
+            checkImg.sprite = _roundedSprite;
+            checkImg.type = Image.Type.Sliced;
+            checkImg.color = new Color(1f, 0.6f, 0.2f); // Orange checkmark
+
+            // Add Toggle component
+            _testModeToggle = toggleBtn.AddComponent<Toggle>();
+            _testModeToggle.targetGraphic = btnBgImg;
+            _testModeToggle.graphic = checkImg;
+            _testModeToggle.toggleTransition = Toggle.ToggleTransition.Fade;
+            _testModeToggle.isOn = false;
+            _testModeToggle.onValueChanged.AddListener(OnTestModeToggled);
+            
+            // Status text - shows ON/OFF
+            GameObject statusObj = new GameObject("StatusText");
+            statusObj.transform.SetParent(_testModeContainer.transform, false);
+            RectTransform statusRect = statusObj.AddComponent<RectTransform>();
+            statusRect.anchorMin = new Vector2(0.6f, 0);
+            statusRect.anchorMax = new Vector2(1f, 1);
+            statusRect.offsetMin = Vector2.zero;
+            statusRect.offsetMax = Vector2.zero;
+            
+            _testModeStatusText = statusObj.AddComponent<Text>();
+            _testModeStatusText.text = "OFF";
+            _testModeStatusText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            _testModeStatusText.fontSize = 14;
+            _testModeStatusText.fontStyle = FontStyle.Bold;
+            _testModeStatusText.color = new Color(0.6f, 0.6f, 0.6f);
+            _testModeStatusText.alignment = TextAnchor.MiddleLeft;
+        }
+        
+        private void OnTestModeToggled(bool isOn)
+        {
+            // Update status text
+            if (_testModeStatusText != null)
+            {
+                _testModeStatusText.text = isOn ? "ON" : "OFF";
+                _testModeStatusText.color = isOn ? new Color(1f, 0.6f, 0.2f) : new Color(0.6f, 0.6f, 0.6f);
+            }
+            
+            if (!_isHost || GameSessionManager.Instance == null) return;
+            if (GameSessionManager.Instance.CurrentPhase.Value != MatchPhase.LobbyOpen) return;
+            
+            Debug.Log($"[LobbyUI] Test Mode toggled: {isOn}");
+            
+            // Send settings update with test mode flag
+            OnSettingChanged();
         }
 
         private (Slider, Text) CreateSettingSlider(Transform parent, string label, float min, float max, float defaultVal, float yPos)
@@ -550,6 +661,21 @@ namespace UI
             _killCooldownValue.text = settings.KillCooldown.ToString("F0");
             _missionsValue.text = settings.MissionsPerInnocent.ToString();
             
+            // Update test mode toggle without triggering callback
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            if (_testModeToggle != null)
+            {
+                _testModeToggle.SetIsOnWithoutNotify(settings.TestMode);
+                
+                // Update status text
+                if (_testModeStatusText != null)
+                {
+                    _testModeStatusText.text = settings.TestMode ? "ON" : "OFF";
+                    _testModeStatusText.color = settings.TestMode ? new Color(1f, 0.6f, 0.2f) : new Color(0.6f, 0.6f, 0.6f);
+                }
+            }
+#endif
+            
             // Update player list header because MaxPlayers might have changed
             RefreshPlayerList();
 
@@ -645,6 +771,10 @@ namespace UI
             if (_killCooldownSlider != null) _killCooldownSlider.interactable = canEdit;
             if (_missionsSlider != null) _missionsSlider.interactable = canEdit;
             
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            if (_testModeToggle != null) _testModeToggle.interactable = canEdit;
+#endif
+            
             CheckValidation();
         }
         
@@ -652,9 +782,11 @@ namespace UI
         {
             if (GameSessionManager.Instance == null) return;
             
+            var settings = GameSessionManager.Instance.Settings.Value;
+            
             // Run validation
-            var ctx = new LobbyRuntimeContext { CurrentPlayerCount = GameSessionManager.Instance.GetEligiblePlayerCount() };
-            var result = _validator.Validate(GameSessionManager.Instance.Settings.Value, ctx);
+            var ctx = new LobbyRuntimeContext { CurrentPlayerCount = GameSessionManager.Instance.GetEligiblePlayerCount(), IsTestMode = settings.TestMode };
+            var result = _validator.Validate(settings, ctx);
             
             if (!result.IsValid)
             {
@@ -683,7 +815,11 @@ namespace UI
             if (GameSessionManager.Instance == null) return false;
 
             int eligibleCount = GameSessionManager.Instance.GetEligiblePlayerCount();
-            if (eligibleCount < 2) return false;
+            bool isTestMode = GameSessionManager.Instance.Settings.Value.TestMode;
+            
+            // In test mode, only need 1 player; otherwise need at least 2
+            int minPlayers = isTestMode ? 1 : 2;
+            if (eligibleCount < minPlayers) return false;
 
             // Check all eligible players are ready
             foreach (var player in GameSessionManager.Instance.Players)
@@ -704,6 +840,11 @@ namespace UI
             if (!_isHost || GameSessionManager.Instance == null) return;
             if (GameSessionManager.Instance.CurrentPhase.Value != MatchPhase.LobbyOpen) return;
 
+            bool testModeEnabled = false;
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            testModeEnabled = _testModeToggle != null && _testModeToggle.isOn;
+#endif
+
             var settings = new LobbySettings
             {
                 MaxPlayers = Mathf.RoundToInt(_maxPlayersSlider.value),
@@ -711,11 +852,12 @@ namespace UI
                 VotingTime = _votingTimeSlider.value,
                 MoveSpeed = _moveSpeedSlider.value,
                 KillCooldown = _killCooldownSlider.value,
-                MissionsPerInnocent = Mathf.RoundToInt(_missionsSlider.value)
+                MissionsPerInnocent = Mathf.RoundToInt(_missionsSlider.value),
+                TestMode = testModeEnabled
             };
             
             // Sanitize locally to prevent visual desync (Server keeps old value, Client sees new invalid value)
-            var ctx = new LobbyRuntimeContext { CurrentPlayerCount = GameSessionManager.Instance.GetEligiblePlayerCount() };
+            var ctx = new LobbyRuntimeContext { CurrentPlayerCount = GameSessionManager.Instance.GetEligiblePlayerCount(), IsTestMode = testModeEnabled };
             var sanitized = _validator.Sanitize(settings, ctx);
             
             if (!sanitized.Equals(settings))
