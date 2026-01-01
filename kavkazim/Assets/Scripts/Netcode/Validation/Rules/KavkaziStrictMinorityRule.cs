@@ -7,6 +7,12 @@ namespace Kavkazim.Netcode.Validation.Rules
     {
         public IEnumerable<ValidationError> Validate(LobbySettings s, LobbyRuntimeContext ctx)
         {
+            // Skip this validation in test mode - team balance doesn't matter when playing alone
+            if (ctx.IsTestMode)
+            {
+                yield break;
+            }
+            
             // Rule: 2 * K < P
             // K <= (P - 1) / 2
             

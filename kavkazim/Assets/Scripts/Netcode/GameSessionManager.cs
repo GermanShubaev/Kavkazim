@@ -438,10 +438,19 @@ namespace Kavkazim.Netcode
                 }
             }
             
-            // Require at least 2 eligible players
-            if (eligibleCount < 2)
+            bool isTestMode = Settings.Value.TestMode;
+            
+            // Require at least 2 eligible players (skip in test mode)
+            if (!isTestMode && eligibleCount < 2)
             {
                 Debug.LogWarning($"[GameSessionManager] Need at least 2 players to start (have {eligibleCount})");
+                return;
+            }
+            
+            // In test mode, require at least 1 player
+            if (isTestMode && eligibleCount < 1)
+            {
+                Debug.LogWarning($"[GameSessionManager] Need at least 1 player to start in test mode");
                 return;
             }
             
@@ -453,7 +462,7 @@ namespace Kavkazim.Netcode
             }
             
             // Use Validator for comprehensive checks
-            var ctx = new LobbyRuntimeContext { CurrentPlayerCount = eligibleCount }; // Use eligible count for start check
+            var ctx = new LobbyRuntimeContext { CurrentPlayerCount = eligibleCount, IsTestMode = isTestMode }; // Use eligible count for start check
             var validationResult = _lobbyValidator.Validate(Settings.Value, ctx);
             
             if (!validationResult.IsValid)
@@ -732,12 +741,19 @@ namespace Kavkazim.Netcode
 
         /// <summary>
         /// Check all win conditions and end match if one is met.
-        /// Server only.
+        /// Server only. Disabled in test mode.
         /// </summary>
         public void CheckWinConditions()
         {
             if (!IsServer) return;
             if (CurrentPhase.Value != MatchPhase.MatchInProgress) return;
+            
+            // Skip win condition checking in test mode
+            if (Settings.Value.TestMode)
+            {
+                Debug.Log("[GameSessionManager] Test mode enabled - win conditions disabled");
+                return;
+            }
             
             var snapshot = BuildGameSnapshot();
             
@@ -796,8 +812,8 @@ namespace Kavkazim.Netcode
         {
             if (!IsServer) return;
             
-            var ctx = new LobbyRuntimeContext { CurrentPlayerCount = Players.Count };
             var currentSettings = Settings.Value;
+            var ctx = new LobbyRuntimeContext { CurrentPlayerCount = Players.Count, IsTestMode = currentSettings.TestMode };
             var sanitized = _lobbyValidator.Sanitize(currentSettings, ctx);
             
             if (!sanitized.Equals(currentSettings))
