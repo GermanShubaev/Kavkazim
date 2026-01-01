@@ -6,6 +6,7 @@ using Unity.Netcode;
 using Unity.Netcode.Transports.UTP;
 using Unity.Networking.Transport.Relay;
 using Unity.Services.Relay.Models;
+using UnityEngine;
 
 namespace Netcode
 {
@@ -105,12 +106,32 @@ namespace Netcode
 
         public async Task LeaveLobbyAsync()
         {
+            // First try with known lobby ID
             if (!string.IsNullOrEmpty(_lobbyId))
             {
                 try { await _lobby.LeaveLobbyAsync(_lobbyId); }
                 catch { /* ignore */ }
                 _lobbyId = null;
                 LobbyCode = null;
+            }
+            
+            // Also check for any other lobbies this player might be in
+            try
+            {
+                var joinedLobbies = await Unity.Services.Lobbies.LobbyService.Instance.GetJoinedLobbiesAsync();
+                foreach (var lobbyId in joinedLobbies)
+                {
+                    try
+                    {
+                        await _lobby.LeaveLobbyAsync(lobbyId);
+                        Debug.Log($"[NetworkBootstrap] Left lobby: {lobbyId}");
+                    }
+                    catch { /* ignore individual failures */ }
+                }
+            }
+            catch (System.Exception e)
+            {
+                Debug.LogWarning($"[NetworkBootstrap] Could not get joined lobbies: {e.Message}");
             }
         }
     }

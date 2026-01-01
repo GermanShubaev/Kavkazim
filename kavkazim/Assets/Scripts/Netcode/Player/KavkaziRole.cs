@@ -1,20 +1,21 @@
 using UnityEngine;
-using Unity.Netcode;
-using System.Collections;
 
 namespace Kavkazim.Netcode
 {
+    /// <summary>
+    /// Kavkazi (impostor) role implementation.
+    /// Kill functionality is delegated to the KillerAbility component.
+    /// </summary>
     public class KavkaziRole : PlayerRole
     {
         public override PlayerRoleType RoleType => PlayerRoleType.Kavkazi;
 
-        private float _killCooldown = 10f;
-        private float _lastKillTime;
-        private float _killRange = 2.0f;
+        private KillerAbility _killerAbility;
 
         public KavkaziRole(PlayerAvatar avatar) : base(avatar) 
         {
-            _lastKillTime = -_killCooldown; // Ready immediately
+            // Cache reference to KillerAbility component
+            _killerAbility = avatar.GetComponent<KillerAbility>();
         }
 
         public override void SetupVisuals()
@@ -24,47 +25,29 @@ namespace Kavkazim.Netcode
             _avatar.SetNameColor(Color.red);
         }
 
+        /// <summary>
+        /// Attempts to kill the nearest target.
+        /// Delegates to KillerAbility for server-validated kill.
+        /// </summary>
         public void TryKill()
         {
-            if (Time.time - _lastKillTime < _killCooldown)
+            if (_killerAbility == null)
             {
-                Debug.Log("Kill on cooldown.");
+                Debug.LogWarning("[KavkaziRole] No KillerAbility component found on player.");
                 return;
             }
 
-            // Find closest target
-            PlayerAvatar target = FindClosestTarget();
-            if (target != null)
-            {
-                _lastKillTime = Time.time;
-                _avatar.PerformSlashAnimation();
-                
-                // In a real game, we would call a ServerRpc here to kill the target.
-                // For now, we'll just log it or disable the target locally if we are the server, 
-                // but since this logic runs on the owner client, we need to request the kill.
-                _avatar.RequestKillServerRpc(target.NetworkObjectId);
-            }
+            _killerAbility.TryKill();
         }
 
-        private PlayerAvatar FindClosestTarget()
-        {
-            var allPlayers = Object.FindObjectsByType<PlayerAvatar>(FindObjectsSortMode.None);
-            PlayerAvatar closest = null;
-            float minDst = _killRange;
+        /// <summary>
+        /// Check if kill ability is ready (off cooldown).
+        /// </summary>
+        public bool IsKillReady => _killerAbility != null && _killerAbility.IsKillReady;
 
-            foreach (var p in allPlayers)
-            {
-                if (p == _avatar) continue; // Don't kill self
-                // In a real game, check if p is also Kavkazi (teammate)
-
-                float dst = Vector3.Distance(_avatar.transform.position, p.transform.position);
-                if (dst < minDst)
-                {
-                    minDst = dst;
-                    closest = p;
-                }
-            }
-            return closest;
-        }
+        /// <summary>
+        /// Get remaining cooldown time for UI display.
+        /// </summary>
+        public float RemainingCooldown => _killerAbility?.RemainingCooldown ?? 0f;
     }
 }

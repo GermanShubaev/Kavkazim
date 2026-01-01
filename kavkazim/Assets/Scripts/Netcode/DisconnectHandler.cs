@@ -59,8 +59,11 @@ namespace Netcode
                 NetworkManager.Singleton.Shutdown();
             }
 
-            // Return to main menu
-            SceneManager.LoadScene("MainMenu");
+            // Return to main menu (avoid reloading if already there)
+            if (SceneManager.GetActiveScene().name != "MainMenu")
+            {
+                SceneManager.LoadScene("MainMenu");
+            }
         }
     }
 }

@@ -15,3 +15,6 @@ MonoBehaviour:
   moveSpeed: 7
   inputSendRate: 30
   stateSendRate: 30
+  killRange: 2
+  killCooldown: 15
+  ghostAlpha: 0.172

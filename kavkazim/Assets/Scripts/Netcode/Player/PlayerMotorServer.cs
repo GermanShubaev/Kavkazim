@@ -6,6 +6,7 @@ namespace Netcode.Player
 {
     /// <summary>
     /// Server-only motor: applies validated velocity to Rigidbody2D.
+    /// Ghosts bypass wall collision detection.
     /// </summary>
     [RequireComponent(typeof(Rigidbody2D))]
     [RequireComponent(typeof(BoxCollider2D))]
@@ -18,11 +19,13 @@ namespace Netcode.Player
         private Rigidbody2D _rb;
         private BoxCollider2D _collider;
         private Vector2 _serverVelocity;
+        private PlayerState _playerState;
 
         private void Awake()
         {
             _rb = GetComponent<Rigidbody2D>();
             _collider = GetComponent<BoxCollider2D>();
+            _playerState = GetComponent<PlayerState>();
         }
 
         public override void OnNetworkSpawn()
@@ -47,7 +50,18 @@ namespace Netcode.Player
             
             if (moveDistance < 0.0001f) return; // No significant movement
             
-            // Use BoxCastAll to allow filtering out other players
+            // If player is a ghost, skip wall collision detection entirely
+            bool isGhost = _playerState != null && !_playerState.IsAlive.Value;
+            
+            if (isGhost)
+            {
+                // Ghosts move freely without collision checks
+                Vector2 targetPosition = _rb.position + _serverVelocity * Time.fixedDeltaTime;
+                _rb.MovePosition(targetPosition);
+                return;
+            }
+            
+            // Alive players use BoxCast for wall collision
             Vector2 castOrigin = _rb.position + _collider.offset;
             RaycastHit2D[] hits = Physics2D.BoxCastAll(
                 castOrigin,
@@ -61,7 +75,7 @@ namespace Netcode.Player
             // Sort by distance to ensure we handle the closest valid obstacle first
             System.Array.Sort(hits, (a, b) => a.distance.CompareTo(b.distance));
             
-            Vector2 targetPosition;
+            Vector2 targetPos;
             
             // Find the first valid collision that is NOT another player
             RaycastHit2D? validHit = null;
@@ -81,14 +95,14 @@ namespace Netcode.Player
             if (validHit.HasValue)
             {
                 float safeDistance = Mathf.Max(0f, validHit.Value.distance - skinWidth);
-                targetPosition = _rb.position + moveDirection * safeDistance;
+                targetPos = _rb.position + moveDirection * safeDistance;
             }
             else
             {
-                targetPosition = _rb.position + _serverVelocity * Time.fixedDeltaTime;
+                targetPos = _rb.position + _serverVelocity * Time.fixedDeltaTime;
             }
             
-            _rb.MovePosition(targetPosition);
+            _rb.MovePosition(targetPos);
         }
     }
 }
