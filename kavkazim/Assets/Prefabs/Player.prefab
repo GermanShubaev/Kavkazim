@@ -22,6 +22,7 @@ GameObject:
   - component: {fileID: -2638491744535586950}
   - component: {fileID: 8959800121656972371}
   - component: {fileID: 7536937082566640545}
+  - component: {fileID: 4152613538345482205}
   m_Layer: 0
   m_Name: Player
   m_TagString: Untagged
@@ -114,7 +115,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d5a57f767e5e46a458fc5d3c628d0cbb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Unity.Netcode.Runtime::Unity.Netcode.NetworkObject
-  GlobalObjectIdHash: 1257775113
+  GlobalObjectIdHash: 3480825052
   InScenePlacedSourceGlobalObjectIdHash: 0
   DeferredDespawnTick: 0
   Ownership: 1
@@ -154,43 +155,6 @@ Rigidbody2D:
   m_SleepingMode: 1
   m_CollisionDetection: 1
   m_Constraints: 4
---- !u!70 &4152613538345482205
-CapsuleCollider2D:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 64683924485901163}
-  m_Enabled: 0
-  serializedVersion: 3
-  m_Density: 1
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
-  m_ForceSendLayers:
-    serializedVersion: 2
-    m_Bits: 4294967295
-  m_ForceReceiveLayers:
-    serializedVersion: 2
-    m_Bits: 4294967295
-  m_ContactCaptureLayers:
-    serializedVersion: 2
-    m_Bits: 4294967295
-  m_CallbackLayers:
-    serializedVersion: 2
-    m_Bits: 4294967295
-  m_IsTrigger: 0
-  m_UsedByEffector: 0
-  m_CompositeOperation: 0
-  m_CompositeOrder: 0
-  m_Offset: {x: 0, y: 0}
-  m_Size: {x: 1, y: 1}
-  m_Direction: 0
 --- !u!114 &8365024740585526556
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -287,9 +251,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c43c5b9a6f3644b4bb28a687e02c2751, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Kavkazim.Netcode.PlayerSpawnHandler
-  spawnCenter: {x: 12.4, y: 30.3, z: 0}
-  spawnRadius: 1.5
-  maxPlayersOnCircle: 10
+  gameplaySpawnCenter: {x: 12.4, y: 30.3, z: 0}
+  gameplaySpawnRadius: 1.5
+  lobbySpawnCenter: {x: 0, y: -50, z: 0}
+  playerPrefab: {fileID: 0}
 --- !u!114 &7553111882227554343
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -466,3 +431,40 @@ MonoBehaviour:
   ShowTopMostFoldoutHeaderGroup: 1
   renderersToHide: []
   objectsToHide: []
+--- !u!70 &4152613538345482205
+CapsuleCollider2D:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 64683924485901163}
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Density: 1
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_ForceSendLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_ForceReceiveLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_ContactCaptureLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_CallbackLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_IsTrigger: 0
+  m_UsedByEffector: 0
+  m_CompositeOperation: 0
+  m_CompositeOrder: 0
+  m_Offset: {x: 0, y: 0}
+  m_Size: {x: 1, y: 1}
+  m_Direction: 0
