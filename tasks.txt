@@ -9,11 +9,12 @@ what we have :
 2.1 movement, report body 
 2.2 crewmate abilities - tasks
 2.3 kavkazi abilities - kill
+3.Winning screen and logic
+4.call meeting abilty
 
 what we need :
-1.Winning screen and logic
-2.Movement fix bugs
-3.create 2-3 more tasks and common tasks
-4.tasks progress bar
-5.call meeting abilty + voting screen
-6.sabotage(?)
+1.Movement fix bugs
+2.create 2-3 more tasks and common tasks
+3.tasks progress bar
+4.call meeting abilty + voting screen (half done)
+5.sabotage(?)
