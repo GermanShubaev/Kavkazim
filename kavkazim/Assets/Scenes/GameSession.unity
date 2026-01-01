@@ -216,7 +216,7 @@ SpriteRenderer:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 351009922}
-  m_Enabled: 1
+  m_Enabled: 0
   m_CastShadows: 0
   m_ReceiveShadows: 0
   m_DynamicOccludee: 1
@@ -276,8 +276,8 @@ Transform:
   m_GameObject: {fileID: 351009922}
   serializedVersion: 2
   m_LocalRotation: {x: 1.2166086e-10, y: 4.4948764e-10, z: -0.26126468, w: 0.96526724}
-  m_LocalPosition: {x: 17.03, y: 26.08, z: 0}
-  m_LocalScale: {x: 7.490126, y: 7.385113, z: 1}
+  m_LocalPosition: {x: 4.61, y: 9.04, z: 0}
+  m_LocalScale: {x: 10.640521, y: 11.005989, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
@@ -295,7 +295,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Kavkazim.Netcode.Reporting.EmergencyButton
   ShowTopMostFoldoutHeaderGroup: 1
-  interactionRange: 4.5
+  interactionRange: 5.5
   cooldownDuration: 20
 --- !u!1 &29482986
 GameObject:
