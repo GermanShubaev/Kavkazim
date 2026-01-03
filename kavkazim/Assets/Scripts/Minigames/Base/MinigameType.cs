@@ -13,7 +13,8 @@ namespace Minigames
         WolfClick,
         TakedownClick,
         ShashlikSort,
-        RemoteCommonClick
+        RemoteCommonClick,
+        LaundrySort
     }
 }
 
