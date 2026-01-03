@@ -14,8 +14,8 @@ namespace Minigames
     public class TakedownClickGame : BaseMinigame
     {
         [Header("Takedown Settings")]
-        [SerializeField] private int requiredClicks = 20;
-        [SerializeField] private float timeWindow = 4f;
+        [SerializeField] private int requiredClicks = 30;
+        [SerializeField] private float timeWindow = 5f;
         [SerializeField] private float imageFlashDuration = 0.1f;
         [SerializeField] private Vector2 buttonSize = new Vector2(120, 120);
 

@@ -102,7 +102,8 @@ namespace Minigames
                 return;
             }
 
-            numberOfElements = _targetOrder.Length;
+            // Force exactly 6 cells for the prayer game
+            numberOfElements = 6;
             elementSize = 300f; // 4x original (100 * 4)
             cellSpacing = 30f; // Increased spacing for larger elements
             minDistanceBetweenElements = 200f; // Reduced to fit elements in lower section
@@ -265,53 +266,93 @@ namespace Minigames
 
         private void CheckWinCondition()
         {
-            if (cells == null || cells.Count == 0)
+            if (cells == null || cells.Count != 6)
+            {
+                Debug.Log($"[PraySortGame] Win check skipped: cells.Count = {cells?.Count ?? 0}, expected 6");
                 return;
+            }
 
-            // Check if all cells have elements in their correct positions
-            bool allCorrect = true;
-            
+            // Define the correct order from right to left (cell 0 is rightmost, cell 5 is leftmost)
+            // 1st cell (cell 0): pray_shalom.png
+            // 2nd cell (cell 1): pray_alechem.png
+            // 3rd cell (cell 2): pray_malachei_2.png or pray_malachei_1.png
+            // 4th cell (cell 3): pray_hashalom.png
+            // 5th cell (cell 4): pray_malachei_2.png or pray_malachei_1.png
+            // 6th cell (cell 5): pray_elion.png
+            string[] expectedTypes = new string[]
+            {
+                "elion",        // Cell 5: 6th cell (leftmost)
+                "malachei",    // Cell 4: 5th cell (malachei_1 or malachei_2)
+                "hashalom",    // Cell 3: 4th cell
+                "malachei",    // Cell 2: 3rd cell (malachei_1 or malachei_2)
+                "alechem",     // Cell 1: 2nd cell
+                "shalom"      // Cell 0: 1st cell (rightmost)
+            };
+
+            // Check if all cells have elements
             for (int i = 0; i < cells.Count; i++)
             {
                 Cell cell = cells[i];
                 DraggableElement element = cell.GetElement();
-                
-                // If any cell is empty, game is not complete
+
                 if (element == null)
                 {
+                    // Not all cells filled yet
                     if (_resultText != null)
                         _resultText.text = "";
                     return;
+                }
+            }
+
+            // All cells are filled, now check if they're in correct order
+            bool allCorrect = true;
+            for (int i = 0; i < cells.Count && i < expectedTypes.Length; i++)
+            {
+                Cell cell = cells[i];
+                DraggableElement element = cell.GetElement();
+
+                if (element == null)
+                {
+                    allCorrect = false;
+                    break;
                 }
 
                 PrayWordElement wordElement = element.GetComponent<PrayWordElement>();
                 if (wordElement == null)
                 {
-                    if (_resultText != null)
-                        _resultText.text = "";
-                    return;
+                    allCorrect = false;
+                    Debug.LogWarning($"[PraySortGame] Cell {i} element is not a PrayWordElement");
+                    break;
                 }
-                
-                // Check if element's order value matches expected position
-                // Cell 0 should have OrderValue 1, Cell 1 should have OrderValue 2, etc.
-                int expectedOrderValue = i + 1;
-                if (wordElement.OrderValue != expectedOrderValue)
+
+                string actualType = wordElement.GetSpriteType();
+                string expectedType = expectedTypes[i];
+
+                if (actualType != expectedType)
                 {
                     allCorrect = false;
+                    Debug.Log($"[PraySortGame] Cell {i} incorrect: expected '{expectedType}', got '{actualType}'");
+                    break;
                 }
             }
 
             if (allCorrect)
             {
                 if (_resultText != null)
-                    _resultText.text = "Correct!";
-                
-                // Close the popup after a short delay
-                StartCoroutine(CloseAfterDelay(1.5f));
+                {
+                    _resultText.text = "Correct! All prayer words in order!";
+                    _resultText.color = Color.green;
+                }
+                Debug.Log("[PraySortGame] All images correctly ordered! Game complete.");
+                StartCoroutine(CloseAfterDelay(2f));
             }
-            else if (_resultText != null)
+            else
             {
-                _resultText.text = "";
+                // Clear result text if not all correct
+                if (_resultText != null)
+                {
+                    _resultText.text = "";
+                }
             }
         }
 
@@ -515,15 +556,12 @@ namespace Minigames
     {
         private Sprite _praySprite;
         private Canvas _canvas;
-        private int _orderValue; // The correct position value (1-6, right to left)
 
         public Sprite PraySprite => _praySprite;
-        public int OrderValue => _orderValue;
 
         public void Initialize(Sprite sprite, int index, PraySortGame game)
         {
             _praySprite = sprite;
-            _orderValue = GetOrderValueFromName(sprite.name);
             base.Initialize(index, game, sprite);
             
             // Cache the canvas from the popup window (element is a child of the popup)
@@ -531,28 +569,31 @@ namespace Minigames
         }
 
         /// <summary>
-        /// Gets the order value based on sprite name.
-        /// Order is right to left: 1 = rightmost, 6 = leftmost
+        /// Gets the sprite type identifier based on sprite name.
+        /// Returns a string identifier for the sprite type.
         /// </summary>
-        private int GetOrderValueFromName(string spriteName)
+        private string GetSpriteTypeFromName(string spriteName)
         {
             string lowerName = spriteName.ToLower();
             
             if (lowerName.Contains("shalom") && !lowerName.Contains("hashalom"))
-                return 1; // pray_shalom
+                return "shalom"; // pray_shalom
             if (lowerName.Contains("alechem"))
-                return 2; // pray_alechem
-            if (lowerName.Contains("malachei_1"))
-                return 3; // pray_malachei_1 (can also be 5)
+                return "alechem"; // pray_alechem
+            if (lowerName.Contains("malachei"))
+                return "malachei"; // pray_malachei_1
             if (lowerName.Contains("hashalom"))
-                return 4; // pray_hashalom
-            if (lowerName.Contains("malachei_2"))
-                return 5; // pray_malachei_2 (can also be 3)
+                return "hashalom"; // pray_hashalom
             if (lowerName.Contains("elion"))
-                return 6; // pray_elion
+                return "elion"; // pray_elion
                 
-            Debug.LogWarning($"[PrayWordElement] Unknown sprite name: {spriteName}, defaulting to order 0");
-            return 0;
+            Debug.LogWarning($"[PrayWordElement] Unknown sprite name: {spriteName}, defaulting to unknown");
+            return "unknown";
+        }
+
+        public string GetSpriteType()
+        {
+            return GetSpriteTypeFromName(_praySprite.name);
         }
 
         public override void OnDrag(PointerEventData eventData)

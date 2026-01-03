@@ -280,52 +280,85 @@ namespace Minigames
 
         private void CheckWinCondition()
         {
-            if (cells == null || cells.Count == 0 || _loadedImages == null)
+            if (cells == null || cells.Count != 8)
                 return;
 
-            int imageCount = _loadedImages.Length;
-            
-            // Check if all elements are in their correct cells
-            bool allCorrect = true;
-
-            for (int i = 0; i < imageCount; i++)
+            // Define the correct order for each cell
+            // Upper row (cells 0-3): hands_1, hands_2, hands_1, hands_3
+            // Lower row (cells 4-7): right_foot_up, right_foot_forward, left_foot_up, left_foot_forward
+            string[] expectedTypes = new string[]
             {
-                if (i >= cells.Count) break;
-                
+                "hands_1",           // Cell 0: Upper row, 1st cell
+                "hands_2",           // Cell 1: Upper row, 2nd cell
+                "hands_1",           // Cell 2: Upper row, 3rd cell
+                "hands_3",           // Cell 3: Upper row, 4th cell
+                "right_foot_up",     // Cell 4: Lower row, 1st cell
+                "right_foot_forward", // Cell 5: Lower row, 2nd cell
+                "left_foot_up",      // Cell 6: Lower row, 3rd cell
+                "left_foot_forward"  // Cell 7: Lower row, 4th cell
+            };
+
+            // Check if all cells have elements
+            bool allCellsFilled = true;
+            for (int i = 0; i < cells.Count; i++)
+            {
                 Cell cell = cells[i];
                 DraggableElement element = cell.GetElement();
 
-                // If any cell is empty, game is not complete
                 if (element == null)
                 {
-                    if (_resultText != null)
-                        _resultText.text = "";
-                    return;
+                    allCellsFilled = false;
+                    break;
+                }
+            }
+
+            if (!allCellsFilled)
+            {
+                if (_resultText != null)
+                    _resultText.text = "";
+                return;
+            }
+
+            // Check if all elements are in their correct positions
+            bool allCorrect = true;
+            for (int i = 0; i < cells.Count && i < expectedTypes.Length; i++)
+            {
+                Cell cell = cells[i];
+                DraggableElement element = cell.GetElement();
+
+                if (element == null)
+                {
+                    allCorrect = false;
+                    break;
                 }
 
                 LezginkaElement lezginkaElement = element.GetComponent<LezginkaElement>();
                 if (lezginkaElement == null)
                 {
-                    if (_resultText != null)
-                        _resultText.text = "";
-                    return;
+                    allCorrect = false;
+                    break;
                 }
 
-                // Check if element's order value matches expected position
-                // Cell 0 should have OrderValue 1, Cell 1 should have OrderValue 2, etc.
-                int expectedOrderValue = i + 1;
-                if (lezginkaElement.OrderValue != expectedOrderValue)
+                string actualType = lezginkaElement.GetSpriteType();
+                string expectedType = expectedTypes[i];
+
+                if (actualType != expectedType)
                 {
                     allCorrect = false;
+                    Debug.Log($"[LezginkaSortGame] Cell {i} incorrect: expected {expectedType}, got {actualType}");
+                    break;
                 }
             }
 
             if (allCorrect)
             {
                 if (_resultText != null)
-                    _resultText.text = "Correct!";
-
-                StartCoroutine(CloseAfterDelay(1.5f));
+                {
+                    _resultText.text = "Correct! All dance moves in order!";
+                    _resultText.color = Color.green;
+                }
+                Debug.Log("[LezginkaSortGame] All images correctly ordered! Game complete.");
+                StartCoroutine(CloseAfterDelay(2f));
             }
             else if (_resultText != null)
             {
@@ -529,38 +562,53 @@ namespace Minigames
     {
         private Sprite _sprite;
         private Canvas _canvas;
-        private int _orderValue;
 
         public Sprite LezginkaSprite => _sprite;
-        public int OrderValue => _orderValue;
 
         public void Initialize(Sprite sprite, int index, LezginkaSortGame game)
         {
             _sprite = sprite;
-            _orderValue = GetOrderValueFromName(sprite.name);
             base.Initialize(index, game, sprite);
             _canvas = GetComponentInParent<Canvas>();
         }
 
+        public string GetSpriteType()
+        {
+            return GetSpriteTypeFromName(_sprite.name);
+        }
+
         /// <summary>
-        /// Gets the order value based on sprite name.
-        /// Order: feet_1=1, feet_2=2, hands_1=3, hands_2=4, hands_3=5
+        /// Gets the sprite type identifier based on sprite name.
+        /// Returns a string identifier for the sprite type.
         /// </summary>
-        private int GetOrderValueFromName(string spriteName)
+        private string GetSpriteTypeFromName(string spriteName)
         {
             string lowerName = spriteName.ToLower();
 
-            if (lowerName.Contains("lezginka_hands_1")) return 1;
-            if (lowerName.Contains("lezginka_hands_2")) return 2;
-            if (lowerName.Contains("lezginka_hands_1")) return 3;
-            if (lowerName.Contains("lezginka_hands_3")) return 4;
-            if (lowerName.Contains("left_foot_up")) return 5;
-            if (lowerName.Contains("left_foot_forward")) return 6;
-            if (lowerName.Contains("right_foot_up")) return 7;
-            if (lowerName.Contains("right_foot_forward")) return 8;
+            // Check for hands images
+            if (lowerName.Contains("lezginka_hands_1_copy") || lowerName.Contains("lezginka_hands_1"))
+            {
+                // Make sure it's not hands_2 or hands_3
+                if (!lowerName.Contains("hands_2") && !lowerName.Contains("hands_3"))
+                    return "hands_1";
+            }
+            if (lowerName.Contains("lezginka_hands_2"))
+                return "hands_2";
+            if (lowerName.Contains("lezginka_hands_3"))
+                return "hands_3";
+            
+            // Check for foot images
+            if (lowerName.Contains("right_foot_up"))
+                return "right_foot_up";
+            if (lowerName.Contains("right_foot_forward"))
+                return "right_foot_forward";
+            if (lowerName.Contains("left_foot_up"))
+                return "left_foot_up";
+            if (lowerName.Contains("left_foot_forward"))
+                return "left_foot_forward";
 
-            Debug.LogWarning($"[LezginkaElement] Unknown sprite name: {spriteName}, defaulting to order 0");
-            return 0;
+            Debug.LogWarning($"[LezginkaElement] Unknown sprite name: {spriteName}, defaulting to unknown");
+            return "unknown";
         }
 
         public override void OnDrag(PointerEventData eventData)
