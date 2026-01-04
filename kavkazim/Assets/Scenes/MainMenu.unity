@@ -908,9 +908,6 @@ MonoBehaviour:
   gameplaySpawnRadius: 1.5
   lobbySpawnCenter: {x: 0, y: -50, z: 0}
   playerPrefab: {fileID: 64683924485901163, guid: 34cc8fb027dbef64c996b2688cca29db, type: 3}
-  spawnCenter: {x: 12.4, y: 30.3, z: 0}
-  spawnRadius: 1.5
-  maxPlayersOnCircle: 10
 --- !u!1 &1317697001
 GameObject:
   m_ObjectHideFlags: 0
