@@ -4,14 +4,12 @@ Main Menu
 3.leave - exit app
 
 features :
-1.3 tasks minigames left
-3.block tasks for impostors
-4.implement progress bar for tasks
-5.minimap 
-6.add visual cue for tasks on the map and minimap
-7.voting system 
-8.cams?
-9.sabotage?
+1.block tasks for impostors
+2.implement progress bar for tasks
+3.minimap 
+4.voting system 
+5.cams?
+6.sabotage?
 bugs :
 1.colliders irregular - fix Movement
 2.

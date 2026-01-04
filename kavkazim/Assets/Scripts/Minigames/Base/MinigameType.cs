@@ -14,7 +14,8 @@ namespace Minigames
         TakedownClick,
         ShashlikSort,
         RemoteCommonClick,
-        LaundrySort
+        LaundrySort,
+        TapachkiClick
     }
 }
 
