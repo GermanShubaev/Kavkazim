@@ -24,5 +24,9 @@ namespace Kavkazim.Config
         [Header("Report")]
         [Tooltip("Maximum distance to report a dead body")]
         [Range(0.5f, 5f)] public float reportRange = 2.5f;
+
+        [Header("Meeting")]
+        [Tooltip("Duration of voting period during meetings in seconds")]
+        [Range(30f, 180f)] public float meetingDuration = 60f;
     }
 }

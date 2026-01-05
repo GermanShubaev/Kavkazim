@@ -14,6 +14,10 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/WinScreen.unity
     guid: 7d90354d2e46c0c46b6588441f261bbf
+  - enabled: 1
+    path: Assets/Scenes/MeetingScene.unity
+    guid: c9e70563b21c8c44494c91ecddddc0c3
   m_configObjects:
+    com.unity.addressableassets: {fileID: 11400000, guid: 6834bb19c9647264dbebbdf0c864d3eb, type: 2}
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 2bcd2660ca9b64942af0de543d8d7100, type: 3}
   m_UseUCBPForAssetBundles: 0

@@ -173,7 +173,7 @@ namespace Kavkazim.Netcode.Reporting
             AnnounceReportClientRpc(reporterName, reporterClientId, VictimName);
             
             // Notify the static service
-            ReportService.NotifyBodyReported(reporterName, VictimName);
+            ReportService.NotifyBodyReported(reporterName, VictimName, reporterClientId, VictimPlayerId);
             
             Debug.Log($"[DeadBody] SERVER: Report validated successfully.");
         }
@@ -187,8 +187,7 @@ namespace Kavkazim.Netcode.Reporting
         {
             Debug.Log($"REPORT, Found Body by \"{reporterName}\"");
             
-            // Mark this player as having reported on all clients
-            ReportService.MarkPlayerAsReported(reporterClientId);
+            // Body reports are unlimited - no need to mark player
         }
 
         /// <summary>

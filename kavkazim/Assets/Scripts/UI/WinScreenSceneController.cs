@@ -265,11 +265,17 @@ namespace UI
             _returnButton.interactable = false;
             _countdownText.text = "Returning...";
 
-            // Only the server/host can trigger the return
-            // Clients will automatically sync when server loads the new scene
-            if (NetworkManager.Singleton != null && NetworkManager.Singleton.IsServer)
+            // Use GameSessionManager to properly reset state and return to lobby
+            // This ensures phase is reset, player states cleared, etc.
+            if (GameSessionManager.Instance != null)
             {
-                Debug.Log("[WinScreenSceneController] Server requesting return to lobby...");
+                Debug.Log("[WinScreenSceneController] Requesting return to lobby via GameSessionManager...");
+                GameSessionManager.Instance.ReturnToLobbyServerRpc();
+            }
+            else if (NetworkManager.Singleton != null && NetworkManager.Singleton.IsServer)
+            {
+                // Fallback if GameSessionManager not available
+                Debug.LogWarning("[WinScreenSceneController] GameSessionManager not found, loading scene directly...");
                 NetworkManager.Singleton.SceneManager.LoadScene("GameSession", LoadSceneMode.Single);
             }
             else if (NetworkManager.Singleton != null && NetworkManager.Singleton.IsClient)
