@@ -74,11 +74,14 @@ namespace Kavkazim.UI.Meeting
                 if (skipCountObj != null) skipCountText = skipCountObj.GetComponent<TextMeshProUGUI>();
             }
             
-            // Create settings panel
+            // Create settings panel with its own canvas
             CreateSettingsPanel();
             
             Debug.Log($"[MeetingUIController] Awake - voteController={voteController != null}");
         }
+        
+        // Canvas specifically for the settings UI (created by this controller)
+        private Canvas _settingsCanvas;
 
         private void Start()
         {
@@ -131,6 +134,12 @@ namespace Kavkazim.UI.Meeting
             {
                 _meetingManager.TimeRemaining.OnValueChanged -= OnTimerChanged;
                 _meetingManager.SkipVoteCount.OnValueChanged -= OnSkipCountChanged;
+            }
+            
+            // Clean up our settings canvas
+            if (_settingsCanvas != null)
+            {
+                Destroy(_settingsCanvas.gameObject);
             }
         }
 
@@ -220,13 +229,18 @@ namespace Kavkazim.UI.Meeting
 
         private void CreateSettingsPanel()
         {
-            // Find the canvas
-            Canvas canvas = FindFirstObjectByType<Canvas>();
-            if (canvas == null) return;
+            // Create our own canvas for settings UI to avoid conflicts with persistent canvases
+            GameObject settingsCanvasObj = new GameObject("MeetingSettingsCanvas");
+            // Don't parent to anything - let it be a root object so positioning works correctly
+            _settingsCanvas = settingsCanvasObj.AddComponent<Canvas>();
+            _settingsCanvas.renderMode = RenderMode.ScreenSpaceOverlay;
+            _settingsCanvas.sortingOrder = 100; // Ensure it's above other UI
+            settingsCanvasObj.AddComponent<CanvasScaler>();
+            settingsCanvasObj.AddComponent<GraphicRaycaster>();
 
             // Create Settings Button (Top Right)
             GameObject settingsButtonObj = new GameObject("SettingsButton");
-            settingsButtonObj.transform.SetParent(canvas.transform, false);
+            settingsButtonObj.transform.SetParent(settingsCanvasObj.transform, false);
             
             Image buttonBg = settingsButtonObj.AddComponent<Image>();
             buttonBg.color = new Color(0.9f, 0.9f, 0.9f, 1f);
@@ -256,7 +270,7 @@ namespace Kavkazim.UI.Meeting
 
             // Create Settings Panel (Center)
             _settingsPanel = new GameObject("SettingsPanel");
-            _settingsPanel.transform.SetParent(canvas.transform, false);
+            _settingsPanel.transform.SetParent(settingsCanvasObj.transform, false);
             
             Image panelBg = _settingsPanel.AddComponent<Image>();
             panelBg.color = new Color(0, 0, 0, 0.9f);

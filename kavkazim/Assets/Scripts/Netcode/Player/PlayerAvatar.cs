@@ -66,10 +66,11 @@ namespace Kavkazim.Netcode
             if (IsOwner)
             {
                 // PlayerAvatar is only spawned when match starts, so spawn GameplayUI
-                if (GameObject.FindFirstObjectByType<GameplayUI>() == null)
+                // Use Instance check instead of FindFirstObjectByType for better reliability
+                if (GameplayUI.Instance == null)
                 {
                     GameObject uiGo = new GameObject("GameplayUIManager");
-                    uiGo.transform.SetParent(transform); // Parent to player to persist
+                    // Don't parent to player - GameplayUI handles its own persistence
                     uiGo.AddComponent<GameplayUI>();
                 }
 
