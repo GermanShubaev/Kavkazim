@@ -32,6 +32,13 @@ namespace Netcode.Player
         {
             if (!IsOwner) return;
 
+            // Block all input during meetings
+            if (GameSessionManager.Instance != null && 
+                GameSessionManager.Instance.CurrentPhase.Value == MatchPhase.Meeting)
+            {
+                return;
+            }
+
             // Handle Move
             if (_move != null)
             {

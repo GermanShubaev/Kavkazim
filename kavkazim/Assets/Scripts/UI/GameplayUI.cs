@@ -12,6 +12,8 @@ namespace UI
 {
     public class GameplayUI : MonoBehaviour
     {
+        public static GameplayUI Instance { get; private set; }
+        
         private GameObject _panel;
         private bool _isPanelOpen = false;
 
@@ -29,9 +31,27 @@ namespace UI
         private IReportInput _reportInput;
         private PlayerState _localPlayerState;
 
+        private void Awake()
+        {
+            // Singleton pattern
+            if (Instance != null && Instance != this)
+            {
+                Debug.LogWarning($"[GameplayUI] Duplicate detected! Destroying self. Existing Instance: {Instance.GetInstanceID()}, This: {GetInstanceID()}");
+                Destroy(gameObject);
+                return;
+            }
+            Instance = this;
+            DontDestroyOnLoad(gameObject);
+        }
+
         private void Start()
         {
-            CreateUI();
+            // Only create UI if it doesn't exist yet
+            if (_canvasObj == null)
+            {
+                CreateUI();
+            }
+            
             SceneManager.activeSceneChanged += OnSceneChanged;
             UpdateVisibility(SceneManager.GetActiveScene());
             
@@ -45,6 +65,12 @@ namespace UI
         private void OnDestroy()
         {
             SceneManager.activeSceneChanged -= OnSceneChanged;
+            
+            // Clear singleton reference if this is the instance
+            if (Instance == this)
+            {
+                Instance = null;
+            }
         }
 
         private void Update()
@@ -56,6 +82,11 @@ namespace UI
 
         private void OnSceneChanged(Scene oldScene, Scene newScene)
         {
+            // Clear cached player references - they're destroyed on scene change
+            _localAvatar = null;
+            _localKillerAbility = null;
+            _localPlayerState = null;
+            
             UpdateVisibility(newScene);
         }
 
@@ -63,12 +94,15 @@ namespace UI
         {
             if (_canvasObj)
             {
-                // Hide in MainMenu, show elsewhere (Gameplay)
-                bool isMainMenu = scene.name == "MainMenu"; 
-                _canvasObj.SetActive(!isMainMenu);
+                // Only show in GameSession scene during gameplay (not lobby, meeting, etc.)
+                // Hide in MainMenu, MeetingScene, WinScreen
+                bool shouldHide = scene.name == "MainMenu" || 
+                                  scene.name == "MeetingScene" || 
+                                  scene.name == "WinScreen";
+                _canvasObj.SetActive(!shouldHide);
 
                 // Ensure EventSystem exists if we are active
-                if (!isMainMenu && FindFirstObjectByType<UnityEngine.EventSystems.EventSystem>() == null)
+                if (!shouldHide && FindFirstObjectByType<UnityEngine.EventSystems.EventSystem>() == null)
                 {
                     CreateEventSystem();
                 }
@@ -414,8 +448,6 @@ namespace UI
             
             // Initialize keyboard input (can be swapped for mobile button later)
             _reportInput = new KeyboardReportInput(KeyCode.L);
-            
-            Debug.Log("[GameplayUI] Report UI created with L key input.");
         }
 
         /// <summary>

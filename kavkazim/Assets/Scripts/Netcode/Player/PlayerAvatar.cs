@@ -5,7 +5,9 @@ using TMPro;
 using Unity.Services.Authentication;
 using System.Collections;
 using System.Collections.Generic;
+using Netcode.Player;
 using UI;
+using Unity.Services.Lobbies.Models;
 
 namespace Kavkazim.Netcode
 {
@@ -45,9 +47,12 @@ namespace Kavkazim.Netcode
         private TextMeshPro _nameLabel;
         public PlayerRole CurrentRole { get; private set; }
 
+        private PlayerState _playerState;
+
         public override void OnNetworkSpawn()
         {
             if (!spriteRenderer) spriteRenderer = GetComponentInChildren<SpriteRenderer>();
+            _playerState = GetComponent<PlayerState>();
             
             // Setup name label
             SetupNameLabel();
@@ -56,14 +61,16 @@ namespace Kavkazim.Netcode
             // Actual perceived role will be set via RPC from server
             UpdateVisuals(PerceivedRole);
 
+
             // If we are the owner, set up local player specifics
             if (IsOwner)
             {
                 // PlayerAvatar is only spawned when match starts, so spawn GameplayUI
-                if (GameObject.FindFirstObjectByType<GameplayUI>() == null)
+                // Use Instance check instead of FindFirstObjectByType for better reliability
+                if (GameplayUI.Instance == null)
                 {
                     GameObject uiGo = new GameObject("GameplayUIManager");
-                    uiGo.transform.SetParent(transform); // Parent to player to persist
+                    // Don't parent to player - GameplayUI handles its own persistence
                     uiGo.AddComponent<GameplayUI>();
                 }
 
@@ -137,7 +144,6 @@ namespace Kavkazim.Netcode
             }
             
             CurrentRole.SetupVisuals();
-            Debug.Log($"[PlayerAvatar] Visuals set to perceived role: {perceivedRole}");
         }
 
         /// <summary>
@@ -166,7 +172,6 @@ namespace Kavkazim.Netcode
             {
                 PerceivedRole = perceivedRole;
                 UpdateVisuals(perceivedRole);
-                Debug.Log($"[PlayerAvatar] Received my perceived role: {perceivedRole}");
             }
             else
             {
@@ -180,7 +185,6 @@ namespace Kavkazim.Netcode
                         targetAvatar.ApplyPerceivedRole(perceivedRole);
                     }
                 }
-                Debug.Log($"[PlayerAvatar] Received perceived role for player {targetNetworkObjectId}: {perceivedRole}");
             }
         }
 
@@ -203,6 +207,10 @@ namespace Kavkazim.Netcode
 
         public void SetBodyColor(Color c)
         {
+            // Block visual role color updates if we are dead (Ghost)
+            // This prevents "Innocent/Kavkazi" role assignment from overwriting the Ghost visual
+            if (_playerState != null && !_playerState.IsAlive.Value) return;
+
             if (spriteRenderer) spriteRenderer.color = c;
         }
 

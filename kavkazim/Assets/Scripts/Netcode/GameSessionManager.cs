@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using Unity.Collections;
 using Unity.Netcode;
 using UnityEngine;
@@ -39,32 +40,25 @@ namespace Kavkazim.Netcode
         public static Dictionary<ulong, string> CachedPlayerNames { get; private set; } = new Dictionary<ulong, string>();
 
         [Header("Configuration")]
-        [SerializeField] private float postMatchDuration = 5f;
+        //[SerializeField] private float postMatchDuration = 5f;
+        [SerializeField] private float transitionDuration = 1.0f;
 
         // ========== NETWORKED STATE ==========
         
         /// <summary>Current match phase - determines what players can do.</summary>
-        public NetworkVariable<MatchPhase> CurrentPhase = new(
-            MatchPhase.LobbyOpen,
-            NetworkVariableReadPermission.Everyone,
-            NetworkVariableWritePermission.Server
-        );
+        public NetworkVariable<MatchPhase> CurrentPhase = new();
 
         /// <summary>All connected players. Single source of truth.</summary>
-        public NetworkList<PlayerSessionData> Players;
+        public NetworkList<PlayerSessionData> Players = new();
 
         /// <summary>Lobby settings configured by host.</summary>
         public NetworkVariable<LobbySettings> Settings = new(
-            LobbySettings.Default,
-            NetworkVariableReadPermission.Everyone,
-            NetworkVariableWritePermission.Server
+            LobbySettings.Default
         );
 
         /// <summary>Win result data synced to all clients when game ends.</summary>
         public NetworkVariable<WinResultData> WinResult = new(
-            WinResultData.Empty,
-            NetworkVariableReadPermission.Everyone,
-            NetworkVariableWritePermission.Server
+            WinResultData.Empty
         );
 
         // ========== EVENTS FOR UI ==========
@@ -99,9 +93,6 @@ namespace Kavkazim.Netcode
             }
             Instance = this;
             
-            // Initialize NetworkList (must be done in Awake before OnNetworkSpawn)
-            Players = new NetworkList<PlayerSessionData>();
-            
             // Initialize win condition evaluator with default conditions
             _winEvaluator = WinConditionEvaluator.CreateDefault();
             _lobbyValidator = new LobbyValidator();
@@ -109,16 +100,27 @@ namespace Kavkazim.Netcode
 
         public override void OnNetworkSpawn()
         {
-            Debug.Log($"[GameSessionManager] OnNetworkSpawn. IsServer={IsServer}, IsClient={IsClient}");
+            Debug.Log($"[GameSessionManager] OnNetworkSpawn. IsServer={IsServer}");
+            
+            // CRITICAL: Make this persist across scene loads for ALL clients
+            // This must happen early to prevent destruction during scene transitions
+            DontDestroyOnLoad(gameObject);
+            
+            // Ensure validators are initialized (defensive)
+            if (_winEvaluator == null) _winEvaluator = WinConditionEvaluator.CreateDefault();
+            if (_lobbyValidator == null) _lobbyValidator = new LobbyValidator();
             
             // Subscribe to NetworkVariable/List changes
-            Players.OnListChanged += HandlePlayersListChanged;
-            Settings.OnValueChanged += HandleSettingsChanged;
-            CurrentPhase.OnValueChanged += HandlePhaseChanged;
-            WinResult.OnValueChanged += HandleWinResultChanged;
+            if (Players != null) Players.OnListChanged += HandlePlayersListChanged;
+            if (Settings != null) Settings.OnValueChanged += HandleSettingsChanged;
+            if (CurrentPhase != null) CurrentPhase.OnValueChanged += HandlePhaseChanged;
+            if (WinResult != null) WinResult.OnValueChanged += HandleWinResultChanged;
             
             // Subscribe to network events
-            NetworkManager.Singleton.OnClientDisconnectCallback += OnClientDisconnected;
+            if (NetworkManager.Singleton != null)
+            {
+                NetworkManager.Singleton.OnClientDisconnectCallback += OnClientDisconnected;
+            }
             
             // Server: Subscribe to player death events for win condition checking
             if (IsServer)
@@ -171,7 +173,6 @@ namespace Kavkazim.Netcode
                         string prefsKey = "PlayerName" + GetParrelSyncSuffix();
                         string hostName = PlayerPrefs.GetString(prefsKey, $"Player {hostId}");
                         AddPlayer(hostId, hostName);
-                        Debug.Log($"[GameSessionManager] Added host player: {hostName}");
                     }
                 }
             }
@@ -204,10 +205,10 @@ namespace Kavkazim.Netcode
 
         public override void OnNetworkDespawn()
         {
-            Players.OnListChanged -= HandlePlayersListChanged;
-            Settings.OnValueChanged -= HandleSettingsChanged;
-            CurrentPhase.OnValueChanged -= HandlePhaseChanged;
-            WinResult.OnValueChanged -= HandleWinResultChanged;
+            if (Players != null) Players.OnListChanged -= HandlePlayersListChanged;
+            if (Settings != null) Settings.OnValueChanged -= HandleSettingsChanged;
+            if (CurrentPhase != null) CurrentPhase.OnValueChanged -= HandlePhaseChanged;
+            if (WinResult != null) WinResult.OnValueChanged -= HandleWinResultChanged;
             
             if (NetworkManager.Singleton != null)
             {
@@ -221,8 +222,9 @@ namespace Kavkazim.Netcode
             }
         }
 
-        private new void OnDestroy()
+        private void OnDestroy()
         {
+            // Clear singleton reference when destroyed
             if (Instance == this)
             {
                 Instance = null;
@@ -233,19 +235,16 @@ namespace Kavkazim.Netcode
 
         private void HandlePlayersListChanged(NetworkListEvent<PlayerSessionData> changeEvent)
         {
-            Debug.Log($"[GameSessionManager] Players list changed: {changeEvent.Type}");
             OnPlayersChanged?.Invoke();
         }
 
         private void HandleSettingsChanged(LobbySettings previousValue, LobbySettings newValue)
         {
-            Debug.Log($"[GameSessionManager] Settings changed: {newValue}");
             OnSettingsChanged?.Invoke();
         }
 
         private void HandlePhaseChanged(MatchPhase previousValue, MatchPhase newValue)
         {
-            Debug.Log($"[GameSessionManager] Phase changed: {previousValue} -> {newValue}");
             OnPhaseChanged?.Invoke(newValue);
         }
 
@@ -253,7 +252,6 @@ namespace Kavkazim.Netcode
         {
             if (newValue.HasEnded)
             {
-                Debug.Log($"[GameSessionManager] Win result received: {newValue.GetWinningTeamDisplay()}");
                 OnGameEnded?.Invoke(newValue);
             }
         }
@@ -267,7 +265,6 @@ namespace Kavkazim.Netcode
             if (!IsServer) return;
             if (CurrentPhase.Value != MatchPhase.MatchInProgress) return;
             
-            Debug.Log($"[GameSessionManager] Player killed, checking win conditions...");
             CheckWinConditions();
         }
 
@@ -275,14 +272,11 @@ namespace Kavkazim.Netcode
         {
             if (!IsServer) return;
             
-            Debug.Log($"[GameSessionManager] Client {clientId} disconnected");
-            
             // Remove from Players list
             for (int i = Players.Count - 1; i >= 0; i--)
             {
                 if (Players[i].ClientId == clientId)
                 {
-                    Debug.Log($"[GameSessionManager] Removing player: {Players[i].PlayerName}");
                     Players.RemoveAt(i);
                     // Players list change will trigger HandlePlayersListChanged
                     // But we want to run auto-clamp logic on Server immediately after modifying the list?
@@ -304,7 +298,6 @@ namespace Kavkazim.Netcode
                 
                 // CRITICAL: Check win conditions after a player disconnects
                 // Disconnecting might change the balance (e.g. Kavkazi majority)
-                Debug.Log($"[GameSessionManager] Player {clientId} disconnected during match, checking win conditions...");
                 CheckWinConditions();
             }
         }
@@ -334,14 +327,12 @@ namespace Kavkazim.Netcode
                     var data = Players[i];
                     data.PlayerName = playerName;
                     Players[i] = data;
-                    Debug.Log($"[GameSessionManager] Updated player name: {playerName} (Client {clientId})");
                     return;
                 }
             }
             
             // Player not found - this can happen due to timing (RPC arrives before OnClientConnected)
             // Add them now with the correct name
-            Debug.Log($"[GameSessionManager] SubmitPlayerNameServerRpc: Adding player {clientId} with name: {playerName}");
             AddPlayer(clientId, playerName);
         }
 
@@ -367,7 +358,6 @@ namespace Kavkazim.Netcode
                     var data = Players[i];
                     data.IsReady = ready;
                     Players[i] = data;
-                    Debug.Log($"[GameSessionManager] Player {data.PlayerName} ready: {ready}");
                     return;
                 }
             }
@@ -399,8 +389,6 @@ namespace Kavkazim.Netcode
             var ctx = new LobbyRuntimeContext { CurrentPlayerCount = Players.Count };
             newSettings = _lobbyValidator.Sanitize(newSettings, ctx);
             Settings.Value = newSettings;
-            
-            Debug.Log($"[GameSessionManager] Settings updated: {newSettings}");
         }
 
         /// <summary>
@@ -477,19 +465,11 @@ namespace Kavkazim.Netcode
             int kavkaziCount = Settings.Value.KavkaziCount;
             
             // All checks passed - start the game!
-            Debug.Log($"[GameSessionManager] Starting game with {eligibleCount} players, {kavkaziCount} Kavkazi");
             
-            CurrentPhase.Value = MatchPhase.MatchInProgress;
+            // Trigger fade out
+            TriggerFadeOutClientRpc(transitionDuration);
             
-            // Directly call spawn handler to spawn gameplay avatars
-            if (PlayerSpawnHandler.Instance != null)
-            {
-                PlayerSpawnHandler.Instance.SpawnGameplayAvatars(GetEligiblePlayers(), Settings.Value);
-            }
-            else
-            {
-                Debug.LogError("[GameSessionManager] PlayerSpawnHandler.Instance is null!");
-            }
+            StartCoroutine(DelayedStartGame(transitionDuration, eligibleCount, kavkaziCount));
         }
 
         // ========== PUBLIC METHODS (Server Only) ==========
@@ -529,18 +509,11 @@ namespace Kavkazim.Netcode
             
             Players.Add(newPlayer);
             
-            // Auto-clamp settings if needed (e.g. increase player cap if host forced join?)
-            // Usually we don't change settings on join unless necessary?
-            // "if host lowers max below current players -> either block or auto-clamp back up"
-            // If new player joins, current count increases. If it exceeds MaxPlayers, we might clamp MaxPlayers?
-            // Although usually networking layer prevents join if full.
-            // But let's run sanitize just in case.
+            // Auto-clamp settings if needed
             if (CurrentPhase.Value == MatchPhase.LobbyOpen)
             {
                  ValidateAndClampSettings();
             }
-
-            Debug.Log($"[GameSessionManager] Added player: {newPlayer}");
         }
 
         /// <summary>
@@ -566,11 +539,10 @@ namespace Kavkazim.Netcode
                 return;
             }
             
-            Debug.Log("[GameSessionManager] Ending match...");
-            
             // Set win result NetworkVariable for UI sync
             if (winResult != null)
             {
+
                 string winnerNames = string.Join(",", winResult.WinnerNames);
                 WinResult.Value = new WinResultData
                 {
@@ -579,7 +551,13 @@ namespace Kavkazim.Netcode
                     ReasonKey = winResult.ReasonKey,
                     HasEnded = true
                 };
-                Debug.Log($"[GameSessionManager] Win: {winResult.WinningTeamEnum} - {winResult.ReasonKey}");
+                
+                // Trigger fade out for win sequence
+                TriggerFadeOutClientRpc(transitionDuration);
+                
+                // Delay scene load to allow fade
+                StartCoroutine(DelayedWinScreenLoad(transitionDuration));
+                return; // Exit here, coroutine handles the rest
             }
             else
             {
@@ -634,7 +612,6 @@ namespace Kavkazim.Netcode
         private void CacheWinResultClientRpc(WinResultData winResult)
         {
             CachedWinResult = winResult;
-            Debug.Log($"[GameSessionManager] Client received win result: {winResult.GetWinningTeamDisplay()}");
         }
 
         /// <summary>
@@ -656,8 +633,6 @@ namespace Kavkazim.Netcode
             // Use Netcode's scene management for synchronized loading
             if (NetworkManager.SceneManager != null)
             {
-                Debug.Log("[GameSessionManager] Loading WinScreen scene for all clients...");
-                
                 // Subscribe to scene load events for debugging
                 NetworkManager.SceneManager.OnLoadComplete -= OnSceneLoadComplete;
                 NetworkManager.SceneManager.OnLoadComplete += OnSceneLoadComplete;
@@ -681,7 +656,7 @@ namespace Kavkazim.Netcode
         /// </summary>
         private void OnSceneLoadComplete(ulong clientId, string sceneName, LoadSceneMode loadSceneMode)
         {
-            Debug.Log($"[GameSessionManager] Scene '{sceneName}' loaded for client {clientId}");
+            // Scene load callback - can be used for debugging if needed
         }
 
         /// <summary>
@@ -690,13 +665,22 @@ namespace Kavkazim.Netcode
         [Rpc(SendTo.Server)]
         public void ReturnToLobbyServerRpc(RpcParams rpcParams = default)
         {
-            if (CurrentPhase.Value != MatchPhase.PostMatch)
+            // Allow return from any phase except lobby (in case of manual return or error recovery)
+            if (CurrentPhase.Value == MatchPhase.LobbyOpen)
             {
-                Debug.LogWarning("[GameSessionManager] ReturnToLobby called but not in PostMatch");
+                Debug.LogWarning("[GameSessionManager] ReturnToLobby called but already in LobbyOpen");
                 return;
             }
             
-            Debug.Log("[GameSessionManager] Returning to lobby (requested by client)...");
+            // Trigger fade out before returning
+            TriggerFadeOutClientRpc(transitionDuration);
+            
+            StartCoroutine(DelayedReturnToLobby(transitionDuration));
+        }
+
+        private IEnumerator DelayedReturnToLobby(float delay)
+        {
+            yield return new WaitForSeconds(delay);
             PerformReturnToLobby();
         }
 
@@ -710,6 +694,7 @@ namespace Kavkazim.Netcode
             // Reset all players for next round
             for (int i = 0; i < Players.Count; i++)
             {
+
                 var player = Players[i];
                 
                 // Waiting players become eligible for next round
@@ -724,18 +709,43 @@ namespace Kavkazim.Netcode
             // Reset win result
             WinResult.Value = WinResultData.Empty;
             
-            // Return to lobby phase
+            // Clear cached meeting data and player states
+            CachedMeetingData = default;
+            _cachedPlayerStates.Clear();
+            
+            // Clean up all gameplay objects before returning to lobby
+            DespawnAllDeadBodies();
+            DespawnAllPlayerAvatars();
+            
+            // Return to lobby phase BEFORE loading scene
             CurrentPhase.Value = MatchPhase.LobbyOpen;
             
             // Load GameSession scene (lobby) for all clients
             if (NetworkManager.SceneManager != null)
             {
-                Debug.Log("[GameSessionManager] Loading GameSession scene (lobby)...");
                 NetworkManager.SceneManager.LoadScene("GameSession", LoadSceneMode.Single);
             }
             else
             {
                 Debug.LogError("[GameSessionManager] NetworkManager.SceneManager is null!");
+            }
+        }
+        
+        /// <summary>
+        /// SERVER ONLY: Despawn all player avatars when returning to lobby.
+        /// </summary>
+        private void DespawnAllPlayerAvatars()
+        {
+            if (!IsServer || NetworkManager.SpawnManager == null) return;
+            
+            var avatars = FindObjectsByType<PlayerAvatar>(FindObjectsSortMode.None);
+            
+            foreach (var avatar in avatars)
+            {
+                if (avatar != null && avatar.NetworkObject != null && avatar.NetworkObject.IsSpawned)
+                {
+                    avatar.NetworkObject.Despawn();
+                }
             }
         }
 
@@ -751,7 +761,6 @@ namespace Kavkazim.Netcode
             // Skip win condition checking in test mode
             if (Settings.Value.TestMode)
             {
-                Debug.Log("[GameSessionManager] Test mode enabled - win conditions disabled");
                 return;
             }
             
@@ -759,7 +768,6 @@ namespace Kavkazim.Netcode
             
             if (_winEvaluator.TryEvaluate(snapshot, out var result))
             {
-                Debug.Log($"[GameSessionManager] Win condition met: {result.WinningTeamEnum}");
                 EndMatch(result);
             }
         }
@@ -812,13 +820,15 @@ namespace Kavkazim.Netcode
         {
             if (!IsServer) return;
             
+            // Defensive init
+            if (_lobbyValidator == null) _lobbyValidator = new LobbyValidator();
+
             var currentSettings = Settings.Value;
             var ctx = new LobbyRuntimeContext { CurrentPlayerCount = Players.Count, IsTestMode = currentSettings.TestMode };
             var sanitized = _lobbyValidator.Sanitize(currentSettings, ctx);
             
             if (!sanitized.Equals(currentSettings))
             {
-                Debug.Log("[GameSessionManager] Auto-clamping settings due to player count change...");
                 Settings.Value = sanitized;
             }
         }
@@ -893,7 +903,6 @@ namespace Kavkazim.Netcode
                 if (netObj.OwnerClientId == clientId && netObj.GetComponent<PlayerAvatar>() != null)
                 {
                     netObj.Despawn(true);
-                    Debug.Log($"[GameSessionManager] Despawned avatar for client {clientId}");
                     return;
                 }
             }
@@ -916,16 +925,327 @@ namespace Kavkazim.Netcode
             {
                 netObj.Despawn(true);
             }
+        }
+        
+
+        // ========== MEETING SYSTEM INTEGRATION ==========
+
+        /// <summary>
+        /// SERVER ONLY: Load the Meeting scene and start a meeting.
+        /// Called by ReportService when a body is reported or emergency meeting called.
+        /// </summary>
+        public void LoadMeetingScene(Kavkazim.Netcode.Meeting.MeetingStartData meetingData)
+        {
+            if (!IsServer)
+            {
+                Debug.LogError("[GameSessionManager] LoadMeetingScene called on client!");
+                return;
+            }
+
+            if (CurrentPhase.Value != MatchPhase.MatchInProgress)
+            {
+                Debug.LogWarning($"[GameSessionManager] Cannot start meeting - not in MatchInProgress phase (current: {CurrentPhase.Value})");
+                return;
+            }
+
+            // CRITICAL: Cache player states NOW (before scene changes)
+            // Players are still spawned in GameSession at this point
+            CachePlayerStatesBeforeMeeting();
             
-            Debug.Log($"[GameSessionManager] Despawned {toDespawn.Count} avatars");
+            // Trigger Fade Out
+            TriggerFadeOutClientRpc(transitionDuration);
+
+            // Clean up dead bodies - they're evidence that's already been discussed
+            // Do this in coroutine? No, can do it now or later. But load scene must wait.
+            // Move DespawnAllDeadBodies to DelayedMeetingLoad?
+            // "Bodies are evidence that was already discussed in the meeting"
+            // If we delay, they stay visible during fade out. That is fine.
+            
+            StartCoroutine(DelayedMeetingLoad(transitionDuration, meetingData));
         }
 
-        private IEnumerator ReturnToLobbyCoroutine()
+        /// <summary>
+        /// Cached meeting data to pass to MeetingManager after scene loads.
+        /// </summary>
+        public static Kavkazim.Netcode.Meeting.MeetingStartData CachedMeetingData { get; set; }
+
+        /// <summary>
+        /// Cached ID of player eliminated during meeting vote.
+        /// ulong.MaxValue means no one was eliminated.
+        /// </summary>
+        public static ulong CachedEliminatedPlayerId { get; set; } = ulong.MaxValue;
+
+        /// <summary>
+        /// Cached player states for respawning after meeting.
+        /// Key = ClientId, Value = (Role, IsAlive)
+        /// </summary>
+        private static Dictionary<ulong, (PlayerRoleType Role, bool IsAlive)> _cachedPlayerStates = new Dictionary<ulong, (PlayerRoleType, bool)>();
+
+        /// <summary>
+        /// Get cached player states (for use by MeetingManager to count alive players).
+        /// </summary>
+        public static Dictionary<ulong, (PlayerRoleType Role, bool IsAlive)> GetCachedPlayerStates()
         {
-            yield return new WaitForSeconds(postMatchDuration);
+            return _cachedPlayerStates;
+        }
+
+        /// <summary>
+        /// SERVER ONLY: Cache all player states before transitioning to meeting.
+        /// </summary>
+        public void CachePlayerStatesBeforeMeeting()
+        {
+            if (!IsServer) return;
+
+            _cachedPlayerStates.Clear();
             
-            CurrentPhase.Value = MatchPhase.LobbyOpen;
-            Debug.Log("[GameSessionManager] Returned to lobby");
+            // Force reset elimination ID on cache start
+            CachedEliminatedPlayerId = ulong.MaxValue;
+
+            if (NetworkManager.SpawnManager == null)
+
+            {
+                Debug.LogWarning("[GameSessionManager] SpawnManager is null, cannot cache player states!");
+                return;
+            }
+
+            // Find all PlayerState and PlayerAvatar components
+            foreach (var netObj in NetworkManager.SpawnManager.SpawnedObjects.Values)
+            {
+                var playerState = netObj.GetComponent<PlayerState>();
+                var playerAvatar = netObj.GetComponent<PlayerAvatar>();
+
+                if (playerState != null && playerAvatar != null)
+                {
+                    ulong clientId = netObj.OwnerClientId;
+                    PlayerRoleType role = playerAvatar.Role.Value;
+                    bool isAlive = playerState.IsAlive.Value;
+
+                    _cachedPlayerStates[clientId] = (role, isAlive);
+                }
+            }
+        }
+
+        /// <summary>
+        /// SERVER ONLY: Despawn all dead bodies before meeting.
+        /// Bodies are evidence that was already discussed in the meeting.
+        /// </summary>
+        private void DespawnAllDeadBodies()
+        {
+            if (!IsServer) return;
+
+            // Find all DeadBody NetworkObjects and despawn them
+            var deadBodies = FindObjectsByType<Kavkazim.Netcode.Reporting.DeadBody>(FindObjectsSortMode.None);
+            
+            foreach (var body in deadBodies)
+            {
+                if (body != null && body.NetworkObject != null)
+                {
+                    body.NetworkObject.Despawn();
+                }
+            }
+        }
+
+        /// <summary>
+        /// SERVER ONLY: Return to gameplay scene and respawn players with preserved state.
+        /// </summary>
+        public void ReturnToGameplayFromMeeting()
+        {
+            if (!IsServer)
+            {
+                Debug.LogError("[GameSessionManager] ReturnToGameplayFromMeeting called on client!");
+                return;
+            }
+
+            TriggerFadeOutClientRpc(transitionDuration);
+            
+            StartCoroutine(DelayedReturnToGameplay(transitionDuration));
+        }
+
+        /// <summary>
+        /// Called when GameSession scene loads after meeting.
+        /// </summary>
+        private void OnGameSessionSceneLoadedAfterMeeting(ulong clientId, string sceneName, UnityEngine.SceneManagement.LoadSceneMode loadMode)
+        {
+            if (sceneName != "GameSession") return;
+
+            // Unsubscribe
+            NetworkManager.SceneManager.OnLoadComplete -= OnGameSessionSceneLoadedAfterMeeting;
+
+            // Delay slightly to ensure scene is fully loaded
+            StartCoroutine(RespawnPlayersAfterMeetingCoroutine());
+        }
+
+        /// <summary>
+        /// Respawn players with their preserved state after meeting.
+        /// </summary>
+        private System.Collections.IEnumerator RespawnPlayersAfterMeetingCoroutine()
+        {
+            yield return new WaitForSeconds(0.5f);
+
+            if (!IsServer) yield break;
+
+            if (PlayerSpawnHandler.Instance == null)
+            {
+                Debug.LogError("[GameSessionManager] PlayerSpawnHandler.Instance is null!");
+                yield break;
+            }
+
+            // Create player data list
+            List<PlayerSessionData> playersToSpawn = new List<PlayerSessionData>();
+            foreach (var player in Players)
+            {
+                if (_cachedPlayerStates.ContainsKey(player.ClientId))
+                {
+                    playersToSpawn.Add(player);
+                }
+            }
+
+            // Spawn all players WITHOUT reassigning roles (we'll restore cached roles after)
+            PlayerSpawnHandler.Instance.SpawnGameplayAvatars(playersToSpawn, Settings.Value, skipRoleAssignment: true);
+
+            // Wait for spawns to complete
+            yield return new WaitForSeconds(1f);
+
+            // Restore player states
+            RestorePlayerStatesAfterMeeting();
+        }
+
+        /// <summary>
+        /// Restore player states (role, alive/dead) after respawning.
+        /// </summary>
+        private void RestorePlayerStatesAfterMeeting()
+        {
+            if (NetworkManager.SpawnManager == null)
+            {
+                Debug.LogWarning("[GameSessionManager] SpawnManager is null, cannot restore player states!");
+                return;
+            }
+
+            // Create a copy to avoid "Collection was modified" exception
+            var spawnedObjects = NetworkManager.SpawnManager.SpawnedObjects.Values.ToList();
+
+            try
+            {
+                foreach (var netObj in spawnedObjects)
+                {
+                    if (netObj == null) continue;
+
+                    var playerState = netObj.GetComponent<PlayerState>();
+                    if (playerState != null)
+                    {
+                        ulong clientId = netObj.OwnerClientId;
+
+                        if (_cachedPlayerStates.TryGetValue(clientId, out var cachedState))
+                        {
+                            var playerAvatar = netObj.GetComponent<PlayerAvatar>();
+                            if (playerAvatar != null)
+                            {
+                                playerAvatar.Role.Value = cachedState.Role;
+                            }
+
+                            // Restore alive/dead state
+                            playerState.ForceSetAliveState(cachedState.IsAlive);
+                        }
+                    }
+                }
+            }
+            catch (System.Exception e)
+            {
+                Debug.LogException(e);
+            }
+
+            // Apply cached elimination from meeting vote (if any)
+            if (CachedEliminatedPlayerId != ulong.MaxValue)
+            {
+                bool foundEliminated = false;
+
+                // Find the eliminated player's PlayerState
+                foreach (var netObj in spawnedObjects)
+                {
+                    if (netObj == null) continue;
+                    if (netObj.OwnerClientId == CachedEliminatedPlayerId)
+                    {
+                        var playerState = netObj.GetComponent<PlayerState>();
+                        if (playerState != null)
+                        {
+                            playerState.Kill(false); // false = don't spawn body for meeting eliminations
+                            foundEliminated = true;
+                            break; // Stop calling kill found the player
+                        }
+                        // If null, it's just another object owned by this client (e.g. manager), keep searching.
+                    }
+                }
+                
+                if (!foundEliminated)
+                {
+                    Debug.LogError($"[GameSessionManager] FATAL: Could not find NetworkObject for eliminated player {CachedEliminatedPlayerId} in spawned objects list!");
+                }
+
+                // Clear the cached elimination
+                CachedEliminatedPlayerId = ulong.MaxValue;
+            }
+
+            // After restoring roles, distribute perceived roles to all clients
+            if (PlayerSpawnHandler.Instance != null)
+            {
+                // Build the spawned players list for role distribution
+                var spawnedPlayers = new List<PlayerAvatar>();
+                foreach (var netObj in spawnedObjects)
+                {
+                    if (netObj != null)
+                    {
+                        var avatar = netObj.GetComponent<PlayerAvatar>();
+                        if (avatar != null)
+                        {
+                            spawnedPlayers.Add(avatar);
+                        }
+                    }
+                }
+
+                // Distribute perceived roles
+                StartCoroutine(DistributeRolesAfterRestore(spawnedPlayers));
+            }
+
+            // Clear the cache
+            _cachedPlayerStates.Clear();
+        }
+
+        /// <summary>
+        /// Distribute perceived roles to clients after restoring from cache.
+        /// </summary>
+        private System.Collections.IEnumerator DistributeRolesAfterRestore(List<PlayerAvatar> players)
+        {
+            yield return null; // Wait a frame for role sync
+
+            foreach (var observer in players)
+            {
+                if (observer == null) continue;
+
+                PlayerRoleType observerTrueRole = observer.Role.Value;
+
+                // Send perceived role for each player to this observer
+                foreach (var target in players)
+                {
+                    if (target == null) continue;
+
+                    PlayerRoleType targetTrueRole = target.Role.Value;
+                    PlayerRoleType perceivedRole = RoleVisibilityService.GetPerceivedRole(observerTrueRole, targetTrueRole);
+
+                    observer.ReceivePerceivedRoleClientRpc(
+                        target.NetworkObjectId,
+                        perceivedRole,
+                        observer.RpcTarget.Single(observer.OwnerClientId, RpcTargetUse.Temp)
+                    );
+                }
+            }
+
+            // NOW check win conditions after all roles are restored and distributed
+            yield return null; // One more frame to ensure everything is synced
+
+            CheckWinConditions();
+            
+            // NOW fade in - respawn is complete
+            TriggerFadeInClientRpc(transitionDuration);
         }
 
         // ========== DEBUG ==========
@@ -996,6 +1316,159 @@ namespace Kavkazim.Netcode
             }
         }
 #endif
+
+        // ========== TRANSITION HELPERS ==========
+
+        [Rpc(SendTo.ClientsAndHost)]
+        private void TriggerFadeOutClientRpc(float duration)
+        {
+            if (SceneTransitionManager.Instance != null)
+            {
+                SceneTransitionManager.Instance.FadeOut(duration);
+            }
+        }
+
+        [Rpc(SendTo.ClientsAndHost)]
+        private void TriggerFadeInClientRpc(float duration)
+        {
+            if (SceneTransitionManager.Instance != null)
+            {
+                SceneTransitionManager.Instance.FadeIn(duration);
+            }
+        }
+
+        [Rpc(SendTo.ClientsAndHost)]
+        private void SuppressFadeInClientRpc()
+        {
+            if (SceneTransitionManager.Instance != null)
+            {
+                SceneTransitionManager.Instance.SuppressNextAutoFadeIn = true;
+            }
+        }
+        
+        private IEnumerator DelayedStartGame(float delay, int eligibleCount, int kavkaziCount)
+        {
+            yield return new WaitForSeconds(delay);
+            
+            CurrentPhase.Value = MatchPhase.MatchInProgress;
+            
+            // Reset meeting state for new game
+            CachedEliminatedPlayerId = ulong.MaxValue;
+            CachedMeetingData = default;
+            _cachedPlayerStates.Clear();
+            
+            if (Kavkazim.Netcode.Meeting.MeetingManager.Instance != null)
+            {
+                Kavkazim.Netcode.Meeting.MeetingManager.Instance.ResetForNewGame();
+            }
+            
+            // RESET EMERGENCY TRACKING
+            Kavkazim.Netcode.Reporting.ReportService.ResetEmergencyTracking();
+            
+            // Directly call spawn handler to spawn gameplay avatars
+            if (PlayerSpawnHandler.Instance != null)
+            {
+                PlayerSpawnHandler.Instance.SpawnGameplayAvatars(GetEligiblePlayers(), Settings.Value);
+            }
+            else
+            {
+                Debug.LogError("[GameSessionManager] PlayerSpawnHandler.Instance is null!");
+            }
+            
+            // No scene change for start game, so we must trigger fade in manually
+            TriggerFadeInClientRpc(transitionDuration);
+        }
+
+        private IEnumerator DelayedMeetingLoad(float delay, Kavkazim.Netcode.Meeting.MeetingStartData meetingData)
+        {
+            yield return new WaitForSeconds(delay);
+            
+            // Clean up dead bodies - they're evidence that's already been discussed
+            DespawnAllDeadBodies();
+
+            // Cache meeting data (MeetingManager will read this after spawning)
+            CachedMeetingData = meetingData;
+
+            // Load Meeting scene (MeetingManager will be spawned with the scene)
+            // Note: GameSessionManager persists via DontDestroyOnLoad set in OnNetworkSpawn
+            if (NetworkManager.SceneManager != null)
+            {
+                var status = NetworkManager.SceneManager.LoadScene("MeetingScene", UnityEngine.SceneManagement.LoadSceneMode.Single);
+                
+                if (status != SceneEventProgressStatus.Started)
+                {
+                    Debug.LogError($"[GameSessionManager] Failed to load MeetingScene! Status: {status}");
+                    Debug.LogError("[GameSessionManager] Make sure MeetingScene is added to Build Settings!");
+                }
+                else
+                {
+                    Debug.Log("[GameSessionManager] MeetingScene load started.");
+                }
+            }
+            else
+            {
+                Debug.LogError("[GameSessionManager] NetworkManager.SceneManager is null!");
+            }
+        }
+        
+        private IEnumerator DelayedReturnToGameplay(float delay)
+        {
+            yield return new WaitForSeconds(delay);
+
+            CurrentPhase.Value = MatchPhase.MatchInProgress;
+
+            // Suppress auto-fade-in - we'll trigger it manually after respawn
+            SuppressFadeInClientRpc();
+
+            // Load GameSession scene
+            if (NetworkManager.SceneManager != null)
+            {
+                NetworkManager.SceneManager.OnLoadComplete += OnGameSessionSceneLoadedAfterMeeting;
+                NetworkManager.SceneManager.LoadScene("GameSession", UnityEngine.SceneManagement.LoadSceneMode.Single);
+            }
+            else
+            {
+                Debug.LogError("[GameSessionManager] NetworkManager.SceneManager is null!");
+            }
+        }
+
+        private IEnumerator DelayedWinScreenLoad(float delay)
+        {
+            yield return new WaitForSeconds(delay);
+            
+            // Set phase to PostMatch
+            CurrentPhase.Value = MatchPhase.PostMatch;
+            
+            // Cache the win result for the WinScreen scene to read
+            // (GameSessionManager gets destroyed on scene load)
+            CachedWinResult = WinResult.Value;
+            
+            // Cache all player names before scene transition
+            // This ensures correct names are restored when returning to lobby
+            CachedPlayerNames.Clear();
+            foreach (var player in Players)
+            {
+                CachedPlayerNames[player.ClientId] = player.PlayerName.ToString();
+            }
+            
+            // Sync win result to all clients BEFORE scene loads
+            CacheWinResultClientRpc(WinResult.Value);
+            
+            // Sync player names to all clients BEFORE scene loads
+            // Send each player name individually since Dictionary can't be sent via RPC
+            // Create a copy to avoid collection modification during enumeration
+            var cachedNames = new List<KeyValuePair<ulong, string>>(CachedPlayerNames);
+            foreach (var kvp in cachedNames)
+            {
+                CachePlayerNameClientRpc(kvp.Key, kvp.Value);
+            }
+            
+            // Despawn all player avatars before scene transition
+            DespawnAllAvatars();
+            
+            // Load WinScreen scene for all clients
+            LoadWinScreenScene();
+        }
 
         /// <summary>
         /// Gets a unique suffix for ParrelSync clones to prevent PlayerPrefs sharing.

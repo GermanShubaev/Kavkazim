@@ -131,18 +131,17 @@ namespace Kavkazim.UI
 
             _reportContainer.SetActive(true);
 
-            // Check if player has already reported this game
-            bool hasUsedReport = ReportService.HasPlayerReported(playerState.OwnerClientId);
-            
             // Check if there's something reportable in range (body OR emergency button)
-            bool canReport = !hasUsedReport && ReportService.HasReportableInRange(playerState.transform.position);
+            // Note: Body reports are UNLIMITED, emergency meetings are one per player
+            // Emergency button has its own cooldown/limit check, so we just check range here
+            bool canReport = ReportService.HasReportableInRange(playerState.transform.position);
 
-            // Visual feedback: orange when can report, gray when not (or already reported)
+            // Visual feedback: orange when can report, gray when not
             if (_reportFill != null)
             {
                 _reportFill.color = canReport 
                     ? new Color(1f, 0.6f, 0f, 0.9f)   // Orange - can report
-                    : new Color(0.4f, 0.4f, 0.4f, 0.6f); // Gray - nothing to report / used report
+                    : new Color(0.4f, 0.4f, 0.4f, 0.6f); // Gray - nothing in range
             }
         }
 

@@ -120,10 +120,10 @@ namespace Kavkazim.Netcode.Reporting
             ulong callerClientId = rpcParams.Receive.SenderClientId;
             Debug.Log($"[EmergencyButton] SERVER: Received emergency meeting request from ClientID: {callerClientId}");
 
-            // Check if player has already reported this game
-            if (ReportService.HasPlayerReported(callerClientId))
+            // Check if player has already called an emergency meeting this game
+            if (ReportService.HasCalledEmergency(callerClientId))
             {
-                Debug.LogWarning("[EmergencyButton] SERVER: Request rejected - player already used their report this game.");
+                Debug.LogWarning("[EmergencyButton] SERVER: Request rejected - player already used their emergency meeting this game.");
                 return;
             }
 
@@ -165,8 +165,8 @@ namespace Kavkazim.Netcode.Reporting
                 callerName = avatar.PlayerName.Value.ToString();
             }
 
-            // Mark player as having reported (one report per game)
-            ReportService.MarkPlayerAsReported(callerClientId);
+            // Mark player as having called emergency meeting (one per game)
+            ReportService.MarkEmergencyCalled(callerClientId);
 
             // Start cooldown
             _lastUsedTime.Value = Time.time;
@@ -180,17 +180,17 @@ namespace Kavkazim.Netcode.Reporting
 
         /// <summary>
         /// Client RPC to announce the emergency meeting.
-        /// Also syncs the "has reported" state to all clients.
+        /// Also syncs the "has called emergency" state to all clients.
         /// </summary>
         [ClientRpc]
         private void AnnounceEmergencyMeetingClientRpc(string callerName, ulong callerClientId)
         {
             // Use ReportService for consistent logging
-            ReportService.NotifyEmergencyMeeting(callerName);
+            ReportService.NotifyEmergencyMeeting(callerName, callerClientId);
             OnEmergencyMeetingCalled?.Invoke(callerName);
             
-            // Mark this player as having reported on all clients
-            ReportService.MarkPlayerAsReported(callerClientId);
+            // Mark this player as having called emergency meeting on all clients
+            ReportService.MarkEmergencyCalled(callerClientId);
         }
 
         private void Update()

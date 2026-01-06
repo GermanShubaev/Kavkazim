@@ -35,9 +35,22 @@ namespace Kavkazim.Netcode
 
         private PlayerState _playerState;
         
-        // Cached config values
+        // Cached config values - prefer GameSessionManager settings, fallback to config
         private float KillRange => config ? config.killRange : defaultKillRange;
-        private float KillCooldown => config ? config.killCooldown : defaultKillCooldown;
+        
+        private float KillCooldown
+        {
+            get
+            {
+                // Use lobby settings if available
+                if (GameSessionManager.Instance != null)
+                    return GameSessionManager.Instance.Settings.Value.KillCooldown;
+                // Fallback to config
+                if (config != null)
+                    return config.killCooldown;
+                return defaultKillCooldown;
+            }
+        }
 
         private void Awake()
         {

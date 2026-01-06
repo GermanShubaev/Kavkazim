@@ -198,7 +198,8 @@ namespace Netcode.Player
         /// </summary>
         /// <param name="eligiblePlayers">Players who were in lobby (not late joiners)</param>
         /// <param name="settings">Lobby settings for role assignment</param>
-        public void SpawnGameplayAvatars(List<PlayerSessionData> eligiblePlayers, LobbySettings settings)
+        /// <param name="skipRoleAssignment">If true, skip random role assignment (for respawning after meeting)</param>
+        public void SpawnGameplayAvatars(List<PlayerSessionData> eligiblePlayers, LobbySettings settings, bool skipRoleAssignment = false)
         {
             if (!NetworkManager.Singleton.IsServer)
             {
@@ -206,7 +207,7 @@ namespace Netcode.Player
                 return;
             }
 
-            Debug.Log($"[PlayerSpawnHandler] Spawning {eligiblePlayers.Count} gameplay avatars");
+            Debug.Log($"[PlayerSpawnHandler] Spawning {eligiblePlayers.Count} gameplay avatars (skipRoleAssignment={skipRoleAssignment})");
             
             // Reset spawn counter
             _spawnedPlayerCount = 0;
@@ -230,8 +231,15 @@ namespace Netcode.Player
                 SpawnPlayerAvatar(playerData.ClientId, playerData.PlayerName.ToString());
             }
             
-            // Assign roles after all avatars are spawned
-            StartCoroutine(AssignRolesCoroutine(settings.KavkaziCount));
+            // Assign roles after all avatars are spawned (unless skipped for respawn)
+            if (!skipRoleAssignment)
+            {
+                StartCoroutine(AssignRolesCoroutine(settings.KavkaziCount));
+            }
+            else
+            {
+                Debug.Log("[PlayerSpawnHandler] Skipping role assignment - roles will be restored from cache");
+            }
         }
 
         private void SpawnPlayerAvatar(ulong clientId, string playerName)

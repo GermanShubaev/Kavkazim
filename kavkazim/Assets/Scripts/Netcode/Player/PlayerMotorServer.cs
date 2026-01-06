@@ -38,7 +38,15 @@ namespace Netcode.Player
         {
             // Sanitize input length and compute velocity
             var clamped = Vector2.ClampMagnitude(moveInput, 1f);
-            _serverVelocity = clamped * (config ? config.moveSpeed : 3.5f);
+            
+            // Get move speed from lobby settings, fallback to config, then default
+            float moveSpeed = 3.5f;
+            if (Kavkazim.Netcode.GameSessionManager.Instance != null)
+                moveSpeed = Kavkazim.Netcode.GameSessionManager.Instance.Settings.Value.MoveSpeed;
+            else if (config != null)
+                moveSpeed = config.moveSpeed;
+            
+            _serverVelocity = clamped * moveSpeed;
         }
 
         private void FixedUpdate()

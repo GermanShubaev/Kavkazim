@@ -184,7 +184,8 @@ namespace Netcode.Player
         /// <summary>
         /// SERVER ONLY: Kills this player, transitioning them to ghost state.
         /// </summary>
-        public void Kill()
+        /// <param name="spawnBody">If true, spawns a dead body. Set to false for meeting eliminations.</param>
+        public void Kill(bool spawnBody = true)
         {
             if (!IsServer)
             {
@@ -199,10 +200,13 @@ namespace Netcode.Player
             }
             
             IsAlive.Value = false;
-            Debug.Log($"[PlayerState] SERVER: Player {OwnerClientId} has been killed.");
+            Debug.Log($"[PlayerState] SERVER: Player {OwnerClientId} has been killed (spawnBody={spawnBody}).");
             
-            // Fire event for win condition checking
-            OnPlayerKilled?.Invoke(this);
+            // Fire event for win condition checking (and body spawning if spawnBody is true)
+            if (spawnBody)
+            {
+                OnPlayerKilled?.Invoke(this);
+            }
         }
 
         /// <summary>
@@ -224,6 +228,24 @@ namespace Netcode.Player
             
             IsAlive.Value = true;
             Debug.Log($"[PlayerState] SERVER: Player {OwnerClientId} has been revived.");
+        }
+
+        /// <summary>
+        /// SERVER ONLY: Force sets the alive state, bypassing normal checks.
+        /// Used for restoring player state after meeting respawn.
+        /// </summary>
+        public void ForceSetAliveState(bool alive)
+        {
+            if (!IsServer)
+            {
+                Debug.LogWarning("[PlayerState] ForceSetAliveState() called on client - ignored.");
+                return;
+            }
+            
+            Debug.Log($"[PlayerState] SERVER: Force setting Player {OwnerClientId} IsAlive={alive}");
+            IsAlive.Value = alive;
+            
+            // Don't invoke OnPlayerKilled since this is a state restoration, not a kill
         }
 
         /// <summary>

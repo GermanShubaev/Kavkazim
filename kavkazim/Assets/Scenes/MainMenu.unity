@@ -905,7 +905,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Kavkazim.Netcode.PlayerSpawnHandler
   gameplaySpawnCenter: {x: 4.6, y: 9.17, z: 0}
-  gameplaySpawnRadius: 1.5
+  gameplaySpawnRadius: 5.5
   lobbySpawnCenter: {x: 0, y: -50, z: 0}
   playerPrefab: {fileID: 64683924485901163, guid: 34cc8fb027dbef64c996b2688cca29db, type: 3}
 --- !u!1 &1317697001

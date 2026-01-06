@@ -16,7 +16,10 @@ namespace Kavkazim.Netcode
         MatchInProgress = 1,
         
         /// <summary>Post-match results screen before returning to lobby.</summary>
-        PostMatch = 2
+        PostMatch = 2,
+        
+        /// <summary>Meeting is in progress (voting). Gameplay frozen.</summary>
+        Meeting = 3
     }
 
     /// <summary>

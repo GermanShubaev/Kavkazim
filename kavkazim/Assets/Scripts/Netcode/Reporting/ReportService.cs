@@ -19,14 +19,17 @@ namespace Kavkazim.Netcode.Reporting
     /// <summary>
     /// Service for handling reports (dead bodies and emergency meetings).
     /// Uses static methods. Same L key triggers both - priority: body first, then emergency.
-    /// Players can only report ONCE per game.
+    /// RULES:
+    /// - Body reports: UNLIMITED (players can report multiple bodies)
+    /// - Emergency meetings: ONE per player per game (tracked below)
     /// </summary>
     public static class ReportService
     {
         private static float _reportRange = 2.5f;
         
-        // Track which players have already reported (server-side)
-        private static HashSet<ulong> _playersWhoReported = new HashSet<ulong>();
+        // Track which players have already called an EMERGENCY meeting (server-side)
+        // NOTE: This does NOT apply to body reports (body reports are unlimited)
+        private static HashSet<ulong> _playersWhoCalledEmergency = new HashSet<ulong>();
         
         /// <summary>
         /// Event fired when a body is successfully reported.
@@ -50,29 +53,29 @@ namespace Kavkazim.Netcode.Reporting
         }
 
         /// <summary>
-        /// Reset the report tracking (call at start of new game/round).
+        /// Reset emergency meeting tracking (call at start of new game/round).
         /// </summary>
-        public static void ResetReportTracking()
+        public static void ResetEmergencyTracking()
         {
-            _playersWhoReported.Clear();
-            Debug.Log("[ReportService] Report tracking reset for new game.");
+            _playersWhoCalledEmergency.Clear();
+            Debug.Log("[ReportService] Emergency meeting tracking reset for new game.");
         }
 
         /// <summary>
-        /// Check if a player has already reported this game.
+        /// Check if a player has already called an emergency meeting this game.
         /// </summary>
-        public static bool HasPlayerReported(ulong clientId)
+        public static bool HasCalledEmergency(ulong clientId)
         {
-            return _playersWhoReported.Contains(clientId);
+            return _playersWhoCalledEmergency.Contains(clientId);
         }
 
         /// <summary>
-        /// Mark a player as having reported (server-side).
+        /// Mark a player as having called an emergency meeting (server-side).
         /// </summary>
-        public static void MarkPlayerAsReported(ulong clientId)
+        public static void MarkEmergencyCalled(ulong clientId)
         {
-            _playersWhoReported.Add(clientId);
-            Debug.Log($"[ReportService] Player {clientId} has used their report.");
+            _playersWhoCalledEmergency.Add(clientId);
+            Debug.Log($"[ReportService] Player {clientId} has used their emergency meeting.");
         }
 
         /// <summary>
@@ -202,20 +205,62 @@ namespace Kavkazim.Netcode.Reporting
 
         /// <summary>
         /// Called by DeadBody when a report is validated on server.
+        /// Triggers meeting scene load.
         /// </summary>
-        internal static void NotifyBodyReported(string reporterName, string victimName)
+        internal static void NotifyBodyReported(string reporterName, string victimName, ulong reporterId, ulong victimId)
         {
             Debug.Log($"REPORT (Dead Body), Found Body by \"{reporterName}\"");
             OnBodyReported?.Invoke(reporterName, victimName);
+
+            // Trigger meeting scene load (SERVER ONLY)
+            if (GameSessionManager.Instance != null && GameSessionManager.Instance.IsServer)
+            {
+                var meetingData = new Kavkazim.Netcode.Meeting.MeetingStartData
+                {
+                    Type = Kavkazim.Netcode.Meeting.MeetingType.BodyReport,
+                    CallerId = reporterId,
+                    CallerName = reporterName,
+                    VictimId = victimId,
+                    VictimName = victimName,
+                    Timestamp = UnityEngine.Time.time
+                };
+
+                GameSessionManager.Instance.LoadMeetingScene(meetingData);
+            }
+            else
+            {
+                Debug.LogError("[ReportService] GameSessionManager not found, cannot load meeting scene!");
+            }
         }
 
         /// <summary>
         /// Called by EmergencyButton when meeting is validated on server.
+        /// Triggers meeting scene load.
         /// </summary>
-        internal static void NotifyEmergencyMeeting(string callerName)
+        internal static void NotifyEmergencyMeeting(string callerName, ulong callerId)
         {
             Debug.Log($"REPORT (Emergency Meeting) BY \"{callerName}\"");
             OnEmergencyMeetingCalled?.Invoke(callerName);
+
+            // Trigger meeting scene load (SERVER ONLY)
+            if (GameSessionManager.Instance != null && GameSessionManager.Instance.IsServer)
+            {
+                var meetingData = new Kavkazim.Netcode.Meeting.MeetingStartData
+                {
+                    Type = Kavkazim.Netcode.Meeting.MeetingType.Emergency,
+                    CallerId = callerId,
+                    CallerName = callerName,
+                    VictimId = ulong.MaxValue, // No victim for emergency
+                    VictimName = "",
+                    Timestamp = UnityEngine.Time.time
+                };
+
+                GameSessionManager.Instance.LoadMeetingScene(meetingData);
+            }
+            else
+            {
+                Debug.LogError("[ReportService] GameSessionManager not found, cannot load meeting scene!");
+            }
         }
     }
 }

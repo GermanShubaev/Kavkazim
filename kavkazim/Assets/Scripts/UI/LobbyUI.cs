@@ -261,7 +261,7 @@ namespace UI
 
             // Max Players
             (_maxPlayersSlider, _maxPlayersValue) = CreateSettingSlider(settingsPanel.transform, "Max Players", 
-                4, 15, 10, yOffset);
+                4, 10, 10, yOffset);
             _maxPlayersSlider.wholeNumbers = true;
             _maxPlayersSlider.onValueChanged.AddListener(v => OnSettingChanged());
             yOffset += yStep;
