@@ -1,0 +1,598 @@
+fileFormatVersion: 2
+guid: 4e052ad2ce90d6c4b8e09168fcee3fb9
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: -7885728161564341496
+    second: DeadMark_no_bg_0
+  - first:
+      213: -3537428174866700330
+    second: DeadMark_no_bg_1
+  - first:
+      213: 5222995990258473520
+    second: DeadMark_no_bg_2
+  - first:
+      213: -2551115372254089412
+    second: DeadMark_no_bg_3
+  - first:
+      213: -2708559719620326798
+    second: DeadMark_no_bg_4
+  - first:
+      213: 2763202175115336073
+    second: DeadMark_no_bg_5
+  - first:
+      213: -6628380736549631749
+    second: DeadMark_no_bg_6
+  - first:
+      213: 8247014518412050459
+    second: DeadMark_no_bg_7
+  - first:
+      213: 1772503453204574770
+    second: DeadMark_no_bg_8
+  - first:
+      213: -2897343410551178981
+    second: DeadMark_no_bg_9
+  - first:
+      213: 2030688396801806801
+    second: DeadMark_no_bg_10
+  - first:
+      213: -2583918161124334502
+    second: DeadMark_no_bg_11
+  - first:
+      213: -1483320022189243119
+    second: DeadMark_no_bg_12
+  - first:
+      213: 7847501168958710448
+    second: DeadMark_no_bg_13
+  - first:
+      213: -4536291951950228317
+    second: DeadMark_no_bg_14
+  - first:
+      213: -2812291883992794859
+    second: DeadMark_no_bg_15
+  - first:
+      213: 581352358633217868
+    second: DeadMark_no_bg_16
+  - first:
+      213: 6081523608061153435
+    second: DeadMark_no_bg_17
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 1
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 100
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: WebGL
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: DeadMark_no_bg_0
+      rect:
+        serializedVersion: 2
+        x: 444
+        y: 1602
+        width: 125
+        height: 191
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 80bc9a67404409290800000000000000
+      internalID: -7885728161564341496
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: DeadMark_no_bg_1
+      rect:
+        serializedVersion: 2
+        x: 1461
+        y: 1716
+        width: 23
+        height: 32
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6d7ac9a21d788eec0800000000000000
+      internalID: -3537428174866700330
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: DeadMark_no_bg_2
+      rect:
+        serializedVersion: 2
+        x: 1490
+        y: 1639
+        width: 64
+        height: 91
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 03a55a63e2fcb7840800000000000000
+      internalID: 5222995990258473520
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: DeadMark_no_bg_3
+      rect:
+        serializedVersion: 2
+        x: 567
+        y: 1648
+        width: 32
+        height: 47
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c3fa1c7d51e989cd0800000000000000
+      internalID: -2551115372254089412
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: DeadMark_no_bg_4
+      rect:
+        serializedVersion: 2
+        x: 799
+        y: 1506
+        width: 97
+        height: 194
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 27a491b1943496ad0800000000000000
+      internalID: -2708559719620326798
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: DeadMark_no_bg_5
+      rect:
+        serializedVersion: 2
+        x: 1603
+        y: 1679
+        width: 22
+        height: 24
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 989165afcbdd85620800000000000000
+      internalID: 2763202175115336073
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: DeadMark_no_bg_6
+      rect:
+        serializedVersion: 2
+        x: 457
+        y: 1599
+        width: 15
+        height: 14
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: bf8cae9b6d24304a0800000000000000
+      internalID: -6628380736549631749
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: DeadMark_no_bg_7
+      rect:
+        serializedVersion: 2
+        x: 487
+        y: 190
+        width: 1198
+        height: 1474
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b10807b8208437270800000000000000
+      internalID: 8247014518412050459
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: DeadMark_no_bg_8
+      rect:
+        serializedVersion: 2
+        x: 400
+        y: 1533
+        width: 21
+        height: 21
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2327963ef72399810800000000000000
+      internalID: 1772503453204574770
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: DeadMark_no_bg_9
+      rect:
+        serializedVersion: 2
+        x: 1615
+        y: 1529
+        width: 112
+        height: 68
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b1937c5d4819ac7d0800000000000000
+      internalID: -2897343410551178981
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: DeadMark_no_bg_10
+      rect:
+        serializedVersion: 2
+        x: 472
+        y: 1472
+        width: 30
+        height: 27
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1d111ec76547e2c10800000000000000
+      internalID: 2030688396801806801
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: DeadMark_no_bg_11
+      rect:
+        serializedVersion: 2
+        x: 444
+        y: 728
+        width: 27
+        height: 26
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a54e0856f14142cd0800000000000000
+      internalID: -2583918161124334502
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: DeadMark_no_bg_12
+      rect:
+        serializedVersion: 2
+        x: 431
+        y: 602
+        width: 97
+        height: 46
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1158f2d7c403a6be0800000000000000
+      internalID: -1483320022189243119
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: DeadMark_no_bg_13
+      rect:
+        serializedVersion: 2
+        x: 454
+        y: 523
+        width: 24
+        height: 25
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 0b22f3e3cbce7ec60800000000000000
+      internalID: 7847501168958710448
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: DeadMark_no_bg_14
+      rect:
+        serializedVersion: 2
+        x: 1715
+        y: 520
+        width: 103
+        height: 58
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 3a41b86018adb01c0800000000000000
+      internalID: -4536291951950228317
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: DeadMark_no_bg_15
+      rect:
+        serializedVersion: 2
+        x: 316
+        y: 402
+        width: 132
+        height: 115
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 51935e18e6bb8f8d0800000000000000
+      internalID: -2812291883992794859
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: DeadMark_no_bg_16
+      rect:
+        serializedVersion: 2
+        x: 442
+        y: 459
+        width: 19
+        height: 20
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c4f1ba9d3e0611800800000000000000
+      internalID: 581352358633217868
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: DeadMark_no_bg_17
+      rect:
+        serializedVersion: 2
+        x: 340
+        y: 317
+        width: 120
+        height: 128
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b9013af0089e56450800000000000000
+      internalID: 6081523608061153435
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      DeadMark_no_bg_0: -7885728161564341496
+      DeadMark_no_bg_1: -3537428174866700330
+      DeadMark_no_bg_10: 2030688396801806801
+      DeadMark_no_bg_11: -2583918161124334502
+      DeadMark_no_bg_12: -1483320022189243119
+      DeadMark_no_bg_13: 7847501168958710448
+      DeadMark_no_bg_14: -4536291951950228317
+      DeadMark_no_bg_15: -2812291883992794859
+      DeadMark_no_bg_16: 581352358633217868
+      DeadMark_no_bg_17: 6081523608061153435
+      DeadMark_no_bg_2: 5222995990258473520
+      DeadMark_no_bg_3: -2551115372254089412
+      DeadMark_no_bg_4: -2708559719620326798
+      DeadMark_no_bg_5: 2763202175115336073
+      DeadMark_no_bg_6: -6628380736549631749
+      DeadMark_no_bg_7: 8247014518412050459
+      DeadMark_no_bg_8: 1772503453204574770
+      DeadMark_no_bg_9: -2897343410551178981
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

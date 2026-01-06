@@ -13,14 +13,13 @@ namespace Kavkazim.UI.Meeting
     {
         [Header("UI References")]
         [SerializeField] private TextMeshProUGUI playerNameText;
-        [SerializeField] private Image characterImage;
         [SerializeField] private Image selectionRing; // The "Glowy" ring
         [SerializeField] private Image deadOverlay;   // Visual for dead players
-        [SerializeField] private Image votedCheckmark; // Visual for "Has Voted"
 
         [Header("Settings")]
         [SerializeField] private Color localPlayerNameColor = Color.yellow;
         [SerializeField] private Color normalPlayerNameColor = Color.white;
+        [SerializeField] private Color deadPlayerNameColor = Color.gray;
         [SerializeField] private float hoverScale = 1.1f;
         [SerializeField] private float animationDuration = 0.2f;
 
@@ -34,29 +33,7 @@ namespace Kavkazim.UI.Meeting
         private void Awake()
         {
             _originalScale = transform.localScale;
-
-            // Auto-wire references if missing (compatibility with old hierarchy)
-            if (selectionRing == null)
-            {
-                var t = transform.Find("SelectionHighlight");
-                if (t) selectionRing = t.GetComponent<Image>();
-            }
-            if (deadOverlay == null)
-            {
-                var t = transform.Find("DeadOverlay");
-                if (t) deadOverlay = t.GetComponent<Image>();
-            }
-            if (votedCheckmark == null)
-            {
-                var t = transform.Find("VotedCheckmark");
-                if (t) votedCheckmark = t.GetComponent<Image>();
-            }
-            if (characterImage == null)
-            {
-                // Try "CharacterSprite" (old name) or just find first image
-                var t = transform.Find("CharacterSprite");
-                if (t) characterImage = t.GetComponent<Image>();
-            }
+            
             if (playerNameText == null)
             {
                 playerNameText = GetComponentInChildren<TextMeshProUGUI>();
@@ -69,11 +46,6 @@ namespace Kavkazim.UI.Meeting
                 selectionRing.raycastTarget = false; // Ensure it never blocks
             }
             
-            // Ensure we have a raycast target for events
-            if (characterImage != null)
-            {
-                characterImage.raycastTarget = true; 
-            }
         }
 
         public void Setup(ulong clientId, string playerName, bool isLocalPlayer, bool isDead)
@@ -83,21 +55,24 @@ namespace Kavkazim.UI.Meeting
             if (playerNameText != null)
             {
                 playerNameText.text = isLocalPlayer ? $"{playerName} (You)" : playerName;
-                playerNameText.color = isLocalPlayer ? localPlayerNameColor : normalPlayerNameColor;
+                
+                // Determine color: Dead takes priority over local color
+                Color targetColor = isDead ? deadPlayerNameColor : (isLocalPlayer ? localPlayerNameColor : normalPlayerNameColor);
+                playerNameText.color = targetColor;
+                
                 playerNameText.raycastTarget = false; // Ensure text doesn't block
             }
 
             if (deadOverlay != null)
             {
                 deadOverlay.enabled = isDead;
-                deadOverlay.raycastTarget = false;
+                deadOverlay.raycastTarget = false; // Ensure overlay doesn't block
             }
 
             // Reset state
             SetSelected(false);
-            SetVoted(false);
             
-            // Reset scale just in case
+            // Reset scale
             transform.localScale = _originalScale;
         }
 
@@ -113,8 +88,6 @@ namespace Kavkazim.UI.Meeting
             if (!interactive)
             {
                 transform.localScale = _originalScale;
-                // If interactive disabled (e.g. voted), we might want to keep selection visuals
-                // The selection ring is controlled by _isSelected, so it stays
             }
         }
 
@@ -127,17 +100,6 @@ namespace Kavkazim.UI.Meeting
             if (selectionRing != null)
             {
                 selectionRing.enabled = isSelected;
-            }
-        }
-
-        /// <summary>
-        /// Show/hide the "Voted" checkmark.
-        /// </summary>
-        public void SetVoted(bool hasVoted)
-        {
-            if (votedCheckmark != null)
-            {
-                votedCheckmark.enabled = hasVoted;
             }
         }
 
