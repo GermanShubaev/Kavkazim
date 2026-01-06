@@ -25,8 +25,8 @@ namespace Minigames
                 MinigameType.TakedownClick => minigameObj.AddComponent<TakedownClickGame>(),
                 MinigameType.ShashlikSort => minigameObj.AddComponent<ShashlikSortGame>(),
                 MinigameType.RemoteCommonClick => minigameObj.AddComponent<RemoteCommonClickGame>(),
-                //MinigameType.LaundrySort => minigameObj.AddComponent<LaundrySortGame>(),
-                //MinigameType.TapachkiClick => minigameObj.AddComponent<TapachkiGame>(),
+                MinigameType.LaundrySort => minigameObj.AddComponent<LaundrySortGame>(),
+                MinigameType.TapachkiClick => minigameObj.AddComponent<TapachkiGame>(),
                 _ => minigameObj.AddComponent<EmptyPopupMinigame>()
             };
 
