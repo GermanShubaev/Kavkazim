@@ -61,6 +61,9 @@ namespace Kavkazim.Netcode
             WinResultData.Empty
         );
 
+        /// <summary>Total number of tasks remaining across all innocent players.</summary>
+        public NetworkVariable<int> TasksLeft = new(0);
+
         // ========== EVENTS FOR UI ==========
         
         /// <summary>Fired when player list changes (join, leave, ready, name).</summary>

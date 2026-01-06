@@ -1,18 +1,14 @@
 using System.Collections.Generic;
-using UnityEngine;
-using UnityEngine.UI;
-using UnityEngine.EventSystems;
 using Kavkazim.UI;
-#if UNITY_EDITOR
+using Minigames.Base;
 using UnityEditor;
-#endif
+using UnityEngine;
+using UnityEngine.EventSystems;
+using UnityEngine.UI;
 
-namespace Minigames
+namespace Minigames.SortGames
 {
-    /// <summary>
-    /// A minigame where players drag prayer images to order them correctly using SortGame's two-section layout.
-    /// </summary>
-    public class PraySortGame : SortGame, IMinigame
+    public class PraySortGame : SortGame
     {
         [Header("Popup Settings")]
         [SerializeField] private int canvasSortingOrder = 200;
@@ -117,7 +113,7 @@ namespace Minigames
         {
             if (upperSection == null) return;
 
-            cells.Clear();
+            Cells.Clear();
             // Use cellSize for cell dimensions (3x original = 300)
             float totalWidth = (numberOfElements * cellSize) + ((numberOfElements - 1) * cellSpacing);
             float startX = -totalWidth / 2f + cellSize / 2f;
@@ -136,7 +132,7 @@ namespace Minigames
 
                 Cell cell = cellObj.AddComponent<Cell>();
                 cell.Initialize(i, this);
-                cells.Add(cell);
+                Cells.Add(cell);
 
                 // Add background image to show cell boundaries
                 Image bgImage = cellObj.AddComponent<Image>();
@@ -266,9 +262,9 @@ namespace Minigames
 
         private void CheckWinCondition()
         {
-            if (cells == null || cells.Count != 6)
+            if (Cells == null || Cells.Count != 6)
             {
-                Debug.Log($"[PraySortGame] Win check skipped: cells.Count = {cells?.Count ?? 0}, expected 6");
+                Debug.Log($"[PraySortGame] Win check skipped: cells.Count = {Cells?.Count ?? 0}, expected 6");
                 return;
             }
 
@@ -290,9 +286,9 @@ namespace Minigames
             };
 
             // Check if all cells have elements
-            for (int i = 0; i < cells.Count; i++)
+            for (int i = 0; i < Cells.Count; i++)
             {
-                Cell cell = cells[i];
+                Cell cell = Cells[i];
                 DraggableElement element = cell.GetElement();
 
                 if (element == null)
@@ -306,9 +302,9 @@ namespace Minigames
 
             // All cells are filled, now check if they're in correct order
             bool allCorrect = true;
-            for (int i = 0; i < cells.Count && i < expectedTypes.Length; i++)
+            for (int i = 0; i < Cells.Count && i < expectedTypes.Length; i++)
             {
-                Cell cell = cells[i];
+                Cell cell = Cells[i];
                 DraggableElement element = cell.GetElement();
 
                 if (element == null)
@@ -344,6 +340,7 @@ namespace Minigames
                     _resultText.color = Color.green;
                 }
                 Debug.Log("[PraySortGame] All images correctly ordered! Game complete.");
+                OnGameComplete();
                 StartCoroutine(CloseAfterDelay(2f));
             }
             else
@@ -599,9 +596,9 @@ namespace Minigames
         public override void OnDrag(PointerEventData eventData)
         {
             // Get rectTransform if not cached
-            if (rectTransform == null)
+            if (RectTransform == null)
             {
-                rectTransform = GetComponent<RectTransform>();
+                RectTransform = GetComponent<RectTransform>();
             }
             
             // Get canvas if not cached
@@ -610,9 +607,9 @@ namespace Minigames
                 _canvas = GetComponentInParent<Canvas>();
             }
             
-            if (game != null && rectTransform != null && _canvas != null)
+            if (Game != null && RectTransform != null && _canvas != null)
             {
-                RectTransform parentRect = rectTransform.parent as RectTransform;
+                RectTransform parentRect = RectTransform.parent as RectTransform;
                 
                 // Use the cached canvas instead of trying to get it from game component
                 Camera cam = _canvas.renderMode != RenderMode.ScreenSpaceOverlay ? _canvas.worldCamera : null;
@@ -625,15 +622,15 @@ namespace Minigames
                 
                 // Calculate anchor position in parent's local space (relative to parent's center/pivot)
                 Vector2 parentSize = parentRect.rect.size;
-                Vector2 anchorCenter = (rectTransform.anchorMin + rectTransform.anchorMax) / 2f;
+                Vector2 anchorCenter = (RectTransform.anchorMin + RectTransform.anchorMax) / 2f;
                 Vector2 anchorLocalPos = new Vector2(
                     (anchorCenter.x - 0.5f) * parentSize.x,
                     (anchorCenter.y - 0.5f) * parentSize.y
                 );
                 
                 // Set anchoredPosition so element center follows cursor exactly
-                rectTransform.anchoredPosition = localPoint - anchorLocalPos;
-                game.OnElementDrag(this, eventData.position);
+                RectTransform.anchoredPosition = localPoint - anchorLocalPos;
+                Game.OnElementDrag(this, eventData.position);
             }
         }
     }

@@ -1,23 +1,18 @@
+using Minigames.ClickGames;
+using Minigames.SortGames;
 using UnityEngine;
 
-namespace Minigames
+namespace Minigames.Base
 {
-    /// <summary>
-    /// Factory for creating minigame instances based on MinigameType.
-    /// </summary>
     public static class MinigameFactory
     {
-        /// <summary>
-        /// Creates and returns a minigame instance based on the specified type.
-        /// </summary>
         public static IMinigame CreateMinigame(MinigameType gameType)
         {
-            GameObject minigameObj = new GameObject($"{gameType}Instance");
+            var minigameObj = new GameObject($"{gameType}Instance");
             
             IMinigame minigame = gameType switch
             {
                 MinigameType.LezginkaSort => minigameObj.AddComponent<LezginkaSortGame>(),
-                MinigameType.EmptyPopup => minigameObj.AddComponent<EmptyPopupMinigame>(),
                 MinigameType.PraySortGame => minigameObj.AddComponent<PraySortGame>(),
                 MinigameType.PapakhaClick => minigameObj.AddComponent<PapakhaClickGame>(),
                 MinigameType.DishClick => minigameObj.AddComponent<DishClickGame>(),
@@ -27,7 +22,6 @@ namespace Minigames
                 MinigameType.RemoteCommonClick => minigameObj.AddComponent<RemoteCommonClickGame>(),
                 MinigameType.LaundrySort => minigameObj.AddComponent<LaundrySortGame>(),
                 MinigameType.TapachkiClick => minigameObj.AddComponent<TapachkiGame>(),
-                _ => minigameObj.AddComponent<EmptyPopupMinigame>()
             };
 
             return minigame;

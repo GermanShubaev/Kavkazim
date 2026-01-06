@@ -1,19 +1,14 @@
 using System.Collections.Generic;
-using UnityEngine;
-using UnityEngine.UI;
-using UnityEngine.EventSystems;
 using Kavkazim.UI;
-#if UNITY_EDITOR
+using Minigames.Base;
 using UnityEditor;
-#endif
+using UnityEngine;
+using UnityEngine.EventSystems;
+using UnityEngine.UI;
 
-namespace Minigames
+namespace Minigames.SortGames
 {
-    /// <summary>
-    /// A minigame where players drag lezginka dance images to order them correctly.
-    /// Features 2 rows of 4 cells for ordering the dance moves.
-    /// </summary>
-    public class LezginkaSortGame : SortGame, IMinigame
+    public class LezginkaSortGame : SortGame
     {
         [Header("Popup Settings")]
         [SerializeField] private int canvasSortingOrder = 200;
@@ -62,7 +57,6 @@ namespace Minigames
                     string path = AssetDatabase.GUIDToAssetPath(guids[i]);
                     _loadedImages[i] = AssetDatabase.LoadAssetAtPath<Sprite>(path);
                 }
-                // Sort by name to ensure consistent order
                 System.Array.Sort(_loadedImages, (a, b) => string.Compare(a.name, b.name));
                 Debug.Log($"[LezginkaSortGame] Loaded {_loadedImages.Length} images from Assets/Art/Images/lezginka (Editor mode)");
             }
@@ -100,37 +94,30 @@ namespace Minigames
             }
 
             numberOfElements = _loadedImages.Length;
-            // 5x larger images (similar to PraySortGame sizing)
             elementSize = 300f;
             cellSize = 250f;
             cellSpacing = 30f;
             rowSpacing = 25f;
-            minDistanceBetweenElements = 200f; // Reduced to fit elements in lower section
+            minDistanceBetweenElements = 200f; 
             snapProximityDistance = 200f;
 
             SetupCellGrid();
             SetupElements();
         }
 
-        /// <summary>
-        /// Sets up exactly 8 cells in 2 rows of 4 (like PraySortGame but in grid layout)
-        /// </summary>
         private void SetupCellGrid()
         {
             if (upperSection == null) return;
 
-            cells.Clear();
+            Cells.Clear();
             
-            // Always create 8 cells: 2 rows × 4 columns
             int totalCells = 8;
             int rowCount = 2;
             int colCount = 4;
             
-            // Calculate total dimensions for centering
             float totalRowWidth = (colCount * cellSize) + ((colCount - 1) * cellSpacing);
             float startX = -totalRowWidth / 2f + cellSize / 2f;
             
-            // Calculate vertical spacing - position rows from top of section
             float topOffset = -cellSize / 2f - 10f;
 
             int cellIndex = 0;
@@ -146,27 +133,22 @@ namespace Minigames
                     float xPos = startX + col * (cellSize + cellSpacing);
                     float yPos = topOffset - row * (cellSize + rowSpacing);
                     cellRect.anchoredPosition = new Vector2(xPos, yPos);
-                    // Use top-center anchor like PraySortGame
                     cellRect.anchorMin = new Vector2(0.5f, 1f);
                     cellRect.anchorMax = new Vector2(0.5f, 1f);
                     cellRect.pivot = new Vector2(0.5f, 0.5f);
 
-                    // Add background image first (Cell.Initialize will use it)
                     Image bgImage = cellObj.AddComponent<Image>();
                     bgImage.color = new Color(1f, 1f, 1f, 0.2f);
 
                     Cell cell = cellObj.AddComponent<Cell>();
                     cell.Initialize(cellIndex, this);
-                    cells.Add(cell);
+                    Cells.Add(cell);
 
                     cellIndex++;
                 }
             }
         }
 
-        /// <summary>
-        /// Sets up the draggable elements with random positions in the lower section
-        /// </summary>
         private void SetupElements()
         {
             if (lowerSection == null || _loadedImages == null || _loadedImages.Length == 0) return;
@@ -186,7 +168,6 @@ namespace Minigames
 
                 elementRect.sizeDelta = new Vector2(elementSize, elementSize);
                 elementRect.anchoredPosition = positions[i];
-                // Use center anchor so positions are relative to section center
                 elementRect.anchorMin = new Vector2(0.5f, 0.5f);
                 elementRect.anchorMax = new Vector2(0.5f, 0.5f);
                 elementRect.pivot = new Vector2(0.5f, 0.5f);
@@ -201,29 +182,19 @@ namespace Minigames
             }
         }
 
-        /// <summary>
-        /// Generate random positions within the lower section bounds.
-        /// Uses screen-based calculation since anchors define the section size.
-        /// </summary>
         private List<Vector2> GenerateRandomPositionsForLezginka(int count)
         {
             List<Vector2> positions = new List<Vector2>();
             
-            // Calculate bounds based on screen size and anchors
-            // Lower section is anchors (0,0) to (1, 0.5) of content panel
-            // Content panel is anchors (0.125, 0.125) to (0.875, 0.875) of screen
             float screenWidth = Screen.width;
             float screenHeight = Screen.height;
             
-            // Content panel size (75% of screen)
             float contentWidth = screenWidth * 0.75f;
             float contentHeight = screenHeight * 0.75f;
             
-            // Lower section is bottom half of content panel
             float sectionWidth = contentWidth;
             float sectionHeight = contentHeight * 0.5f;
             
-            // Calculate bounds with margin for element size
             float margin = elementSize / 2f + 20f;
             float halfWidth = sectionWidth / 2f - margin;
             float halfHeight = sectionHeight / 2f - margin;
@@ -280,29 +251,25 @@ namespace Minigames
 
         private void CheckWinCondition()
         {
-            if (cells == null || cells.Count != 8)
+            if (Cells == null || Cells.Count != 8)
                 return;
 
-            // Define the correct order for each cell
-            // Upper row (cells 0-3): hands_1, hands_2, hands_1, hands_3
-            // Lower row (cells 4-7): right_foot_up, right_foot_forward, left_foot_up, left_foot_forward
             string[] expectedTypes = new string[]
             {
-                "hands_1",           // Cell 0: Upper row, 1st cell
-                "hands_2",           // Cell 1: Upper row, 2nd cell
-                "hands_1",           // Cell 2: Upper row, 3rd cell
-                "hands_3",           // Cell 3: Upper row, 4th cell
-                "right_foot_up",     // Cell 4: Lower row, 1st cell
-                "right_foot_forward", // Cell 5: Lower row, 2nd cell
-                "left_foot_up",      // Cell 6: Lower row, 3rd cell
-                "left_foot_forward"  // Cell 7: Lower row, 4th cell
+                "hands_1",           
+                "hands_2",           
+                "hands_1",           
+                "hands_3",           
+                "right_foot_up",     
+                "right_foot_forward",
+                "left_foot_up",      
+                "left_foot_forward"  
             };
 
-            // Check if all cells have elements
             bool allCellsFilled = true;
-            for (int i = 0; i < cells.Count; i++)
+            for (int i = 0; i < Cells.Count; i++)
             {
-                Cell cell = cells[i];
+                Cell cell = Cells[i];
                 DraggableElement element = cell.GetElement();
 
                 if (element == null)
@@ -319,11 +286,10 @@ namespace Minigames
                 return;
             }
 
-            // Check if all elements are in their correct positions
             bool allCorrect = true;
-            for (int i = 0; i < cells.Count && i < expectedTypes.Length; i++)
+            for (int i = 0; i < Cells.Count && i < expectedTypes.Length; i++)
             {
-                Cell cell = cells[i];
+                Cell cell = Cells[i];
                 DraggableElement element = cell.GetElement();
 
                 if (element == null)
@@ -358,6 +324,7 @@ namespace Minigames
                     _resultText.color = Color.green;
                 }
                 Debug.Log("[LezginkaSortGame] All images correctly ordered! Game complete.");
+                OnGameComplete();
                 StartCoroutine(CloseAfterDelay(2f));
             }
             else if (_resultText != null)
@@ -372,7 +339,6 @@ namespace Minigames
             CloseGame();
         }
 
-        // IMinigame implementation
         public void StartGame()
         {
             if (IsActive)
@@ -435,7 +401,6 @@ namespace Minigames
                 eventSystem.AddComponent<UnityEngine.InputSystem.UI.InputSystemUIInputModule>();
             }
 
-            // Background overlay
             _backgroundPanel = new GameObject("Background");
             _backgroundPanel.transform.SetParent(_popupWindow.transform, false);
             Image bgImage = _backgroundPanel.AddComponent<Image>();
@@ -445,7 +410,6 @@ namespace Minigames
             bgRect.anchorMax = Vector2.one;
             bgRect.sizeDelta = Vector2.zero;
 
-            // Content panel (75% of screen)
             _contentPanel = new GameObject("ContentPanel");
             _contentPanel.transform.SetParent(_popupWindow.transform, false);
             Image contentImage = _contentPanel.AddComponent<Image>();
@@ -459,7 +423,6 @@ namespace Minigames
             popupWindow = contentRect;
             popupCanvas = _canvas;
 
-            // Title text
             GameObject titleObj = new GameObject("TitleText");
             titleObj.transform.SetParent(_contentPanel.transform, false);
             Text titleText = titleObj.AddComponent<Text>();
@@ -475,7 +438,6 @@ namespace Minigames
             titleRect.sizeDelta = Vector2.zero;
             titleRect.anchoredPosition = Vector2.zero;
 
-            // Result text
             GameObject resultTextObj = new GameObject("ResultText");
             resultTextObj.transform.SetParent(_contentPanel.transform, false);
             _resultText = resultTextObj.AddComponent<Text>();
@@ -491,7 +453,6 @@ namespace Minigames
             resultRect.sizeDelta = Vector2.zero;
             resultRect.anchoredPosition = Vector2.zero;
 
-            // Upper section (for the 2 rows of cells) - same structure as PraySortGame
             GameObject upperSectionObj = new GameObject("UpperSection");
             upperSectionObj.transform.SetParent(_contentPanel.transform, false);
             _cellSection = upperSectionObj.AddComponent<RectTransform>();
@@ -499,9 +460,8 @@ namespace Minigames
             _cellSection.anchorMax = new Vector2(1, 0.85f);
             _cellSection.sizeDelta = Vector2.zero;
             _cellSection.anchoredPosition = Vector2.zero;
-            upperSection = _cellSection; // Set reference for SortGame
+            upperSection = _cellSection;
 
-            // Lower section (for randomly scattered elements) - same structure as PraySortGame
             GameObject lowerSectionObj = new GameObject("LowerSection");
             lowerSectionObj.transform.SetParent(_contentPanel.transform, false);
             _elementSection = lowerSectionObj.AddComponent<RectTransform>();
@@ -509,7 +469,7 @@ namespace Minigames
             _elementSection.anchorMax = new Vector2(1, 0.5f);
             _elementSection.sizeDelta = Vector2.zero;
             _elementSection.anchoredPosition = Vector2.zero;
-            lowerSection = _elementSection; // Set reference for SortGame
+            lowerSection = _elementSection;
 
             if (showCloseButton)
             {
@@ -555,9 +515,6 @@ namespace Minigames
         }
     }
 
-    /// <summary>
-    /// Custom draggable element for lezginka dance images.
-    /// </summary>
     public class LezginkaElement : DraggableElement
     {
         private Sprite _sprite;
@@ -577,18 +534,12 @@ namespace Minigames
             return GetSpriteTypeFromName(_sprite.name);
         }
 
-        /// <summary>
-        /// Gets the sprite type identifier based on sprite name.
-        /// Returns a string identifier for the sprite type.
-        /// </summary>
         private string GetSpriteTypeFromName(string spriteName)
         {
             string lowerName = spriteName.ToLower();
 
-            // Check for hands images
             if (lowerName.Contains("lezginka_hands_1_copy") || lowerName.Contains("lezginka_hands_1"))
             {
-                // Make sure it's not hands_2 or hands_3
                 if (!lowerName.Contains("hands_2") && !lowerName.Contains("hands_3"))
                     return "hands_1";
             }
@@ -597,7 +548,6 @@ namespace Minigames
             if (lowerName.Contains("lezginka_hands_3"))
                 return "hands_3";
             
-            // Check for foot images
             if (lowerName.Contains("right_foot_up"))
                 return "right_foot_up";
             if (lowerName.Contains("right_foot_forward"))
@@ -613,9 +563,9 @@ namespace Minigames
 
         public override void OnDrag(PointerEventData eventData)
         {
-            if (rectTransform == null)
+            if (RectTransform == null)
             {
-                rectTransform = GetComponent<RectTransform>();
+                RectTransform = GetComponent<RectTransform>();
             }
 
             if (_canvas == null)
@@ -623,9 +573,9 @@ namespace Minigames
                 _canvas = GetComponentInParent<Canvas>();
             }
 
-            if (game != null && rectTransform != null && _canvas != null)
+            if (Game != null && RectTransform != null && _canvas != null)
             {
-                RectTransform parentRect = rectTransform.parent as RectTransform;
+                RectTransform parentRect = RectTransform.parent as RectTransform;
                 Camera cam = _canvas.renderMode != RenderMode.ScreenSpaceOverlay ? _canvas.worldCamera : null;
 
                 RectTransformUtility.ScreenPointToLocalPointInRectangle(
@@ -635,14 +585,14 @@ namespace Minigames
                     out Vector2 localPoint);
 
                 Vector2 parentSize = parentRect.rect.size;
-                Vector2 anchorCenter = (rectTransform.anchorMin + rectTransform.anchorMax) / 2f;
+                Vector2 anchorCenter = (RectTransform.anchorMin + RectTransform.anchorMax) / 2f;
                 Vector2 anchorLocalPos = new Vector2(
                     (anchorCenter.x - 0.5f) * parentSize.x,
                     (anchorCenter.y - 0.5f) * parentSize.y
                 );
 
-                rectTransform.anchoredPosition = localPoint - anchorLocalPos;
-                game.OnElementDrag(this, eventData.position);
+                RectTransform.anchoredPosition = localPoint - anchorLocalPos;
+                Game.OnElementDrag(this, eventData.position);
             }
         }
     }

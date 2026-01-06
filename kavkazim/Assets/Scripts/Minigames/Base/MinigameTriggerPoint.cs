@@ -1,5 +1,9 @@
 using UnityEngine;
 using UnityEngine.UI;
+using Unity.Netcode;
+using Kavkazim.Netcode;
+using Minigames.Base;
+using Minigames.Progress;
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
@@ -30,6 +34,7 @@ namespace Minigames
         private Image _indicatorImage;
         private Camera _mainCamera;
         private Sprite _exclamationSprite;
+        private PlayerAvatar _localPlayerAvatar;
 
         private void Awake()
         {
@@ -170,6 +175,9 @@ namespace Minigames
             imageRect.anchorMax = new Vector2(0.5f, 0.5f);
             imageRect.pivot = new Vector2(0.5f, 0.5f);
 
+            // Initially hidden - will be shown in Update() if player has this task
+            _indicatorCanvas.SetActive(false);
+            
             Debug.Log($"[MinigameTriggerPoint] Created visual indicator at position ({triggerWorldPos.x}, {triggerWorldPos.y}, {triggerWorldPos.z})");
         }
 
@@ -177,35 +185,112 @@ namespace Minigames
         {
             if (_indicatorCanvas != null && showIndicator)
             {
-                Vector3 triggerWorldPos = new Vector3(position.x, position.y + indicatorHeight, 0);
-                _indicatorCanvas.transform.position = triggerWorldPos;
+                // Check if local player has this task assigned
+                bool shouldShow = ShouldShowIndicator();
+                _indicatorCanvas.SetActive(shouldShow);
+                
+                if (shouldShow)
+                {
+                    Vector3 triggerWorldPos = new Vector3(position.x, position.y + indicatorHeight, 0);
+                    _indicatorCanvas.transform.position = triggerWorldPos;
 
-                if (_mainCamera != null)
-                {
-                    Vector3 directionToCamera = _mainCamera.transform.position - _indicatorCanvas.transform.position;
-                    directionToCamera.y = 0; // Keep it upright
-                    if (directionToCamera != Vector3.zero)
+                    if (_mainCamera != null)
                     {
-                        _indicatorCanvas.transform.rotation = Quaternion.LookRotation(-directionToCamera);
-                    }
-                }
-                else
-                {
-                    _mainCamera = Camera.main;
-                    if (_mainCamera == null)
-                    {
-                        _mainCamera = FindFirstObjectByType<Camera>();
-                    }
-                    if (_mainCamera != null && _indicatorCanvas != null)
-                    {
-                        Canvas canvas = _indicatorCanvas.GetComponent<Canvas>();
-                        if (canvas != null)
+                        Vector3 directionToCamera = _mainCamera.transform.position - _indicatorCanvas.transform.position;
+                        directionToCamera.y = 0; // Keep it upright
+                        if (directionToCamera != Vector3.zero)
                         {
-                            canvas.worldCamera = _mainCamera;
+                            _indicatorCanvas.transform.rotation = Quaternion.LookRotation(-directionToCamera);
+                        }
+                    }
+                    else
+                    {
+                        _mainCamera = Camera.main;
+                        if (_mainCamera == null)
+                        {
+                            _mainCamera = FindFirstObjectByType<Camera>();
+                        }
+                        if (_mainCamera != null && _indicatorCanvas != null)
+                        {
+                            Canvas canvas = _indicatorCanvas.GetComponent<Canvas>();
+                            if (canvas != null)
+                            {
+                                canvas.worldCamera = _mainCamera;
+                            }
                         }
                     }
                 }
             }
+        }
+
+        /// <summary>
+        /// Checks if the local player has this task assigned to them.
+        /// </summary>
+        private bool ShouldShowIndicator()
+        {
+            // Find local player avatar if not cached
+            if (_localPlayerAvatar == null)
+            {
+                PlayerAvatar[] avatars = FindObjectsByType<PlayerAvatar>(FindObjectsSortMode.None);
+                foreach (var avatar in avatars)
+                {
+                    if (avatar.IsOwner)
+                    {
+                        _localPlayerAvatar = avatar;
+                        break;
+                    }
+                }
+            }
+
+            // If no local player found, hide indicator
+            if (_localPlayerAvatar == null)
+            {
+                return false;
+            }
+
+            // Only show for innocent players
+            if (_localPlayerAvatar.PerceivedRole != PlayerRoleType.Innocent)
+            {
+                return false;
+            }
+
+            // Check if GameplayUI has task assignments
+            if (UI.GameplayUI.Instance == null)
+            {
+                return false;
+            }
+
+            // Get task assignments from GameplayUI
+            ulong localClientId = _localPlayerAvatar.OwnerClientId;
+            var taskAssignments = UI.GameplayUI.Instance.GetTaskAssignments();
+            
+            if (taskAssignments == null || !taskAssignments.ContainsKey(localClientId))
+            {
+                return false;
+            }
+
+            // Check if this specific task (position + game type) is assigned to the player
+            var playerTasks = taskAssignments[localClientId];
+            foreach (var task in playerTasks)
+            {
+                // Match by position (with small tolerance for floating point precision) and game type
+                float positionTolerance = 0.1f;
+                if (Vector2.Distance(task.Location, position) < positionTolerance && 
+                    task.MinigameType == gameType)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Checks if the local player has this task assigned (for interaction checks).
+        /// </summary>
+        public bool IsAssignedToLocalPlayer()
+        {
+            return ShouldShowIndicator();
         }
 
         private void OnDrawGizmos()

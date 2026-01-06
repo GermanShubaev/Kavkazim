@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace Minigames
+namespace Minigames.Base
 {
     public interface IMinigame
     {

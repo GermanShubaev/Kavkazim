@@ -1,11 +1,8 @@
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace Minigames
+namespace Minigames.Base
 {
-    /// <summary>
-    /// Abstract base class for all minigames. Handles common popup window creation and lifecycle.
-    /// </summary>
     public abstract class BaseMinigame : MonoBehaviour, IMinigame
     {
         [Header("Popup Settings")]
@@ -18,8 +15,10 @@ namespace Minigames
         protected GameObject _backgroundPanel;
         protected GameObject _contentPanel;
         protected Button _closeButton;
+        protected bool _wasCompletedSuccessfully = false;
 
         public bool IsActive => _popupWindow != null && _popupWindow.activeSelf;
+        public bool WasCompletedSuccessfully => _wasCompletedSuccessfully;
         public GameObject PopupWindow => _popupWindow;
 
         /// <summary>
@@ -154,6 +153,21 @@ namespace Minigames
             _backgroundPanel = null;
             _contentPanel = null;
             _closeButton = null;
+        }
+        
+        /// <summary>
+        /// Called when the minigame is completed successfully.
+        /// Derived classes should override this and call base.OnGameComplete() to set the completion flag.
+        /// </summary>
+        protected virtual void OnGameComplete()
+        {
+            _wasCompletedSuccessfully = true;
+        }
+        
+        protected virtual System.Collections.IEnumerator CloseAfterDelay(float delay)
+        {
+            yield return new WaitForSeconds(delay);
+            CloseGame();
         }
 
         protected virtual void OnDestroy()

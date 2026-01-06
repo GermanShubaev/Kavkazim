@@ -1,17 +1,14 @@
 using System.Collections.Generic;
-using UnityEngine;
-#if UNITY_EDITOR
 using UnityEditor;
-#endif
+using UnityEngine;
 
-namespace Minigames
+namespace Minigames.ClickGames
 {
-    /// <summary>
-    /// A minigame where players click snow stains to clean a papakha (Caucasian fur hat).
-    /// The game ends when all 5 snow stains have been removed.
-    /// </summary>
     public class PapakhaClickGame : ClickGame
     {
+        private const string PapakhaPath = "Assets/Art/Images/papakha/papakha_clean.png";
+        private const string StainPath = "Assets/Art/Images/papakha/snow_stain.png";
+        
         [Header("Papakha Settings")]
         [SerializeField] private int numberOfStains = 5;
 
@@ -20,35 +17,29 @@ namespace Minigames
 
         private void Awake()
         {
-            // Enable 75% screen size popup
             useScreenPercentage = true;
             screenPercentage = 0.75f;
-            
             LoadPapakhaImages();
         }
 
         private void LoadPapakhaImages()
         {
             #if UNITY_EDITOR
-            // Load papakha clean image
-            string papakhaPath = "Assets/Art/Images/papakha/papakha_clean.png";
-            _papakhaSprite = AssetDatabase.LoadAssetAtPath<Sprite>(papakhaPath);
+            
+            _papakhaSprite = AssetDatabase.LoadAssetAtPath<Sprite>(PapakhaPath);
             if (_papakhaSprite == null)
             {
-                // Try loading as texture and converting
-                Texture2D tex = AssetDatabase.LoadAssetAtPath<Texture2D>(papakhaPath);
+                Texture2D tex = AssetDatabase.LoadAssetAtPath<Texture2D>(PapakhaPath);
                 if (tex != null)
                 {
                     _papakhaSprite = Sprite.Create(tex, new Rect(0, 0, tex.width, tex.height), new Vector2(0.5f, 0.5f));
                 }
             }
 
-            // Load snow stain image
-            string stainPath = "Assets/Art/Images/papakha/snow_stain.png";
-            _snowStainSprite = AssetDatabase.LoadAssetAtPath<Sprite>(stainPath);
+            _snowStainSprite = AssetDatabase.LoadAssetAtPath<Sprite>(StainPath);
             if (_snowStainSprite == null)
             {
-                Texture2D tex = AssetDatabase.LoadAssetAtPath<Texture2D>(stainPath);
+                Texture2D tex = AssetDatabase.LoadAssetAtPath<Texture2D>(StainPath);
                 if (tex != null)
                 {
                     _snowStainSprite = Sprite.Create(tex, new Rect(0, 0, tex.width, tex.height), new Vector2(0.5f, 0.5f));
@@ -61,7 +52,6 @@ namespace Minigames
                 Debug.Log("[PapakhaClickGame] Loaded snow_stain.png (Editor mode)");
             #endif
 
-            // Fallback to Resources for runtime
             if (_papakhaSprite == null)
             {
                 _papakhaSprite = Resources.Load<Sprite>("Art/Images/papakha/papakha_clean");
@@ -98,32 +88,26 @@ namespace Minigames
 
         protected override List<StainData> GetStainData()
         {
-            List<StainData> stains = new List<StainData>();
+            var stains = new List<StainData>();
 
             if (_snowStainSprite == null)
             {
                 Debug.LogWarning("[PapakhaClickGame] Snow stain sprite not loaded, using default colored stains.");
             }
 
-            // Positions specifically on the papakha hat (fur hat in center of image)
-            // The hat occupies roughly the center area, slightly below vertical center
-            // Normalized positions (-0.5 to 0.5 relative to main image center)
-            // Hat bounds approximately: X: -0.25 to 0.25, Y: -0.15 to 0.1
-            Vector2[] stainPositions = new Vector2[]
+            var stainPositions = new Vector2[]
             {
-                new Vector2(-0.15f, 0.02f),   // Left side of hat
-                new Vector2(0.12f, 0.05f),    // Right side of hat
-                new Vector2(0.0f, -0.02f),    // Center of hat
-                new Vector2(-0.08f, -0.08f),  // Lower-left of hat
-                new Vector2(0.10f, -0.06f),   // Lower-right of hat
-                new Vector2(0.02f, 0.08f),    // Top center of hat (extra if needed)
+                new Vector2(-0.15f, 0.02f),
+                new Vector2(0.12f, 0.05f),
+                new Vector2(0.0f, -0.02f),
+                new Vector2(-0.08f, -0.08f),
+                new Vector2(0.10f, -0.06f),
+                new Vector2(0.02f, 0.08f)
             };
 
-            // Randomize rotation for variety
-            float[] rotations = new float[] { 0f, 15f, -10f, 25f, -20f, 5f };
+            var rotations = new float[] { 0f, 15f, -10f, 25f, -20f, 5f };
 
-            // Size variations for natural look (scaled for larger popup)
-            Vector2[] sizes = new Vector2[]
+            var sizes = new Vector2[]
             {
                 new Vector2(100, 65),
                 new Vector2(85, 55),
@@ -133,8 +117,8 @@ namespace Minigames
                 new Vector2(95, 62),
             };
 
-            int count = Mathf.Min(numberOfStains, stainPositions.Length);
-            for (int i = 0; i < count; i++)
+            var count = Mathf.Min(numberOfStains, stainPositions.Length);
+            for (var i = 0; i < count; i++)
             {
                 StainData stain = new StainData
                 {
@@ -142,7 +126,7 @@ namespace Minigames
                     normalizedPosition = stainPositions[i],
                     size = sizes[i],
                     rotation = rotations[i],
-                    stainColor = new Color(0.9f, 0.95f, 1f, 0.85f) // Light blue-white for snow
+                    stainColor = new Color(0.9f, 0.95f, 1f, 0.85f)
                 };
                 stains.Add(stain);
             }
@@ -164,10 +148,8 @@ namespace Minigames
 
         protected override void OnGameComplete()
         {
-            // Show success message or play celebration effect
+            base.OnGameComplete(); // Mark as completed successfully
             Debug.Log("[PapakhaClickGame] Congratulations! The papakha is now clean.");
-            
-            // Close after a short delay to let player see the clean papakha
             StartCoroutine(CloseAfterDelay(1.5f));
         }
     }

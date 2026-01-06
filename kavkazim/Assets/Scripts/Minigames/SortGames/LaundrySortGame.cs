@@ -1,14 +1,12 @@
 using System.Collections.Generic;
-using UnityEngine;
-using UnityEngine.UI;
-using UnityEngine.EventSystems;
-#if UNITY_EDITOR
 using UnityEditor;
-#endif
+using UnityEngine;
+using UnityEngine.EventSystems;
+using UnityEngine.UI;
 
-namespace Minigames
+namespace Minigames.SortGames
 {
-    public class LaundrySortGame : BaseMinigame
+    public class LaundrySortGame : SortGame
     {
         [Header("Game Settings")]
         [SerializeField] private int totalClothes = 9;
@@ -465,6 +463,7 @@ namespace Minigames
                         _resultText.color = Color.green;
                     }
                     Debug.Log("[LaundrySortGame] Player won! All clothes sorted correctly.");
+                    OnGameComplete();
                     StartCoroutine(CloseAfterDelay(2f));
                 }
                 else

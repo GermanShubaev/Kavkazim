@@ -7,6 +7,8 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using Kavkazim.UI;
+using Minigames.Progress;
+using System.Collections.Generic;
 
 namespace UI
 {
@@ -30,6 +32,13 @@ namespace UI
         private ReportUIController _reportUIController;
         private IReportInput _reportInput;
         private PlayerState _localPlayerState;
+        
+        // Task list UI
+        private GameObject _taskListContainer;
+        private GameObject _taskListContentContainer;
+        private Dictionary<ulong, List<Task>> _taskAssignments;
+        private HashSet<Task> _completedTasks = new HashSet<Task>();
+        private List<GameObject> _taskTextObjects = new List<GameObject>();
 
         private void Awake()
         {
@@ -78,6 +87,7 @@ namespace UI
             UpdateCooldownUI();
             UpdateReportUI();
             HandleReportInput(); // L key handles both body reports AND emergency meetings
+            UpdateTaskListUI();
         }
 
         private void OnSceneChanged(Scene oldScene, Scene newScene)
@@ -176,6 +186,9 @@ namespace UI
             
             // 6. Create Report UI (positioned above Kill icon)
             CreateReportUI();
+            
+            // 7. Create Task List UI (Upper Left)
+            CreateTaskListUI();
         }
 
         private void CreateCooldownUI()
@@ -520,6 +533,330 @@ namespace UI
             // Note: If we were host, Shutdown destroys the NetworkManager (unless DontDestroyOnLoad is set differently).
             // We assume "MainMenu" is the name of the scene.
             SceneManager.LoadScene("MainMenu");
+        }
+
+        /// <summary>
+        /// Creates the task list UI in the upper left corner.
+        /// </summary>
+        private void CreateTaskListUI()
+        {
+            // Container for task list (upper left)
+            _taskListContainer = new GameObject("TaskListUI");
+            _taskListContainer.transform.SetParent(_canvasObj.transform, false);
+            RectTransform containerRect = _taskListContainer.AddComponent<RectTransform>();
+            // Anchor top-left
+            containerRect.anchorMin = new Vector2(0, 1);
+            containerRect.anchorMax = new Vector2(0, 1);
+            containerRect.pivot = new Vector2(0, 1);
+            containerRect.sizeDelta = new Vector2(300, 100); // Initial size, will be adjusted by ContentSizeFitter
+            containerRect.anchoredPosition = new Vector2(20, -20); // Padding from top-left corner
+            
+            // Background panel
+            Image bgImage = _taskListContainer.AddComponent<Image>();
+            bgImage.color = new Color(0.1f, 0.1f, 0.15f, 0.85f);
+            
+            // Add VerticalLayoutGroup to main container to stack title and content
+            VerticalLayoutGroup mainLayoutGroup = _taskListContainer.AddComponent<VerticalLayoutGroup>();
+            mainLayoutGroup.childAlignment = TextAnchor.UpperLeft;
+            mainLayoutGroup.childControlWidth = true;
+            mainLayoutGroup.childControlHeight = false;
+            mainLayoutGroup.childForceExpandWidth = true;
+            mainLayoutGroup.childForceExpandHeight = false;
+            mainLayoutGroup.spacing = 5f;
+            mainLayoutGroup.padding = new RectOffset(10, 10, 10, 10);
+            
+            // Add ContentSizeFitter to main container so it adjusts to content
+            ContentSizeFitter containerFitter = _taskListContainer.AddComponent<ContentSizeFitter>();
+            containerFitter.horizontalFit = ContentSizeFitter.FitMode.PreferredSize;
+            containerFitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+            
+            // Title text
+            GameObject titleObj = new GameObject("Title");
+            titleObj.transform.SetParent(_taskListContainer.transform, false);
+            Text titleText = titleObj.AddComponent<Text>();
+            titleText.text = "Tasks:";
+            titleText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            titleText.alignment = TextAnchor.UpperLeft;
+            titleText.color = Color.white;
+            titleText.fontSize = 18;
+            titleText.fontStyle = FontStyle.Bold;
+            RectTransform titleRect = titleObj.GetComponent<RectTransform>();
+            titleRect.anchorMin = new Vector2(0, 1);
+            titleRect.anchorMax = new Vector2(1, 1);
+            titleRect.pivot = new Vector2(0, 1);
+            titleRect.sizeDelta = new Vector2(0, 25);
+            
+            // Add LayoutElement to title
+            LayoutElement titleLayout = titleObj.AddComponent<LayoutElement>();
+            titleLayout.preferredHeight = 25;
+            titleLayout.flexibleHeight = 0;
+            
+            // Task list content container (holds individual task text elements)
+            _taskListContentContainer = new GameObject("TaskListContent");
+            _taskListContentContainer.transform.SetParent(_taskListContainer.transform, false);
+            RectTransform contentRect = _taskListContentContainer.AddComponent<RectTransform>();
+            contentRect.anchorMin = new Vector2(0, 1);
+            contentRect.anchorMax = new Vector2(1, 0);
+            contentRect.pivot = new Vector2(0, 1);
+            contentRect.sizeDelta = Vector2.zero;
+            contentRect.anchoredPosition = Vector2.zero;
+            
+            // Add VerticalLayoutGroup to stack tasks vertically
+            VerticalLayoutGroup layoutGroup = _taskListContentContainer.AddComponent<VerticalLayoutGroup>();
+            layoutGroup.childAlignment = TextAnchor.UpperLeft;
+            layoutGroup.childControlWidth = true;
+            layoutGroup.childControlHeight = true;
+            layoutGroup.childForceExpandWidth = true;
+            layoutGroup.childForceExpandHeight = false;
+            layoutGroup.spacing = 2f; // Small spacing between tasks
+            layoutGroup.padding = new RectOffset(0, 0, 0, 0);
+            
+            // Add ContentSizeFitter to content container so it expands based on children
+            ContentSizeFitter contentFitter = _taskListContentContainer.AddComponent<ContentSizeFitter>();
+            contentFitter.horizontalFit = ContentSizeFitter.FitMode.Unconstrained;
+            contentFitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+            
+            // Add LayoutElement to content container
+            LayoutElement contentLayout = _taskListContentContainer.AddComponent<LayoutElement>();
+            contentLayout.flexibleHeight = 1;
+            
+            // Initially hidden until tasks are assigned
+            _taskListContainer.SetActive(false);
+            _taskAssignments = new Dictionary<ulong, List<Task>>();
+        }
+
+        /// <summary>
+        /// Updates the task list UI with the current player's tasks.
+        /// </summary>
+        private void UpdateTaskListUI()
+        {
+            // Try to find local player if not cached
+            if (_localAvatar == null)
+            {
+                TryFindLocalPlayer();
+            }
+            
+            // No local player found yet
+            if (_localAvatar == null || _taskListContainer == null || _taskListContentContainer == null)
+            {
+                return;
+            }
+            
+            // Only show for innocent players
+            bool isInnocent = _localAvatar.PerceivedRole == PlayerRoleType.Innocent;
+            
+            // Check if we need to distribute tasks (server only, once)
+            if (NetworkManager.Singleton != null && NetworkManager.Singleton.IsServer && 
+                (_taskAssignments == null || _taskAssignments.Count == 0))
+            {
+                // Distribute tasks when game starts
+                if (GameSessionManager.Instance != null && 
+                    GameSessionManager.Instance.CurrentPhase.Value == MatchPhase.MatchInProgress)
+                {
+                    _taskAssignments = TaskDistributor.DistributeTasksToInnocentPlayers();
+                    Debug.Log($"[GameplayUI] Distributed tasks to {_taskAssignments.Count} players on server.");
+                    
+                    // Initialize tasksLeft with total task count
+                    if (GameSessionManager.Instance != null)
+                    {
+                        int totalTasks = 0;
+                        foreach (var assignment in _taskAssignments)
+                        {
+                            totalTasks += assignment.Value.Count;
+                        }
+                        GameSessionManager.Instance.TasksLeft.Value = totalTasks;
+                        Debug.Log($"[GameplayUI] Initialized TasksLeft to {totalTasks}");
+                    }
+                }
+            }
+            
+            // Get tasks for local player
+            ulong localClientId = _localAvatar.OwnerClientId;
+            List<Task> playerTasks = new List<Task>();
+            
+            if (_taskAssignments != null && _taskAssignments.ContainsKey(localClientId))
+            {
+                playerTasks = _taskAssignments[localClientId];
+            }
+            else if (NetworkManager.Singleton != null && !NetworkManager.Singleton.IsServer)
+            {
+                // Client: For now, clients can't see tasks until network sync is added
+                // TODO: Add RPC to sync tasks from server to clients
+                // For testing, we can distribute locally, but this won't match server
+                if (isInnocent && GameSessionManager.Instance != null && 
+                    GameSessionManager.Instance.CurrentPhase.Value == MatchPhase.MatchInProgress)
+                {
+                    // Temporary: distribute locally for client testing (not ideal, but works for now)
+                    if (_taskAssignments == null || _taskAssignments.Count == 0)
+                    {
+                        _taskAssignments = TaskDistributor.DistributeTasksToInnocentPlayers();
+                        Debug.LogWarning("[GameplayUI] Client distributed tasks locally - this may not match server!");
+                    }
+                    if (_taskAssignments != null && _taskAssignments.ContainsKey(localClientId))
+                    {
+                        playerTasks = _taskAssignments[localClientId];
+                    }
+                }
+            }
+            
+            // Update UI visibility and content
+            if (_taskListContainer != null)
+            {
+                _taskListContainer.SetActive(isInnocent);
+            }
+            
+            if (isInnocent && _taskListContentContainer != null)
+            {
+                // Clear existing task text objects
+                foreach (var taskObj in _taskTextObjects)
+                {
+                    if (taskObj != null)
+                    {
+                        Destroy(taskObj);
+                    }
+                }
+                _taskTextObjects.Clear();
+                
+                if (playerTasks.Count > 0)
+                {
+                    // Create individual text elements for each task
+                    for (int i = 0; i < playerTasks.Count; i++)
+                    {
+                        var task = playerTasks[i];
+                        bool isCompleted = IsTaskCompleted(task);
+                        string taskText = isCompleted ? $"{i + 1}. {task.Description} ✓ Done" : $"{i + 1}. {task.Description}";
+                        
+                        // Create text object for this task
+                        GameObject taskTextObj = new GameObject($"Task_{i}");
+                        taskTextObj.transform.SetParent(_taskListContentContainer.transform, false);
+                        Text text = taskTextObj.AddComponent<Text>();
+                        text.text = taskText;
+                        text.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+                        text.alignment = TextAnchor.MiddleLeft;
+                        text.fontSize = 44; // Twice the size (22 * 2)
+                        text.resizeTextForBestFit = false;
+                        
+                        // Set color: dark green for completed tasks, white for incomplete
+                        if (isCompleted)
+                        {
+                            text.color = new Color(0f, 0.5f, 0f, 1f); // Dark green
+                        }
+                        else
+                        {
+                            text.color = Color.white;
+                        }
+                        
+                        RectTransform rect = taskTextObj.GetComponent<RectTransform>();
+                        // Set anchors to stretch horizontally, fixed height per row
+                        rect.anchorMin = new Vector2(0, 1);
+                        rect.anchorMax = new Vector2(1, 1);
+                        rect.pivot = new Vector2(0, 1);
+                        rect.sizeDelta = new Vector2(0, 50); // Increased height for larger font
+                        
+                        // Add LayoutElement to control sizing
+                        LayoutElement layoutElement = taskTextObj.AddComponent<LayoutElement>();
+                        layoutElement.preferredHeight = 50; // Increased height for larger font
+                        layoutElement.flexibleHeight = 0;
+                        
+                        _taskTextObjects.Add(taskTextObj);
+                    }
+                }
+                else
+                {
+                    // Show "No tasks" message
+                    GameObject noTasksObj = new GameObject("NoTasksText");
+                    noTasksObj.transform.SetParent(_taskListContentContainer.transform, false);
+                    Text noTasksText = noTasksObj.AddComponent<Text>();
+                    noTasksText.text = "No tasks assigned yet.";
+                    noTasksText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+                    noTasksText.alignment = TextAnchor.MiddleLeft;
+                    noTasksText.color = Color.white;
+                    noTasksText.fontSize = 14;
+                    
+                    RectTransform rect = noTasksObj.GetComponent<RectTransform>();
+                    rect.anchorMin = new Vector2(0, 1);
+                    rect.anchorMax = new Vector2(1, 1);
+                    rect.pivot = new Vector2(0, 1);
+                    rect.sizeDelta = new Vector2(0, 30);
+                    
+                    // Add LayoutElement
+                    LayoutElement layoutElement = noTasksObj.AddComponent<LayoutElement>();
+                    layoutElement.preferredHeight = 30;
+                    layoutElement.flexibleHeight = 0;
+                    
+                    _taskTextObjects.Add(noTasksObj);
+                }
+                
+                // Force layout rebuild to update container size
+                if (_taskListContentContainer != null)
+                {
+                    UnityEngine.UI.LayoutRebuilder.ForceRebuildLayoutImmediate(_taskListContentContainer.GetComponent<RectTransform>());
+                }
+                
+                // Force layout rebuild on main container to adjust to content
+                if (_taskListContainer != null)
+                {
+                    UnityEngine.UI.LayoutRebuilder.ForceRebuildLayoutImmediate(_taskListContainer.GetComponent<RectTransform>());
+                }
+            }
+        }
+
+        /// <summary>
+        /// Sets the task assignments (called from server or when synced).
+        /// </summary>
+        public void SetTaskAssignments(Dictionary<ulong, List<Task>> assignments)
+        {
+            _taskAssignments = assignments;
+        }
+
+        /// <summary>
+        /// Gets the current task assignments dictionary.
+        /// </summary>
+        public Dictionary<ulong, List<Task>> GetTaskAssignments()
+        {
+            return _taskAssignments;
+        }
+
+        /// <summary>
+        /// Marks a task as completed. Called when a minigame is finished.
+        /// </summary>
+        public void MarkTaskAsCompleted(Task task)
+        {
+            if (task == null) return;
+            
+            // Check if already completed to avoid duplicates
+            if (!IsTaskCompleted(task))
+            {
+                // Add to completed tasks set
+                _completedTasks.Add(task);
+                
+                Debug.Log($"[GameplayUI] Task marked as completed: {task.Description}");
+                
+                // Force UI update to show completed status
+                UpdateTaskListUI();
+            }
+        }
+
+        /// <summary>
+        /// Checks if a task is completed.
+        /// </summary>
+        public bool IsTaskCompleted(Task task)
+        {
+            if (task == null) return false;
+            
+            // Compare tasks by position and type (not reference)
+            float positionTolerance = 0.1f;
+            foreach (var completedTask in _completedTasks)
+            {
+                if (completedTask != null &&
+                    Vector2.Distance(completedTask.Location, task.Location) < positionTolerance &&
+                    completedTask.MinigameType == task.MinigameType)
+                {
+                    return true;
+                }
+            }
+            
+            return false;
         }
     }
 }
