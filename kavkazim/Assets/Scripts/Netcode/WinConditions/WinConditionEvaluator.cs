@@ -93,7 +93,8 @@ namespace Kavkazim.Netcode.WinConditions
         /// <summary>
         /// Creates an evaluator with the default win conditions:
         /// 1. ImposterMajorityWinCondition (Kavkazi >= 50% alive)
-        /// 2. AllImpostersEliminatedWinCondition (All Kavkazi dead)
+        /// 2. AllTasksCompletedWinCondition (All tasks completed - Innocents win)
+        /// 3. AllImpostersEliminatedWinCondition (All Kavkazi dead)
         /// </summary>
         public static WinConditionEvaluator CreateDefault()
         {
@@ -102,6 +103,8 @@ namespace Kavkazim.Netcode.WinConditions
             // Add conditions in priority order
             // Imposter majority is checked first (prevents voting phases continuing after majority)
             evaluator.AddCondition(new ImposterMajorityWinCondition());
+            // Tasks completed is checked before imposters eliminated (tasks are primary win condition for innocents)
+            evaluator.AddCondition(new AllTasksCompletedWinCondition());
             evaluator.AddCondition(new AllImpostersEliminatedWinCondition());
             
             return evaluator;

@@ -39,6 +39,12 @@ namespace UI
         private Dictionary<ulong, List<Task>> _taskAssignments;
         private HashSet<Task> _completedTasks = new HashSet<Task>();
         private List<GameObject> _taskTextObjects = new List<GameObject>();
+        
+        // Task progress bar UI
+        private GameObject _progressBarContainer;
+        private GameObject _progressBarBackground;
+        private List<Image> _progressBarStripes = new List<Image>();
+        private int _totalTasks = 0;
 
         private void Awake()
         {
@@ -69,11 +75,23 @@ namespace UI
             {
                 gameObject.AddComponent<DisconnectHandler>();
             }
+            
+            // Subscribe to TasksLeft changes
+            if (GameSessionManager.Instance != null)
+            {
+                GameSessionManager.Instance.TasksLeft.OnValueChanged += OnTasksLeftChanged;
+            }
         }
 
         private void OnDestroy()
         {
             SceneManager.activeSceneChanged -= OnSceneChanged;
+            
+            // Unsubscribe from TasksLeft changes
+            if (GameSessionManager.Instance != null)
+            {
+                GameSessionManager.Instance.TasksLeft.OnValueChanged -= OnTasksLeftChanged;
+            }
             
             // Clear singleton reference if this is the instance
             if (Instance == this)
@@ -88,6 +106,29 @@ namespace UI
             UpdateReportUI();
             HandleReportInput(); // L key handles both body reports AND emergency meetings
             UpdateTaskListUI();
+            
+            // Initialize progress bar if TasksLeft is available but we haven't set it up yet
+            if (_progressBarContainer != null && _totalTasks == 0 && GameSessionManager.Instance != null)
+            {
+                int tasksLeft = GameSessionManager.Instance.TasksLeft.Value;
+                if (tasksLeft > 0)
+                {
+                    // Try to get total from task assignments if available
+                    if (_taskAssignments != null && _taskAssignments.Count > 0)
+                    {
+                        int totalTasks = 0;
+                        foreach (var assignment in _taskAssignments)
+                        {
+                            totalTasks += assignment.Value.Count;
+                        }
+                        if (totalTasks > 0)
+                        {
+                            _totalTasks = totalTasks;
+                            UpdateTaskProgressBar();
+                        }
+                    }
+                }
+            }
         }
 
         private void OnSceneChanged(Scene oldScene, Scene newScene)
@@ -189,6 +230,9 @@ namespace UI
             
             // 7. Create Task List UI (Upper Left)
             CreateTaskListUI();
+            
+            // 8. Create Task Progress Bar (Upper Center)
+            CreateTaskProgressBar();
         }
 
         private void CreateCooldownUI()
@@ -665,7 +709,11 @@ namespace UI
                             totalTasks += assignment.Value.Count;
                         }
                         GameSessionManager.Instance.TasksLeft.Value = totalTasks;
+                        _totalTasks = totalTasks; // Store total for progress bar
                         Debug.Log($"[GameplayUI] Initialized TasksLeft to {totalTasks}");
+                        
+                        // Update progress bar with initial state
+                        UpdateTaskProgressBar();
                     }
                 }
             }
@@ -719,12 +767,22 @@ namespace UI
                 
                 if (playerTasks.Count > 0)
                 {
-                    // Create individual text elements for each task
+                    // Filter out completed tasks - they should no longer be visible
+                    List<Task> incompleteTasks = new List<Task>();
                     for (int i = 0; i < playerTasks.Count; i++)
                     {
                         var task = playerTasks[i];
-                        bool isCompleted = IsTaskCompleted(task);
-                        string taskText = isCompleted ? $"{i + 1}. {task.Description} ✓ Done" : $"{i + 1}. {task.Description}";
+                        if (!IsTaskCompleted(task))
+                        {
+                            incompleteTasks.Add(task);
+                        }
+                    }
+                    
+                    // Create individual text elements for each incomplete task
+                    for (int i = 0; i < incompleteTasks.Count; i++)
+                    {
+                        var task = incompleteTasks[i];
+                        string taskText = $"{i + 1}. {task.Description}";
                         
                         // Create text object for this task
                         GameObject taskTextObj = new GameObject($"Task_{i}");
@@ -736,15 +794,8 @@ namespace UI
                         text.fontSize = 44; // Twice the size (22 * 2)
                         text.resizeTextForBestFit = false;
                         
-                        // Set color: dark green for completed tasks, white for incomplete
-                        if (isCompleted)
-                        {
-                            text.color = new Color(0f, 0.5f, 0f, 1f); // Dark green
-                        }
-                        else
-                        {
-                            text.color = Color.white;
-                        }
+                        // Set color: white for all visible tasks (completed tasks are hidden)
+                        text.color = Color.white;
                         
                         RectTransform rect = taskTextObj.GetComponent<RectTransform>();
                         // Set anchors to stretch horizontally, fixed height per row
@@ -857,6 +908,118 @@ namespace UI
             }
             
             return false;
+        }
+
+        /// <summary>
+        /// Creates the task progress bar in the upper center of the screen.
+        /// Shows a dark grey rectangle with light grey stripes that turn green as tasks are completed.
+        /// </summary>
+        private void CreateTaskProgressBar()
+        {
+            // Container for progress bar (upper center)
+            _progressBarContainer = new GameObject("TaskProgressBar");
+            _progressBarContainer.transform.SetParent(_canvasObj.transform, false);
+            RectTransform containerRect = _progressBarContainer.AddComponent<RectTransform>();
+            
+            // Anchor top-center
+            containerRect.anchorMin = new Vector2(0.5f, 1f);
+            containerRect.anchorMax = new Vector2(0.5f, 1f);
+            containerRect.pivot = new Vector2(0.5f, 1f);
+            containerRect.sizeDelta = new Vector2(600, 40);
+            containerRect.anchoredPosition = new Vector2(0, -20); // Padding from top
+            
+            // Background (dark grey rectangle)
+            _progressBarBackground = new GameObject("ProgressBarBackground");
+            _progressBarBackground.transform.SetParent(_progressBarContainer.transform, false);
+            Image bgImage = _progressBarBackground.AddComponent<Image>();
+            bgImage.color = new Color(0.2f, 0.2f, 0.2f, 0.9f); // Dark grey
+            RectTransform bgRect = _progressBarBackground.GetComponent<RectTransform>();
+            bgRect.anchorMin = Vector2.zero;
+            bgRect.anchorMax = Vector2.one;
+            bgRect.sizeDelta = Vector2.zero;
+            bgRect.anchoredPosition = Vector2.zero;
+        }
+
+        /// <summary>
+        /// Updates the progress bar with the current number of tasks.
+        /// Creates stripes based on total tasks and colors them green as tasks are completed.
+        /// </summary>
+        private void UpdateTaskProgressBar()
+        {
+            if (_progressBarContainer == null || _progressBarBackground == null) return;
+            if (GameSessionManager.Instance == null) return;
+
+            int tasksLeft = GameSessionManager.Instance.TasksLeft.Value;
+            
+            // Initialize total tasks on first update if not set
+            if (_totalTasks == 0 && tasksLeft > 0)
+            {
+                _totalTasks = tasksLeft;
+            }
+            
+            // If we still don't have a total, try to calculate from task assignments
+            if (_totalTasks == 0 && _taskAssignments != null && _taskAssignments.Count > 0)
+            {
+                int totalTasks = 0;
+                foreach (var assignment in _taskAssignments)
+                {
+                    totalTasks += assignment.Value.Count;
+                }
+                if (totalTasks > 0)
+                {
+                    _totalTasks = totalTasks;
+                }
+            }
+            
+            // Don't update if we don't have a total yet
+            if (_totalTasks == 0) return;
+
+            // Clear existing stripes
+            foreach (var stripe in _progressBarStripes)
+            {
+                if (stripe != null && stripe.gameObject != null)
+                {
+                    Destroy(stripe.gameObject);
+                }
+            }
+            _progressBarStripes.Clear();
+
+            // Create stripes
+            int completedTasks = _totalTasks - tasksLeft;
+            float stripeWidth = 1.0f / _totalTasks; // Each stripe takes up 1/totalTasks of the width
+
+            for (int i = 0; i < _totalTasks; i++)
+            {
+                GameObject stripeObj = new GameObject($"Stripe_{i}");
+                stripeObj.transform.SetParent(_progressBarBackground.transform, false);
+                Image stripeImage = stripeObj.AddComponent<Image>();
+                
+                // Color: green if completed, light grey if not
+                if (i < completedTasks)
+                {
+                    stripeImage.color = new Color(0.2f, 0.8f, 0.2f, 1f); // Green
+                }
+                else
+                {
+                    stripeImage.color = new Color(0.6f, 0.6f, 0.6f, 1f); // Light grey
+                }
+                
+                RectTransform stripeRect = stripeObj.GetComponent<RectTransform>();
+                stripeRect.anchorMin = new Vector2(i * stripeWidth, 0);
+                stripeRect.anchorMax = new Vector2((i + 1) * stripeWidth, 1);
+                stripeRect.sizeDelta = Vector2.zero;
+                stripeRect.anchoredPosition = Vector2.zero;
+                
+                _progressBarStripes.Add(stripeImage);
+            }
+        }
+
+        /// <summary>
+        /// Called when TasksLeft NetworkVariable changes.
+        /// </summary>
+        private void OnTasksLeftChanged(int previousValue, int newValue)
+        {
+            UpdateTaskProgressBar();
         }
     }
 }

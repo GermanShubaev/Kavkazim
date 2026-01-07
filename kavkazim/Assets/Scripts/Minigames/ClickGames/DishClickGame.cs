@@ -146,7 +146,7 @@ namespace Minigames.ClickGames
             base.OnAllStainsRemoved();
         }
 
-        protected override void OnGameComplete()
+        public override void OnGameComplete()
         {
             base.OnGameComplete(); // Mark as completed successfully
             Debug.Log("[DishClickGame] Congratulations! The dish is now sparkling clean.");

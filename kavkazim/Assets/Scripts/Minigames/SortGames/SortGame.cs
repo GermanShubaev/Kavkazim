@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using Minigames.Base;
+using Minigames.Base.Strategies;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
@@ -17,7 +18,7 @@ namespace Minigames.SortGames
         [SerializeField] protected GameObject elementPrefab; 
 
         [Header("Game Settings")]
-        [SerializeField] protected int numberOfElements = 6;
+        [SerializeField] protected int numberOfElements;
         [SerializeField] protected float cellSpacing = 50f;
         [SerializeField] protected float elementSize = 1000f;
         [SerializeField] protected float minDistanceBetweenElements = 120f; 
@@ -27,6 +28,11 @@ namespace Minigames.SortGames
         protected readonly List<Cell> Cells = new List<Cell>();
         protected DraggableElement CurrentlyDragging;
 
+        /// <summary>
+        /// Exposes Cells list for win condition strategy.
+        /// </summary>
+        public IReadOnlyList<Cell> GetCells() => Cells;
+
         protected virtual void Awake()
         {
             if (popupCanvas == null)
@@ -34,11 +40,44 @@ namespace Minigames.SortGames
             
             if (popupWindow == null)
                 popupWindow = GetComponent<RectTransform>();
+            
+            // Initialize default win condition strategy if not set
+            if (_winConditionStrategy == null)
+            {
+                _winConditionStrategy = new SortGameWinConditionStrategy();
+            }
+            
+            // Initialize default UI builder if not set
+            if (_uiBuilder == null)
+            {
+                _uiBuilder = new Base.UI.SortGameUIBuilder();
+            }
+        }
+        
+        // Helper methods for UI builder
+        public void SetUpperSection(RectTransform section)
+        {
+            upperSection = section;
+        }
+        
+        public void SetLowerSection(RectTransform section)
+        {
+            lowerSection = section;
+        }
+        
+        public void SetPopupWindowReference(RectTransform window)
+        {
+            popupWindow = window;
+            if (popupCanvas == null && _canvas != null)
+            {
+                popupCanvas = _canvas;
+            }
         }
 
         protected virtual void Start()
         {
-            InitializeGame();
+            // InitializeGame is now called from InitializeGameUI
+            // This Start method is kept for backward compatibility
         }
 
         protected virtual void InitializeGame()
@@ -228,7 +267,7 @@ namespace Minigames.SortGames
             return distance <= snapProximityDistance;
         }
 
-        protected virtual void SnapToCell(DraggableElement element, Cell cell)
+        public virtual void SnapToCell(DraggableElement element, Cell cell)
         {
             foreach (Cell c in Cells)
             {
@@ -265,24 +304,15 @@ namespace Minigames.SortGames
 
         protected virtual void CheckWinCondition()
         {
-            foreach (Cell cell in Cells)
+            if (_winConditionStrategy != null && _winConditionStrategy.CheckWinCondition(this))
             {
-                DraggableElement element = cell.GetElement();
-                
-                if (element == null)
-                    return;
-                
-                if (element.GetCorrectCellIndex() != cell.GetIndex())
-                    return;
+                _winConditionStrategy.OnWin(this);
             }
-
-            OnGameComplete();
         }
 
-        protected override void OnGameComplete()
+        public override void OnGameComplete()
         {
             base.OnGameComplete(); // Mark as completed successfully
-            Debug.Log("SortGame: All elements correctly placed! Game complete.");
             HidePopup();
         }
 
@@ -319,120 +349,9 @@ namespace Minigames.SortGames
 
         protected override void InitializeGameUI()
         {
-            throw new System.NotImplementedException();
-        }
-    }
-
-    public class DraggableElement : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandler
-    {
-        private int _index;
-        private int _correctCellIndex;
-        protected SortGame Game;
-        protected RectTransform RectTransform;
-        private Image _image;
-
-        protected void Initialize(int idx, SortGame sortGame, Sprite sprite)
-        {
-            Initialize(idx, sortGame, sprite, idx);
-        }
-
-        public void Initialize(int idx, SortGame sortGame, Sprite sprite, int correctCell)
-        {
-            _index = idx;
-            _correctCellIndex = correctCell;
-            Game = sortGame;
-            RectTransform = GetComponent<RectTransform>();
-            
-            _image = GetComponent<Image>();
-            if (_image == null)
-                _image = gameObject.AddComponent<Image>();
-            
-            if (sprite != null)
-                _image.sprite = sprite;
-        }
-
-        public RectTransform GetRectTransform() => RectTransform;
-        public int GetIndex() => _index;
-        public int GetCorrectCellIndex() => _correctCellIndex;
-
-        public void OnBeginDrag(PointerEventData eventData)
-        {
-            if (Game != null)
-                Game.OnElementDragStart(this);
-        }
-
-        public virtual void OnDrag(PointerEventData eventData)
-        {
-            if (Game != null && RectTransform != null)
-            {
-                var parentRect = RectTransform.parent as RectTransform;
-                var canvas = Game.GetComponentInParent<Canvas>();
-                var cam = canvas != null && canvas.renderMode != RenderMode.ScreenSpaceOverlay 
-                    ? canvas.worldCamera : null;
-                
-                RectTransformUtility.ScreenPointToLocalPointInRectangle(
-                    parentRect,
-                    eventData.position,
-                    cam,
-                    out Vector2 localPoint);
-                
-                var parentSize = parentRect.rect.size;
-                var anchorCenter = (RectTransform.anchorMin + RectTransform.anchorMax) / 2f;
-                var anchorLocalPos = new Vector2(
-                    (anchorCenter.x - 0.5f) * parentSize.x,
-                    (anchorCenter.y - 0.5f) * parentSize.y
-                );
-                
-                RectTransform.anchoredPosition = localPoint - anchorLocalPos;
-                Game.OnElementDrag(this, eventData.position);
-            }
-        }
-
-        public void OnEndDrag(PointerEventData eventData)
-        {
-            if (Game != null)
-                Game.OnElementDragEnd(this, eventData.position);
-        }
-    }
-
-    public class Cell : MonoBehaviour
-    {
-        private int _index;
-        private SortGame _game;
-        private RectTransform _rectTransform;
-        private DraggableElement _currentElement;
-        private Image _backgroundImage;
-        private readonly Color _normalColor = new Color(1f, 1f, 1f, 0.2f);
-        private readonly Color _highlightColor = new Color(0.2f, 0.8f, 0.2f, 0.5f);
-
-        public void Initialize(int idx, SortGame sortGame)
-        {
-            _index = idx;
-            _game = sortGame;
-            _rectTransform = GetComponent<RectTransform>();
-            
-            _backgroundImage = GetComponent<Image>();
-            if (_backgroundImage == null)
-                _backgroundImage = gameObject.AddComponent<Image>();
-            
-            _backgroundImage.color = _normalColor;
-        }
-
-        public RectTransform GetRectTransform() => _rectTransform;
-        public DraggableElement GetElement() => _currentElement;
-        public int GetIndex() => _index;
-
-        public void SetElement(DraggableElement element)
-        {
-            _currentElement = element;
-        }
-
-        public void SetHighlight(bool highlighted)
-        {
-            if (_backgroundImage != null)
-            {
-                _backgroundImage.color = highlighted ? _highlightColor : _normalColor;
-            }
+            // Initialize the game after UI is set up
+            // Derived classes can override this and call base.InitializeGameUI() if they need custom UI
+            InitializeGame();
         }
     }
 }

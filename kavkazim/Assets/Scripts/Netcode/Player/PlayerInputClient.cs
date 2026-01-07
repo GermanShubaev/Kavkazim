@@ -173,10 +173,38 @@ namespace Netcode.Player
                 if (Vector2.Distance(task.Location, _currentTrigger.Position) < positionTolerance &&
                     task.MinigameType == _currentTrigger.GameType)
                 {
-                    // Mark this task as completed
+                    // Mark this task as completed locally
                     GameplayUI.Instance.MarkTaskAsCompleted(task);
                     Debug.Log($"[PlayerInputClient] Task completed: {task.Description}");
+                    
+                    // Notify server about task completion
+                    NotifyTaskCompletedServerRpc();
                     break;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Server RPC to notify that a task has been completed.
+        /// Decrements the TasksLeft counter on the server.
+        /// </summary>
+        [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Owner)]
+        private void NotifyTaskCompletedServerRpc(RpcParams rpcParams = default)
+        {
+            if (GameSessionManager.Instance == null) return;
+            
+            // Decrement TasksLeft by 1
+            int currentTasks = GameSessionManager.Instance.TasksLeft.Value;
+            if (currentTasks > 0)
+            {
+                GameSessionManager.Instance.TasksLeft.Value = currentTasks - 1;
+                Debug.Log($"[PlayerInputClient] Server: Task completed. TasksLeft: {currentTasks - 1}");
+                
+                // Check win condition when tasks reach 0
+                if (GameSessionManager.Instance.TasksLeft.Value == 0)
+                {
+                    Debug.Log("[PlayerInputClient] Server: All tasks completed! Innocents win!");
+                    GameSessionManager.Instance.CheckWinConditions();
                 }
             }
         }

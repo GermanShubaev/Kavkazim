@@ -106,7 +106,7 @@ namespace Minigames.SortGames
             Debug.Log($"[ShashlikSortGame] Loaded {_ingredientSprites.Count} ingredient sprites");
         }
 
-        public void StartGame()
+        protected override void Start()
         {
             if (IsActive)
             {
@@ -117,7 +117,7 @@ namespace Minigames.SortGames
             CreatePopupWindow();
             _popupWindow.SetActive(true);
         }
-
+        
         public void CloseGame()
         {
             if (!IsActive) return;
@@ -777,6 +777,11 @@ namespace Minigames.SortGames
 
             // Create new skewer with new ingredients
             CreateTargetSkewerInPanel(_memorizationPanel, 0.35f, 0.75f);
+        }
+
+        public override void OnGameComplete()
+        {
+            base.OnGameComplete(); // Mark as completed successfully - this triggers progress bar update and task removal
         }
 
         private System.Collections.IEnumerator CloseAfterDelay(float delay)

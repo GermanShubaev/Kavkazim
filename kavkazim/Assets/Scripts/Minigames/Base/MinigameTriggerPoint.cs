@@ -278,7 +278,13 @@ namespace Minigames
                 if (Vector2.Distance(task.Location, position) < positionTolerance && 
                     task.MinigameType == gameType)
                 {
-                    return true;
+                    // Check if this task has been completed by the local player
+                    // If completed, don't show the indicator (task is no longer available for this player)
+                    if (UI.GameplayUI.Instance.IsTaskCompleted(task))
+                    {
+                        return false; // Task completed - hide indicator
+                    }
+                    return true; // Task assigned and not completed - show indicator
                 }
             }
 

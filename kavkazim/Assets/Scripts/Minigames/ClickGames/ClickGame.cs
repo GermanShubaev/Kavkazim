@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using Minigames.Base;
+using Minigames.Base.Strategies;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
@@ -45,6 +46,18 @@ namespace Minigames.ClickGames
 
         protected override void InitializeGameUI()
         {
+            // Initialize default win condition strategy if not set
+            if (_winConditionStrategy == null)
+            {
+                _winConditionStrategy = new ClickGameWinConditionStrategy();
+            }
+            
+            // Initialize default UI builder if not set
+            if (_uiBuilder == null)
+            {
+                _uiBuilder = new Base.UI.ClickGameUIBuilder();
+            }
+            
             if (useScreenPercentage)
             {
                 ResizeContentPanelToScreenPercentage();
@@ -240,12 +253,15 @@ namespace Minigames.ClickGames
 
         protected virtual void OnAllStainsRemoved()
         {
-            Debug.Log($"{GetType().Name}: All stains removed! Game complete.");
-            OnGameComplete();
+            // Check win condition using strategy
+            if (_winConditionStrategy != null && _winConditionStrategy.CheckWinCondition(this))
+            {
+                _winConditionStrategy.OnWin(this);
+            }
         }
 
         
-        protected override void OnGameComplete()
+        public override void OnGameComplete()
         {
             base.OnGameComplete(); // Mark as completed successfully
             StartCoroutine(CloseAfterDelay(1f));

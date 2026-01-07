@@ -32,7 +32,7 @@ namespace Minigames.SortGames
         private RectTransform _cellSection;
         private RectTransform _elementSection;
 
-        public bool IsActive => _popupWindow != null && _popupWindow.activeSelf;
+        private bool IsActive => _popupWindow != null && _popupWindow.activeSelf;
         public GameObject PopupWindow => _popupWindow;
 
         protected override void Awake()
@@ -42,7 +42,14 @@ namespace Minigames.SortGames
 
         protected override void Start()
         {
-            // Don't call base.Start() - initialize when StartGame() is called
+            if (IsActive)
+            {
+                Debug.LogWarning($"{GetType().Name} is already active!");
+                return;
+            }
+
+            CreatePopupWindow();
+            _popupWindow.SetActive(true);
         }
 
         private void LoadLezginkaImages()
@@ -333,22 +340,15 @@ namespace Minigames.SortGames
             }
         }
 
+        public override void OnGameComplete()
+        {
+            base.OnGameComplete(); // Mark as completed successfully - this triggers progress bar update and task removal
+        }
+
         private System.Collections.IEnumerator CloseAfterDelay(float delay)
         {
             yield return new WaitForSeconds(delay);
             CloseGame();
-        }
-
-        public void StartGame()
-        {
-            if (IsActive)
-            {
-                Debug.LogWarning($"{GetType().Name} is already active!");
-                return;
-            }
-
-            CreatePopupWindow();
-            _popupWindow.SetActive(true);
         }
 
         public void CloseGame()

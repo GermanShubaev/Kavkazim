@@ -204,7 +204,7 @@ namespace Minigames.ClickGames
             OnGameComplete();
         }
 
-        protected override void OnGameComplete()
+        public override void OnGameComplete()
         {
             Debug.Log("[TapachkiGame] Congratulations! Game complete.");
             base.OnGameComplete();

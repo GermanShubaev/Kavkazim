@@ -404,8 +404,8 @@ namespace Minigames.ClickGames
             OnGameComplete();
             StartCoroutine(CloseAfterDelay(2f));
         }
-        
-        protected override void OnGameComplete()
+
+        public override void OnGameComplete()
         {
             base.OnGameComplete(); // Mark as completed successfully
         }
