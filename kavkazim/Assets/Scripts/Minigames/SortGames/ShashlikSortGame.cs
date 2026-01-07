@@ -19,11 +19,7 @@ namespace Minigames.SortGames
         [SerializeField] private float ingredientSpacing = 120f;
         [SerializeField] private int totalRounds = 3;
 
-        private GameObject _popupWindow;
-        private Canvas _canvas;
-        private GameObject _backgroundPanel;
-        private GameObject _contentPanel;
-        private Button _closeButton;
+        // Note: _popupWindow, _canvas, _backgroundPanel, _contentPanel, _closeButton are inherited from BaseMinigame
         private Text _resultText;
 
         private Sprite _skewerSprite;
@@ -43,8 +39,7 @@ namespace Minigames.SortGames
         private Text _roundText;
         private Text _memorizationRoundText;
 
-        public bool IsActive => _popupWindow != null && _popupWindow.activeSelf;
-        public GameObject PopupWindow => _popupWindow;
+        // IsActive and PopupWindow properties are inherited from BaseMinigame
 
         private void Awake()
         {
@@ -114,29 +109,25 @@ namespace Minigames.SortGames
                 return;
             }
 
-            CreatePopupWindow();
-            _popupWindow.SetActive(true);
+            StartGame();
         }
         
-        public void CloseGame()
+        public override void CloseGame()
         {
             if (!IsActive) return;
 
+            // Cleanup is handled by CleanupGameUI() and base.CloseGame()
+            base.CloseGame();
+        }
+
+        protected override void CleanupGameUI()
+        {
+            StopAllCoroutines();
             _targetSequence.Clear();
             _playerSequence.Clear();
             _playerSkewerSlots.Clear();
             _ingredientButtons.Clear();
 
-            if (_popupWindow != null)
-            {
-                Destroy(_popupWindow);
-                _popupWindow = null;
-            }
-
-            _canvas = null;
-            _backgroundPanel = null;
-            _contentPanel = null;
-            _closeButton = null;
             _resultText = null;
             _memorizationPanel = null;
             _gameplayPanel = null;
@@ -146,42 +137,22 @@ namespace Minigames.SortGames
             _memorizationRoundText = null;
         }
 
-        private void CreatePopupWindow()
+        protected override void InitializeGameUI()
         {
-            _popupWindow = new GameObject($"{GetType().Name}Popup");
-            _popupWindow.transform.SetParent(null);
-
-            _canvas = _popupWindow.AddComponent<Canvas>();
-            _canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-            _canvas.sortingOrder = canvasSortingOrder;
-            _popupWindow.AddComponent<CanvasScaler>();
-            _popupWindow.AddComponent<GraphicRaycaster>();
-
-            if (EventSystem.current == null)
-            {
-                GameObject eventSystem = new GameObject("EventSystem");
-                eventSystem.AddComponent<EventSystem>();
-                eventSystem.AddComponent<UnityEngine.InputSystem.UI.InputSystemUIInputModule>();
-            }
-
-            _backgroundPanel = new GameObject("Background");
-            _backgroundPanel.transform.SetParent(_popupWindow.transform, false);
-            Image bgImage = _backgroundPanel.AddComponent<Image>();
-            bgImage.color = backgroundColor;
-            RectTransform bgRect = _backgroundPanel.GetComponent<RectTransform>();
-            bgRect.anchorMin = Vector2.zero;
-            bgRect.anchorMax = Vector2.one;
-            bgRect.sizeDelta = Vector2.zero;
-
-            _contentPanel = new GameObject("ContentPanel");
-            _contentPanel.transform.SetParent(_popupWindow.transform, false);
-            Image contentImage = _contentPanel.AddComponent<Image>();
-            contentImage.color = new Color(0.15f, 0.15f, 0.2f, 0.95f);
+            // Adjust content panel layout (matching LaundrySortGame implementation)
             RectTransform contentRect = _contentPanel.GetComponent<RectTransform>();
-            contentRect.anchorMin = new Vector2(0.125f, 0.125f);
-            contentRect.anchorMax = new Vector2(0.875f, 0.875f);
-            contentRect.sizeDelta = Vector2.zero;
-            contentRect.anchoredPosition = Vector2.zero;
+            if (contentRect != null)
+            {
+                contentRect.anchorMin = new Vector2(0.125f, 0.125f);
+                contentRect.anchorMax = new Vector2(0.875f, 0.875f);
+                contentRect.sizeDelta = Vector2.zero;
+                contentRect.anchoredPosition = Vector2.zero;
+                Image contentImage = _contentPanel.GetComponent<Image>();
+                if (contentImage != null)
+                {
+                    contentImage.color = new Color(0.15f, 0.15f, 0.2f, 0.95f);
+                }
+            }
 
             GenerateTargetSequence();
 
@@ -191,9 +162,6 @@ namespace Minigames.SortGames
 
             _memorizationPanel.SetActive(true);
             _gameplayPanel.SetActive(false);
-
-            if (showCloseButton)
-                CreateCloseButton();
         }
 
         private void CreateMemorizationPhase()

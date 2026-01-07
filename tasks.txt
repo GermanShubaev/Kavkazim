@@ -5,9 +5,6 @@ Main Menu
 
 features :
 1.block tasks for impostors
-2.implement progress bar for tasks
-3.minimap 
-4.voting system 
 5.cams?
 6.sabotage?
 bugs :
