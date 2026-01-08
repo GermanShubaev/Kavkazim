@@ -19,6 +19,7 @@ namespace Minigames.SortGames
 
         [Header("Game Settings")]
         [SerializeField] protected int numberOfElements;
+        // All sizes are relative to reference resolution 2560x1440 and will scale automatically via CanvasScaler
         [SerializeField] protected float cellSpacing = 50f;
         [SerializeField] protected float elementSize = 1000f;
         [SerializeField] protected float minDistanceBetweenElements = 120f; 
