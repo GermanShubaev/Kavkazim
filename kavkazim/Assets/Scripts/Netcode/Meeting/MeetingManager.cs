@@ -119,7 +119,7 @@ namespace Kavkazim.Netcode.Meeting
 
         /// <summary>
         /// SERVER ONLY: Start a meeting with the given data.
-        /// Called by ReportService or GameSessionManager.
+        /// Called by ReportService or GameSessionManager
         /// </summary>
         public void StartMeeting(MeetingStartData data)
         {
