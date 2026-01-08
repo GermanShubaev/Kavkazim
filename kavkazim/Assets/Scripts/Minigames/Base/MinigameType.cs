@@ -1,8 +1,5 @@
-namespace Minigames
+namespace Minigames.Base
 {
-    /// <summary>
-    /// Enum defining all available minigame types.
-    /// </summary>
     public enum MinigameType
     {
         LezginkaSort,

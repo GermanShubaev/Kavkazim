@@ -1,13 +1,11 @@
+using Minigames.Base;
 using UnityEngine;
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
 
-namespace Minigames
+namespace Minigames.Base
 {
-    /// <summary>
-    /// Helper class for setting up minigame trigger points in the scene.
-    /// </summary>
     public class MinigameTriggerPointHelper : MonoBehaviour
     {
 #if UNITY_EDITOR
@@ -17,11 +15,6 @@ namespace Minigames
             GameObject triggerObj = new GameObject("MinigameTriggerPoint");
             MinigameTriggerPoint trigger = triggerObj.AddComponent<MinigameTriggerPoint>();
             
-            // Set default values
-            // Note: These will be set via reflection or we can use SerializedObject
-            // For now, the default values in MinigameTriggerPoint will be used
-            
-            // Select the newly created object
             Selection.activeGameObject = triggerObj;
             
             Debug.Log("Created MinigameTriggerPoint. Set position, radius, and game type in Inspector.");

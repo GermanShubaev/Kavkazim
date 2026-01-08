@@ -1,16 +1,10 @@
-using UnityEngine;
-using UnityEngine.UI;
-using UnityEngine.EventSystems;
-#if UNITY_EDITOR
 using UnityEditor;
-#endif
+using UnityEngine;
+using UnityEngine.EventSystems;
+using UnityEngine.UI;
 
-namespace Minigames
+namespace Minigames.ClickGames
 {
-    /// <summary>
-    /// A minigame where players click boots first (green outline turns red), 
-    /// then click slippers (red outline turns green) to complete the game.
-    /// </summary>
     public class TapachkiGame : ClickGame
     {
         [Header("Tapachki Settings")]
@@ -34,7 +28,6 @@ namespace Minigames
 
         private void Awake()
         {
-            // Enable 75% screen size popup
             useScreenPercentage = true;
             screenPercentage = 0.75f;
             
@@ -44,7 +37,6 @@ namespace Minigames
         private void LoadImages()
         {
             #if UNITY_EDITOR
-            // Load boots image
             string bootsPath = "Assets/Art/Images/tapachki/boots.png";
             _bootsSprite = AssetDatabase.LoadAssetAtPath<Sprite>(bootsPath);
             if (_bootsSprite == null)
@@ -56,7 +48,6 @@ namespace Minigames
                 }
             }
 
-            // Load slippers image
             string slippersPath = "Assets/Art/Images/tapachki/slippers.png";
             _slippersSprite = AssetDatabase.LoadAssetAtPath<Sprite>(slippersPath);
             if (_slippersSprite == null)
@@ -74,7 +65,6 @@ namespace Minigames
                 Debug.Log("[TapachkiGame] Loaded slippers.png (Editor mode)");
             #endif
 
-            // Fallback to Resources for runtime
             if (_bootsSprite == null)
             {
                 _bootsSprite = Resources.Load<Sprite>("Art/Images/tapachki/boots");
@@ -106,18 +96,15 @@ namespace Minigames
 
         protected override void InitializeGameUI()
         {
-            // Resize content panel if using screen percentage
             if (useScreenPercentage)
             {
                 ResizeContentPanelToScreenPercentage();
             }
 
-            // Reset game state
             _bootsClicked = false;
             _slippersClicked = false;
             _gameComplete = false;
 
-            // Create the two images side by side
             CreateBootsImage();
             CreateSlippersImage();
         }
@@ -132,13 +119,11 @@ namespace Minigames
             _bootsImage.preserveAspect = true;
             _bootsImage.raycastTarget = true;
 
-            // Add outline component (green initially)
             _bootsOutline = _bootsObject.AddComponent<Outline>();
             _bootsOutline.effectColor = Color.green;
             _bootsOutline.effectDistance = new Vector2(outlineWidth, outlineWidth);
             _bootsOutline.useGraphicAlpha = false;
 
-            // Setup RectTransform - positioned on the left
             RectTransform rect = _bootsObject.GetComponent<RectTransform>();
             rect.sizeDelta = imageSize;
             rect.anchorMin = new Vector2(0.5f, 0.5f);
@@ -146,7 +131,6 @@ namespace Minigames
             rect.pivot = new Vector2(0.5f, 0.5f);
             rect.anchoredPosition = new Vector2(-(imageSize.x + imageSpacing) / 2f, 0);
 
-            // Add click handler
             EventTrigger trigger = _bootsObject.AddComponent<EventTrigger>();
             EventTrigger.Entry entry = new EventTrigger.Entry();
             entry.eventID = EventTriggerType.PointerClick;
@@ -164,13 +148,11 @@ namespace Minigames
             _slippersImage.preserveAspect = true;
             _slippersImage.raycastTarget = true;
 
-            // Add outline component (red initially)
             _slippersOutline = _slippersObject.AddComponent<Outline>();
             _slippersOutline.effectColor = Color.red;
             _slippersOutline.effectDistance = new Vector2(outlineWidth, outlineWidth);
             _slippersOutline.useGraphicAlpha = false;
 
-            // Setup RectTransform - positioned on the right
             RectTransform rect = _slippersObject.GetComponent<RectTransform>();
             rect.sizeDelta = imageSize;
             rect.anchorMin = new Vector2(0.5f, 0.5f);
@@ -178,7 +160,6 @@ namespace Minigames
             rect.pivot = new Vector2(0.5f, 0.5f);
             rect.anchoredPosition = new Vector2((imageSize.x + imageSpacing) / 2f, 0);
 
-            // Add click handler
             EventTrigger trigger = _slippersObject.AddComponent<EventTrigger>();
             EventTrigger.Entry entry = new EventTrigger.Entry();
             entry.eventID = EventTriggerType.PointerClick;
@@ -190,7 +171,6 @@ namespace Minigames
         {
             if (_gameComplete || _bootsClicked) return;
 
-            // Change boots outline from green to red
             if (_bootsOutline != null)
             {
                 _bootsOutline.effectColor = Color.red;
@@ -204,7 +184,6 @@ namespace Minigames
         {
             if (_gameComplete) return;
 
-            // Can only click slippers after boots
             if (!_bootsClicked)
             {
                 Debug.Log("[TapachkiGame] Must click boots first!");
@@ -213,7 +192,6 @@ namespace Minigames
 
             if (_slippersClicked) return;
 
-            // Change slippers outline from red to green
             if (_slippersOutline != null)
             {
                 _slippersOutline.effectColor = Color.green;
@@ -223,11 +201,10 @@ namespace Minigames
             _gameComplete = true;
             Debug.Log("[TapachkiGame] Slippers clicked! Outline changed to green. Game complete!");
 
-            // Complete the game
             OnGameComplete();
         }
 
-        protected override void OnGameComplete()
+        public override void OnGameComplete()
         {
             Debug.Log("[TapachkiGame] Congratulations! Game complete.");
             base.OnGameComplete();
@@ -246,7 +223,6 @@ namespace Minigames
             _slippersOutline = null;
         }
 
-        // Override these to prevent the base class from creating stains
         protected override void CreateMainImage()
         {
             // Don't create main image - we're using custom UI

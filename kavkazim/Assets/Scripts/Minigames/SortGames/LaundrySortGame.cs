@@ -1,14 +1,12 @@
 using System.Collections.Generic;
-using UnityEngine;
-using UnityEngine.UI;
-using UnityEngine.EventSystems;
-#if UNITY_EDITOR
 using UnityEditor;
-#endif
+using UnityEngine;
+using UnityEngine.EventSystems;
+using UnityEngine.UI;
 
-namespace Minigames
+namespace Minigames.SortGames
 {
-    public class LaundrySortGame : BaseMinigame
+    public class LaundrySortGame : SortGame
     {
         [Header("Game Settings")]
         [SerializeField] private int totalClothes = 9;
@@ -122,7 +120,6 @@ namespace Minigames
 
         protected override void InitializeGameUI()
         {
-            // Resize content panel to use anchors (75% of screen like other games)
             RectTransform contentRect = _contentPanel.GetComponent<RectTransform>();
             if (contentRect != null)
             {
@@ -465,6 +462,7 @@ namespace Minigames
                         _resultText.color = Color.green;
                     }
                     Debug.Log("[LaundrySortGame] Player won! All clothes sorted correctly.");
+                    OnGameComplete();
                     StartCoroutine(CloseAfterDelay(2f));
                 }
                 else
@@ -534,7 +532,7 @@ namespace Minigames
     /// <summary>
     /// Component for draggable clothing items.
     /// </summary>
-    public class DraggableClothing : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandler
+    public class DraggableClothing : MonoBehaviour, IBeginDragHandler, UnityEngine.EventSystems.IDragHandler, IEndDragHandler
     {
         private Sprite _clothingSprite;
         private bool _isWhite;

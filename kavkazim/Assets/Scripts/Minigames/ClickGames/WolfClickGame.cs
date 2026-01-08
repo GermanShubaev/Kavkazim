@@ -1,25 +1,20 @@
 using System.Collections.Generic;
+using UnityEditor;
 using UnityEngine;
 using UnityEngine.UI;
-using UnityEngine.EventSystems;
-#if UNITY_EDITOR
-using UnityEditor;
-#endif
 
-namespace Minigames
+namespace Minigames.ClickGames
 {
-    /// <summary>
-    /// A minigame where players click on anonymous silhouettes to reveal names.
-    /// The game ends when both "amir" and "solomon" are found.
-    /// </summary>
-    public class WolfClickGame : BaseMinigame
+    public class WolfClickGame : ClickGame
     {
+        private readonly string AnonymousPath = "Assets/Art/Images/wolf/anonymous.png";
+        
         [Header("Wolf Game Settings")]
         [SerializeField] private int numberOfPeople = 9;
         [SerializeField] private Vector2 personSize = new Vector2(300, 360);
         [SerializeField] private int gridColumns = 3;
         [SerializeField] private float gridSpacing = 40f;
-        private const float nameLabelHeight = 80f; // Height for name label area
+        private const float NameLabelHeight = 80f; 
 
         private static readonly string[] AllNames = new string[]
         {
@@ -30,8 +25,8 @@ namespace Minigames
         private static readonly string[] TargetNames = new string[] { "amir", "solomon" };
 
         private Sprite _anonymousSprite;
-        private List<PersonCard> _personCards = new List<PersonCard>();
-        private HashSet<string> _revealedTargets = new HashSet<string>();
+        private readonly List<PersonCard> PersonCards = new List<PersonCard>();
+        private HashSet<string> RevealedTargets = new HashSet<string>();
         private GameObject _gridContainer;
 
         private void Awake()
@@ -42,11 +37,11 @@ namespace Minigames
         private void LoadImages()
         {
             #if UNITY_EDITOR
-            string anonymousPath = "Assets/Art/Images/wolf/anonymous.png";
-            _anonymousSprite = AssetDatabase.LoadAssetAtPath<Sprite>(anonymousPath);
+            
+            _anonymousSprite = AssetDatabase.LoadAssetAtPath<Sprite>(AnonymousPath);
             if (_anonymousSprite == null)
             {
-                Texture2D tex = AssetDatabase.LoadAssetAtPath<Texture2D>(anonymousPath);
+                Texture2D tex = AssetDatabase.LoadAssetAtPath<Texture2D>(AnonymousPath);
                 if (tex != null)
                 {
                     _anonymousSprite = Sprite.Create(tex, new Rect(0, 0, tex.width, tex.height), new Vector2(0.5f, 0.5f));
@@ -74,7 +69,6 @@ namespace Minigames
         {
             base.CreatePopupWindow();
             
-            // Resize content panel to 75% of screen
             RectTransform contentRect = _contentPanel.GetComponent<RectTransform>();
             float screenWidth = Screen.width;
             float screenHeight = Screen.height;
@@ -83,19 +77,15 @@ namespace Minigames
 
         protected override void InitializeGameUI()
         {
-            _personCards.Clear();
-            _revealedTargets.Clear();
+            PersonCards.Clear();
+            RevealedTargets.Clear();
 
-            // Create title
             CreateTitle();
 
-            // Create grid container
             CreateGridContainer();
 
-            // Generate random names for 9 people (must include amir and solomon)
             List<string> assignedNames = GenerateRandomNames();
 
-            // Create person cards in a 3x3 grid
             CreatePersonCards(assignedNames);
         }
 
@@ -128,12 +118,11 @@ namespace Minigames
             gridRect.anchorMin = new Vector2(0.5f, 0.5f);
             gridRect.anchorMax = new Vector2(0.5f, 0.5f);
             gridRect.pivot = new Vector2(0.5f, 0.5f);
-            gridRect.anchoredPosition = new Vector2(0, -20); // Slightly below center to account for title
+            gridRect.anchoredPosition = new Vector2(0, -20);  
 
-            // Calculate grid size
             int rows = Mathf.CeilToInt((float)numberOfPeople / gridColumns);
             float gridWidth = gridColumns * personSize.x + (gridColumns - 1) * gridSpacing;
-            float gridHeight = rows * (personSize.y + nameLabelHeight) + (rows - 1) * gridSpacing;
+            float gridHeight = rows * (personSize.y + NameLabelHeight) + (rows - 1) * gridSpacing;
             gridRect.sizeDelta = new Vector2(gridWidth, gridHeight);
         }
 
@@ -142,13 +131,11 @@ namespace Minigames
             List<string> availableNames = new List<string>(AllNames);
             List<string> assignedNames = new List<string>();
 
-            // Ensure amir and solomon are included
             assignedNames.Add("amir");
             assignedNames.Add("solomon");
             availableNames.Remove("amir");
             availableNames.Remove("solomon");
 
-            // Fill remaining slots with random names
             while (assignedNames.Count < numberOfPeople && availableNames.Count > 0)
             {
                 int randomIndex = Random.Range(0, availableNames.Count);
@@ -156,7 +143,6 @@ namespace Minigames
                 availableNames.RemoveAt(randomIndex);
             }
 
-            // Shuffle the list so amir and solomon aren't always first
             ShuffleList(assignedNames);
 
             return assignedNames;
@@ -177,9 +163,9 @@ namespace Minigames
         {
             int rows = Mathf.CeilToInt((float)numberOfPeople / gridColumns);
             float totalWidth = gridColumns * personSize.x + (gridColumns - 1) * gridSpacing;
-            float totalHeight = rows * (personSize.y + nameLabelHeight) + (rows - 1) * gridSpacing;
+            float totalHeight = rows * (personSize.y + NameLabelHeight) + (rows - 1) * gridSpacing;
             float startX = -totalWidth / 2 + personSize.x / 2;
-            float startY = totalHeight / 2 - personSize.y / 2 - nameLabelHeight / 2;
+            float startY = totalHeight / 2 - personSize.y / 2 - NameLabelHeight / 2;
 
             for (int i = 0; i < names.Count && i < numberOfPeople; i++)
             {
@@ -187,16 +173,15 @@ namespace Minigames
                 int row = i / gridColumns;
 
                 float x = startX + col * (personSize.x + gridSpacing);
-                float y = startY - row * (personSize.y + nameLabelHeight + gridSpacing);
+                float y = startY - row * (personSize.y + NameLabelHeight + gridSpacing);
 
                 PersonCard card = CreatePersonCard(i, names[i], new Vector2(x, y));
-                _personCards.Add(card);
+                PersonCards.Add(card);
             }
         }
 
         private PersonCard CreatePersonCard(int index, string personName, Vector2 position)
         {
-            // Create card container
             GameObject cardObj = new GameObject($"PersonCard_{index}");
             cardObj.transform.SetParent(_gridContainer.transform, false);
 
@@ -205,9 +190,8 @@ namespace Minigames
             cardRect.anchorMax = new Vector2(0.5f, 0.5f);
             cardRect.pivot = new Vector2(0.5f, 0.5f);
             cardRect.anchoredPosition = position;
-            cardRect.sizeDelta = new Vector2(personSize.x, personSize.y + nameLabelHeight);
+            cardRect.sizeDelta = new Vector2(personSize.x, personSize.y + NameLabelHeight);
 
-            // Create anonymous image
             GameObject imageObj = new GameObject("Image");
             imageObj.transform.SetParent(cardObj.transform, false);
             
@@ -221,11 +205,9 @@ namespace Minigames
             imageRect.offsetMin = Vector2.zero;
             imageRect.offsetMax = Vector2.zero;
 
-            // Add button component for clicking
             Button button = imageObj.AddComponent<Button>();
             button.targetGraphic = personImage;
 
-            // Create name label (hidden initially)
             GameObject labelObj = new GameObject("NameLabel");
             labelObj.transform.SetParent(cardObj.transform, false);
 
@@ -242,7 +224,6 @@ namespace Minigames
             labelRect.offsetMin = Vector2.zero;
             labelRect.offsetMax = Vector2.zero;
 
-            // Create background for label
             GameObject labelBgObj = new GameObject("LabelBackground");
             labelBgObj.transform.SetParent(cardObj.transform, false);
             labelBgObj.transform.SetSiblingIndex(labelObj.transform.GetSiblingIndex());
@@ -256,10 +237,8 @@ namespace Minigames
             labelBgRect.offsetMin = Vector2.zero;
             labelBgRect.offsetMax = Vector2.zero;
 
-            // Move label to front
             labelObj.transform.SetAsLastSibling();
 
-            // Create PersonCard component
             PersonCard card = cardObj.AddComponent<PersonCard>();
             card.Initialize(index, personName, this, nameText, button);
 
@@ -273,16 +252,14 @@ namespace Minigames
 
             card.RevealName();
 
-            // Check if this is a target
             string name = card.PersonName.ToLower();
             if (System.Array.Exists(TargetNames, t => t == name))
             {
-                _revealedTargets.Add(name);
+                RevealedTargets.Add(name);
                 card.HighlightAsTarget();
-                Debug.Log($"[WolfClickGame] Found {name}! {_revealedTargets.Count}/{TargetNames.Length} targets found.");
+                Debug.Log($"[WolfClickGame] Found {name}! {RevealedTargets.Count}/{TargetNames.Length} targets found.");
 
-                // Check win condition
-                if (_revealedTargets.Count >= TargetNames.Length)
+                if (RevealedTargets.Count >= TargetNames.Length)
                 {
                     OnGameComplete();
                 }
@@ -291,9 +268,9 @@ namespace Minigames
 
         private void OnGameComplete()
         {
+            base.OnGameComplete(); // Mark as completed successfully
             Debug.Log("[WolfClickGame] Both amir and solomon found! Game complete.");
             
-            // Update title to show success
             Transform titleTransform = _contentPanel.transform.Find("Title");
             if (titleTransform != null)
             {
@@ -316,15 +293,12 @@ namespace Minigames
 
         protected override void CleanupGameUI()
         {
-            _personCards.Clear();
-            _revealedTargets.Clear();
+            PersonCards.Clear();
+            RevealedTargets.Clear();
             _gridContainer = null;
         }
     }
 
-    /// <summary>
-    /// Component for clickable person cards in the Wolf game.
-    /// </summary>
     public class PersonCard : MonoBehaviour
     {
         private int _index;
@@ -373,11 +347,10 @@ namespace Minigames
                 _nameText.fontStyle = FontStyle.Bold;
             }
 
-            // Also highlight the image
             Image image = GetComponentInChildren<Image>();
             if (image != null)
             {
-                image.color = new Color(0.5f, 1f, 0.5f, 1f); // Light green tint
+                image.color = new Color(0.5f, 1f, 0.5f, 1f);
             }
         }
     }

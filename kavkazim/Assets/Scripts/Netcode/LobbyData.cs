@@ -231,6 +231,7 @@ namespace Kavkazim.Netcode
                 "imposter_majority" => "Kavkazis achieved majority!",
                 "all_imposters_eliminated" => "All Kavkazis have been eliminated!",
                 "missions_complete" => "All missions completed!",
+                "all_tasks_completed" => "All tasks completed!",
                 "sabotage" => "Critical sabotage successful!",
                 _ => key
             };

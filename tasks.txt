@@ -1,15 +1,12 @@
-Main Menu  
-1.code to join
-2.host
-3.leave - exit app
-
 features :
-1.block tasks for impostors
-2.implement progress bar for tasks
-3.minimap 
-4.voting system 
-5.cams?
-6.sabotage?
+1.minimap
+2.cams
+3.sabotage
+
+
+
 bugs :
-1.colliders irregular - fix Movement
-2.
+1.add colliders and fix irregularity
+2.all game UI elements should be relative & dynamic
+3.add fixed trigger points
+4.clean project

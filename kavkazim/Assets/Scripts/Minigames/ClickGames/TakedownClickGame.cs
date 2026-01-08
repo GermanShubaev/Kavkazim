@@ -1,18 +1,15 @@
 using System.Collections.Generic;
+using UnityEditor;
 using UnityEngine;
 using UnityEngine.UI;
-#if UNITY_EDITOR
-using UnityEditor;
-#endif
 
-namespace Minigames
+namespace Minigames.ClickGames
 {
-    /// <summary>
-    /// A rapid-clicking minigame where players must click 20 times within a 4-second window.
-    /// Each click briefly shows the submission image.
-    /// </summary>
-    public class TakedownClickGame : BaseMinigame
+    public class TakedownClickGame : ClickGame
     {
+        private const string NoSubPath = "Assets/Art/Images/ufc/ufc_no_sub.png";
+        private const string SubPath = "Assets/Art/Images/ufc/ufc_sub.png";
+
         [Header("Takedown Settings")]
         [SerializeField] private int requiredClicks = 30;
         [SerializeField] private float timeWindow = 5f;
@@ -37,22 +34,20 @@ namespace Minigames
         private void LoadImages()
         {
             #if UNITY_EDITOR
-            string noSubPath = "Assets/Art/Images/ufc/ufc_no_sub.png";
-            _noSubSprite = AssetDatabase.LoadAssetAtPath<Sprite>(noSubPath);
+            _noSubSprite = AssetDatabase.LoadAssetAtPath<Sprite>(NoSubPath);
             if (_noSubSprite == null)
             {
-                Texture2D tex = AssetDatabase.LoadAssetAtPath<Texture2D>(noSubPath);
+                Texture2D tex = AssetDatabase.LoadAssetAtPath<Texture2D>(NoSubPath);
                 if (tex != null)
                 {
                     _noSubSprite = Sprite.Create(tex, new Rect(0, 0, tex.width, tex.height), new Vector2(0.5f, 0.5f));
                 }
             }
 
-            string subPath = "Assets/Art/Images/ufc/ufc_sub.png";
-            _subSprite = AssetDatabase.LoadAssetAtPath<Sprite>(subPath);
+            _subSprite = AssetDatabase.LoadAssetAtPath<Sprite>(SubPath);
             if (_subSprite == null)
             {
-                Texture2D tex = AssetDatabase.LoadAssetAtPath<Texture2D>(subPath);
+                Texture2D tex = AssetDatabase.LoadAssetAtPath<Texture2D>(SubPath);
                 if (tex != null)
                 {
                     _subSprite = Sprite.Create(tex, new Rect(0, 0, tex.width, tex.height), new Vector2(0.5f, 0.5f));
@@ -65,7 +60,6 @@ namespace Minigames
                 Debug.Log("[TakedownClickGame] Loaded ufc_sub.png (Editor mode)");
             #endif
 
-            // Fallback to Resources for runtime
             if (_noSubSprite == null)
             {
                 _noSubSprite = Resources.Load<Sprite>("Art/Images/ufc/ufc_no_sub");
@@ -90,7 +84,6 @@ namespace Minigames
         {
             base.CreatePopupWindow();
             
-            // Resize content panel to 75% of screen
             RectTransform contentRect = _contentPanel.GetComponent<RectTransform>();
             float screenWidth = Screen.width;
             float screenHeight = Screen.height;
@@ -151,13 +144,12 @@ namespace Minigames
             buttonObj.transform.SetParent(_contentPanel.transform, false);
 
             Image buttonImage = buttonObj.AddComponent<Image>();
-            buttonImage.color = new Color(0.9f, 0.2f, 0.2f, 1f); // Red button
+            buttonImage.color = new Color(0.9f, 0.2f, 0.2f, 1f);
 
             _clickButton = buttonObj.AddComponent<Button>();
             _clickButton.targetGraphic = buttonImage;
             _clickButton.onClick.AddListener(OnButtonClicked);
 
-            // Add hover/press color transitions
             ColorBlock colors = _clickButton.colors;
             colors.normalColor = new Color(0.9f, 0.2f, 0.2f, 1f);
             colors.highlightedColor = new Color(1f, 0.3f, 0.3f, 1f);
@@ -171,7 +163,6 @@ namespace Minigames
             buttonRect.anchoredPosition = new Vector2(0, 30);
             buttonRect.sizeDelta = buttonSize;
 
-            // Add button text
             GameObject textObj = new GameObject("ButtonText");
             textObj.transform.SetParent(buttonObj.transform, false);
 
@@ -215,22 +206,18 @@ namespace Minigames
         {
             if (_gameWon) return;
 
-            float currentTime = Time.time;
+            var currentTime = Time.time;
             _clickTimestamps.Add(currentTime);
 
-            // Remove clicks older than the time window
             CleanupOldClicks(currentTime);
 
-            // Flash the submission image
             if (!_isFlashing)
             {
                 StartCoroutine(FlashSubmissionImage());
             }
 
-            // Update counter
             UpdateClickCounter();
 
-            // Check win condition
             if (_clickTimestamps.Count >= requiredClicks)
             {
                 OnGameWon();
@@ -239,7 +226,6 @@ namespace Minigames
 
         private void CleanupOldClicks(float currentTime)
         {
-            // Remove timestamps older than timeWindow seconds
             float cutoffTime = currentTime - timeWindow;
             _clickTimestamps.RemoveAll(t => t < cutoffTime);
         }
@@ -248,7 +234,6 @@ namespace Minigames
         {
             if (_gameWon) return;
 
-            // Continuously clean up old clicks and update counter
             CleanupOldClicks(Time.time);
             UpdateClickCounter();
         }
@@ -260,14 +245,13 @@ namespace Minigames
                 int currentClicks = _clickTimestamps.Count;
                 _clickCountText.text = $"Clicks: {currentClicks} / {requiredClicks}";
 
-                // Change color based on progress
-                float progress = (float)currentClicks / requiredClicks;
+                var progress = (float)currentClicks / requiredClicks;
                 if (progress >= 1f)
                     _clickCountText.color = Color.green;
                 else if (progress >= 0.7f)
                     _clickCountText.color = Color.yellow;
                 else if (progress >= 0.4f)
-                    _clickCountText.color = new Color(1f, 0.5f, 0f); // Orange
+                    _clickCountText.color = new Color(1f, 0.5f, 0f);
                 else
                     _clickCountText.color = Color.white;
             }
@@ -296,13 +280,11 @@ namespace Minigames
             _gameWon = true;
             Debug.Log("[TakedownClickGame] Player achieved takedown! Game won!");
 
-            // Keep showing the submission image
             if (_mainImage != null && _subSprite != null)
             {
                 _mainImage.sprite = _subSprite;
             }
 
-            // Update UI
             if (_instructionText != null)
             {
                 _instructionText.text = "SUBMISSION! You got the takedown!";
@@ -316,13 +298,18 @@ namespace Minigames
                 _clickCountText.color = Color.green;
             }
 
-            // Disable button
             if (_clickButton != null)
             {
                 _clickButton.interactable = false;
             }
 
+            OnGameComplete(); // Mark as completed successfully
             StartCoroutine(CloseAfterDelay(2f));
+        }
+
+        public override void OnGameComplete()
+        {
+            base.OnGameComplete(); // Mark as completed successfully
         }
 
         private System.Collections.IEnumerator CloseAfterDelay(float delay)
