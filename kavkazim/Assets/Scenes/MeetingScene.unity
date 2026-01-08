@@ -129,6 +129,7 @@ GameObject:
   m_Component:
   - component: {fileID: 78801566}
   - component: {fileID: 78801567}
+  - component: {fileID: 78801568}
   m_Layer: 0
   m_Name: MeetingPlayerSlot_3
   m_TagString: Untagged
@@ -152,6 +153,7 @@ RectTransform:
   - {fileID: 257946968}
   - {fileID: 269608664}
   - {fileID: 650849328}
+  - {fileID: 1582860645}
   m_Father: {fileID: 1398185520}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
@@ -174,11 +176,26 @@ MonoBehaviour:
   playerNameText: {fileID: 1324485118}
   selectionRing: {fileID: 650849330}
   deadOverlay: {fileID: 269608666}
+  voteDaggersView: {fileID: 78801568}
   localPlayerNameColor: {r: 1, g: 0.92156863, b: 0.015686275, a: 1}
   normalPlayerNameColor: {r: 1, g: 1, b: 1, a: 1}
   deadPlayerNameColor: {r: 0.5, g: 0.5, b: 0.5, a: 1}
   hoverScale: 1.1
   animationDuration: 0.2
+--- !u!114 &78801568
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 78801564}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9172d46437cb8f449916e9f06dc3a346, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Kavkazim.UI.Meeting.VoteDaggersView
+  daggersContainer: {fileID: 1582860645}
+  daggerIconPrefab: {fileID: 7881069409881167981, guid: 08327dea27503904f9bb585ada9e552b, type: 3}
 --- !u!1 &115385824
 GameObject:
   m_ObjectHideFlags: 0
@@ -1321,6 +1338,7 @@ GameObject:
   m_Component:
   - component: {fileID: 290838257}
   - component: {fileID: 290838258}
+  - component: {fileID: 290838259}
   m_Layer: 0
   m_Name: MeetingPlayerSlot_5
   m_TagString: Untagged
@@ -1344,6 +1362,7 @@ RectTransform:
   - {fileID: 1690711551}
   - {fileID: 427444886}
   - {fileID: 1898519595}
+  - {fileID: 952299622}
   m_Father: {fileID: 1398185520}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
@@ -1366,11 +1385,26 @@ MonoBehaviour:
   playerNameText: {fileID: 703037464}
   selectionRing: {fileID: 1898519597}
   deadOverlay: {fileID: 427444888}
+  voteDaggersView: {fileID: 290838259}
   localPlayerNameColor: {r: 1, g: 0.92156863, b: 0.015686275, a: 1}
   normalPlayerNameColor: {r: 1, g: 1, b: 1, a: 1}
   deadPlayerNameColor: {r: 0.5, g: 0.5, b: 0.5, a: 1}
   hoverScale: 1.1
   animationDuration: 0.2
+--- !u!114 &290838259
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 290838255}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9172d46437cb8f449916e9f06dc3a346, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Kavkazim.UI.Meeting.VoteDaggersView
+  daggersContainer: {fileID: 952299622}
+  daggerIconPrefab: {fileID: 7881069409881167981, guid: 08327dea27503904f9bb585ada9e552b, type: 3}
 --- !u!1 &294091878
 GameObject:
   m_ObjectHideFlags: 0
@@ -1657,142 +1691,6 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
---- !u!1 &439288498
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 439288501}
-  - component: {fileID: 439288500}
-  - component: {fileID: 439288499}
-  m_Layer: 0
-  m_Name: ResultsText
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!114 &439288499
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 439288498}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f4688fdb7df04437aeb418b961361dc5, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Unity.TextMeshPro::TMPro.TextMeshProUGUI
-  m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
-  m_RaycastTarget: 1
-  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
-  m_Maskable: 1
-  m_OnCullStateChanged:
-    m_PersistentCalls:
-      m_Calls: []
-  m_text: RESULTS
-  m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
-  m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
-  m_fontSharedMaterials: []
-  m_fontMaterial: {fileID: 0}
-  m_fontMaterials: []
-  m_fontColor32:
-    serializedVersion: 2
-    rgba: 4294967295
-  m_fontColor: {r: 1, g: 1, b: 1, a: 1}
-  m_enableVertexGradient: 0
-  m_colorMode: 3
-  m_fontColorGradient:
-    topLeft: {r: 1, g: 1, b: 1, a: 1}
-    topRight: {r: 1, g: 1, b: 1, a: 1}
-    bottomLeft: {r: 1, g: 1, b: 1, a: 1}
-    bottomRight: {r: 1, g: 1, b: 1, a: 1}
-  m_fontColorGradientPreset: {fileID: 0}
-  m_spriteAsset: {fileID: 0}
-  m_tintAllSprites: 0
-  m_StyleSheet: {fileID: 0}
-  m_TextStyleHashCode: 0
-  m_overrideHtmlColors: 0
-  m_faceColor:
-    serializedVersion: 2
-    rgba: 4294967295
-  m_fontSize: 60
-  m_fontSizeBase: 60
-  m_fontWeight: 400
-  m_enableAutoSizing: 0
-  m_fontSizeMin: 18
-  m_fontSizeMax: 72
-  m_fontStyle: 0
-  m_HorizontalAlignment: 2
-  m_VerticalAlignment: 512
-  m_textAlignment: 65535
-  m_characterSpacing: 0
-  m_wordSpacing: 0
-  m_lineSpacing: 0
-  m_lineSpacingMax: 0
-  m_paragraphSpacing: 0
-  m_charWidthMaxAdj: 0
-  m_TextWrappingMode: 1
-  m_wordWrappingRatios: 0.4
-  m_overflowMode: 0
-  m_linkedTextComponent: {fileID: 0}
-  parentLinkedComponent: {fileID: 0}
-  m_enableKerning: 0
-  m_ActiveFontFeatures: 6e72656b
-  m_enableExtraPadding: 0
-  checkPaddingRequired: 0
-  m_isRichText: 1
-  m_EmojiFallbackSupport: 1
-  m_parseCtrlCharacters: 1
-  m_isOrthographic: 1
-  m_isCullingEnabled: 0
-  m_horizontalMapping: 0
-  m_verticalMapping: 0
-  m_uvLineOffset: 0
-  m_geometrySortingOrder: 0
-  m_IsTextObjectScaleStatic: 0
-  m_VertexBufferAutoSizeReduction: 0
-  m_useMaxVisibleDescender: 1
-  m_pageToDisplay: 1
-  m_margin: {x: 0, y: 0, z: 0, w: 0}
-  m_isUsingLegacyAnimationComponent: 0
-  m_isVolumetricText: 0
-  m_hasFontAssetChanged: 0
-  m_baseMaterial: {fileID: 0}
-  m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
---- !u!222 &439288500
-CanvasRenderer:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 439288498}
-  m_CullTransparentMesh: 1
---- !u!224 &439288501
-RectTransform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 439288498}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 980181109}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 0, y: 0}
-  m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1 &466391127
 GameObject:
   m_ObjectHideFlags: 0
@@ -1944,6 +1842,98 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 496717022}
   m_CullTransparentMesh: 1
+--- !u!1 &504459278
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 504459279}
+  - component: {fileID: 504459281}
+  - component: {fileID: 504459280}
+  - component: {fileID: 504459282}
+  m_Layer: 0
+  m_Name: DaggersContainer
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &504459279
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 504459278}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 2101159533}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 1, y: 0.5}
+  m_AnchorMax: {x: 1, y: 0.5}
+  m_AnchoredPosition: {x: 10, y: 0}
+  m_SizeDelta: {x: 0, y: 0}
+  m_Pivot: {x: 0, y: 0.5}
+--- !u!114 &504459280
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 504459278}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3245ec927659c4140ac4f8d17403cc18, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.ContentSizeFitter
+  m_HorizontalFit: 2
+  m_VerticalFit: 2
+--- !u!114 &504459281
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 504459278}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 30649d3a9faa99c48a7b1166b86bf2a0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.HorizontalLayoutGroup
+  m_Padding:
+    m_Left: 0
+    m_Right: 0
+    m_Top: 0
+    m_Bottom: 0
+  m_ChildAlignment: 3
+  m_Spacing: 4
+  m_ChildForceExpandWidth: 0
+  m_ChildForceExpandHeight: 0
+  m_ChildControlWidth: 0
+  m_ChildControlHeight: 0
+  m_ChildScaleWidth: 0
+  m_ChildScaleHeight: 0
+  m_ReverseArrangement: 0
+--- !u!114 &504459282
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 504459278}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9172d46437cb8f449916e9f06dc3a346, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Kavkazim.UI.Meeting.VoteDaggersView
+  daggersContainer: {fileID: 504459279}
+  daggerIconPrefab: {fileID: 7881069409881167981, guid: 08327dea27503904f9bb585ada9e552b, type: 3}
 --- !u!1 &511010928
 GameObject:
   m_ObjectHideFlags: 0
@@ -2090,6 +2080,7 @@ GameObject:
   m_Component:
   - component: {fileID: 592540854}
   - component: {fileID: 592540855}
+  - component: {fileID: 592540856}
   m_Layer: 0
   m_Name: MeetingPlayerSlot_8
   m_TagString: Untagged
@@ -2113,6 +2104,7 @@ RectTransform:
   - {fileID: 1814181898}
   - {fileID: 1714277970}
   - {fileID: 2051783081}
+  - {fileID: 1290979921}
   m_Father: {fileID: 1398185520}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
@@ -2135,11 +2127,26 @@ MonoBehaviour:
   playerNameText: {fileID: 1160643320}
   selectionRing: {fileID: 2051783083}
   deadOverlay: {fileID: 1714277972}
+  voteDaggersView: {fileID: 592540856}
   localPlayerNameColor: {r: 1, g: 0.92156863, b: 0.015686275, a: 1}
   normalPlayerNameColor: {r: 1, g: 1, b: 1, a: 1}
   deadPlayerNameColor: {r: 0.5, g: 0.5, b: 0.5, a: 1}
   hoverScale: 1.1
   animationDuration: 0.2
+--- !u!114 &592540856
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 592540852}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9172d46437cb8f449916e9f06dc3a346, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Kavkazim.UI.Meeting.VoteDaggersView
+  daggersContainer: {fileID: 1290979921}
+  daggerIconPrefab: {fileID: 7881069409881167981, guid: 08327dea27503904f9bb585ada9e552b, type: 3}
 --- !u!1 &647769654
 GameObject:
   m_ObjectHideFlags: 0
@@ -2997,6 +3004,98 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 755151119}
   m_CullTransparentMesh: 1
+--- !u!1 &767980755
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 767980756}
+  - component: {fileID: 767980758}
+  - component: {fileID: 767980757}
+  - component: {fileID: 767980759}
+  m_Layer: 0
+  m_Name: DaggersContainer
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &767980756
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 767980755}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 923253630}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 1, y: 0.5}
+  m_AnchorMax: {x: 1, y: 0.5}
+  m_AnchoredPosition: {x: 10, y: 0}
+  m_SizeDelta: {x: 0, y: 0}
+  m_Pivot: {x: 0, y: 0.5}
+--- !u!114 &767980757
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 767980755}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3245ec927659c4140ac4f8d17403cc18, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.ContentSizeFitter
+  m_HorizontalFit: 2
+  m_VerticalFit: 2
+--- !u!114 &767980758
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 767980755}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 30649d3a9faa99c48a7b1166b86bf2a0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.HorizontalLayoutGroup
+  m_Padding:
+    m_Left: 0
+    m_Right: 0
+    m_Top: 0
+    m_Bottom: 0
+  m_ChildAlignment: 3
+  m_Spacing: 4
+  m_ChildForceExpandWidth: 0
+  m_ChildForceExpandHeight: 0
+  m_ChildControlWidth: 0
+  m_ChildControlHeight: 0
+  m_ChildScaleWidth: 0
+  m_ChildScaleHeight: 0
+  m_ReverseArrangement: 0
+--- !u!114 &767980759
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 767980755}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9172d46437cb8f449916e9f06dc3a346, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Kavkazim.UI.Meeting.VoteDaggersView
+  daggersContainer: {fileID: 767980756}
+  daggerIconPrefab: {fileID: 7881069409881167981, guid: 08327dea27503904f9bb585ada9e552b, type: 3}
 --- !u!1 &828868354
 GameObject:
   m_ObjectHideFlags: 0
@@ -3082,6 +3181,7 @@ GameObject:
   m_Component:
   - component: {fileID: 867698712}
   - component: {fileID: 867698713}
+  - component: {fileID: 867698714}
   m_Layer: 0
   m_Name: MeetingPlayerSlot_1
   m_TagString: Untagged
@@ -3105,6 +3205,7 @@ RectTransform:
   - {fileID: 1659661938}
   - {fileID: 275555531}
   - {fileID: 238775876}
+  - {fileID: 1875414842}
   m_Father: {fileID: 1398185520}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
@@ -3127,11 +3228,26 @@ MonoBehaviour:
   playerNameText: {fileID: 1235284794}
   selectionRing: {fileID: 238775878}
   deadOverlay: {fileID: 275555533}
+  voteDaggersView: {fileID: 867698714}
   localPlayerNameColor: {r: 1, g: 0.92156863, b: 0.015686275, a: 1}
   normalPlayerNameColor: {r: 1, g: 1, b: 1, a: 1}
   deadPlayerNameColor: {r: 0.5, g: 0.5, b: 0.5, a: 1}
   hoverScale: 1.1
   animationDuration: 0.2
+--- !u!114 &867698714
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 867698710}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9172d46437cb8f449916e9f06dc3a346, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Kavkazim.UI.Meeting.VoteDaggersView
+  daggersContainer: {fileID: 1875414842}
+  daggerIconPrefab: {fileID: 7881069409881167981, guid: 08327dea27503904f9bb585ada9e552b, type: 3}
 --- !u!1 &884687764
 GameObject:
   m_ObjectHideFlags: 0
@@ -3142,6 +3258,7 @@ GameObject:
   m_Component:
   - component: {fileID: 884687766}
   - component: {fileID: 884687767}
+  - component: {fileID: 884687768}
   m_Layer: 0
   m_Name: MeetingPlayerSlot_2
   m_TagString: Untagged
@@ -3165,6 +3282,7 @@ RectTransform:
   - {fileID: 1542064901}
   - {fileID: 1477797783}
   - {fileID: 927657165}
+  - {fileID: 1084624529}
   m_Father: {fileID: 1398185520}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
@@ -3187,11 +3305,26 @@ MonoBehaviour:
   playerNameText: {fileID: 511010931}
   selectionRing: {fileID: 927657167}
   deadOverlay: {fileID: 1477797785}
+  voteDaggersView: {fileID: 884687768}
   localPlayerNameColor: {r: 1, g: 0.92156863, b: 0.015686275, a: 1}
   normalPlayerNameColor: {r: 1, g: 1, b: 1, a: 1}
   deadPlayerNameColor: {r: 0.5, g: 0.5, b: 0.5, a: 1}
   hoverScale: 1.1
   animationDuration: 0.2
+--- !u!114 &884687768
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 884687764}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9172d46437cb8f449916e9f06dc3a346, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Kavkazim.UI.Meeting.VoteDaggersView
+  daggersContainer: {fileID: 1084624529}
+  daggerIconPrefab: {fileID: 7881069409881167981, guid: 08327dea27503904f9bb585ada9e552b, type: 3}
 --- !u!1 &897215323
 GameObject:
   m_ObjectHideFlags: 0
@@ -3262,6 +3395,7 @@ RectTransform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 1687776600}
+  - {fileID: 1462818811}
   m_Father: {fileID: 1707929835}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0}
@@ -3283,6 +3417,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Kavkazim.UI.Meeting.MeetingSkipView
   selectionBorder: {fileID: 1687776598}
   labelText: {fileID: 0}
+  voteCountText: {fileID: 1462818809}
   hoverScale: 1.1
   animationDuration: 0.2
 --- !u!1 &923253628
@@ -3295,6 +3430,7 @@ GameObject:
   m_Component:
   - component: {fileID: 923253630}
   - component: {fileID: 923253631}
+  - component: {fileID: 923253632}
   m_Layer: 0
   m_Name: MeetingPlayerSlot_6
   m_TagString: Untagged
@@ -3318,6 +3454,7 @@ RectTransform:
   - {fileID: 1263388802}
   - {fileID: 1161403026}
   - {fileID: 683095295}
+  - {fileID: 767980756}
   m_Father: {fileID: 1398185520}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
@@ -3340,11 +3477,26 @@ MonoBehaviour:
   playerNameText: {fileID: 2039018262}
   selectionRing: {fileID: 683095297}
   deadOverlay: {fileID: 1161403028}
+  voteDaggersView: {fileID: 923253632}
   localPlayerNameColor: {r: 1, g: 0.92156863, b: 0.015686275, a: 1}
   normalPlayerNameColor: {r: 1, g: 1, b: 1, a: 1}
   deadPlayerNameColor: {r: 0.5, g: 0.5, b: 0.5, a: 1}
   hoverScale: 1.1
   animationDuration: 0.2
+--- !u!114 &923253632
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 923253628}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9172d46437cb8f449916e9f06dc3a346, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Kavkazim.UI.Meeting.VoteDaggersView
+  daggersContainer: {fileID: 767980756}
+  daggerIconPrefab: {fileID: 7881069409881167981, guid: 08327dea27503904f9bb585ada9e552b, type: 3}
 --- !u!1 &927657164
 GameObject:
   m_ObjectHideFlags: 0
@@ -3420,7 +3572,7 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
---- !u!1 &980181106
+--- !u!1 &952299621
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -3428,74 +3580,90 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 980181109}
-  - component: {fileID: 980181108}
-  - component: {fileID: 980181107}
+  - component: {fileID: 952299622}
+  - component: {fileID: 952299624}
+  - component: {fileID: 952299623}
+  - component: {fileID: 952299625}
   m_Layer: 0
-  m_Name: ResultsPanel
+  m_Name: DaggersContainer
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
---- !u!114 &980181107
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 980181106}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
-  m_Material: {fileID: 0}
-  m_Color: {r: 0, g: 0, b: 0, a: 0.8}
-  m_RaycastTarget: 1
-  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
-  m_Maskable: 1
-  m_OnCullStateChanged:
-    m_PersistentCalls:
-      m_Calls: []
-  m_Sprite: {fileID: 0}
-  m_Type: 0
-  m_PreserveAspect: 0
-  m_FillCenter: 1
-  m_FillMethod: 4
-  m_FillAmount: 1
-  m_FillClockwise: 1
-  m_FillOrigin: 0
-  m_UseSpriteMesh: 0
-  m_PixelsPerUnitMultiplier: 1
---- !u!222 &980181108
-CanvasRenderer:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 980181106}
-  m_CullTransparentMesh: 1
---- !u!224 &980181109
+  m_IsActive: 1
+--- !u!224 &952299622
 RectTransform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 980181106}
+  m_GameObject: {fileID: 952299621}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
-  m_Children:
-  - {fileID: 439288501}
-  m_Father: {fileID: 1707929835}
+  m_Children: []
+  m_Father: {fileID: 290838257}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 0, y: 0}
+  m_AnchorMin: {x: 1, y: 0.5}
+  m_AnchorMax: {x: 1, y: 0.5}
+  m_AnchoredPosition: {x: 10, y: 0}
   m_SizeDelta: {x: 0, y: 0}
-  m_Pivot: {x: 0.5, y: 0.5}
+  m_Pivot: {x: 0, y: 0.5}
+--- !u!114 &952299623
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 952299621}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3245ec927659c4140ac4f8d17403cc18, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.ContentSizeFitter
+  m_HorizontalFit: 2
+  m_VerticalFit: 2
+--- !u!114 &952299624
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 952299621}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 30649d3a9faa99c48a7b1166b86bf2a0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.HorizontalLayoutGroup
+  m_Padding:
+    m_Left: 0
+    m_Right: 0
+    m_Top: 0
+    m_Bottom: 0
+  m_ChildAlignment: 3
+  m_Spacing: 4
+  m_ChildForceExpandWidth: 0
+  m_ChildForceExpandHeight: 0
+  m_ChildControlWidth: 0
+  m_ChildControlHeight: 0
+  m_ChildScaleWidth: 0
+  m_ChildScaleHeight: 0
+  m_ReverseArrangement: 0
+--- !u!114 &952299625
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 952299621}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9172d46437cb8f449916e9f06dc3a346, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Kavkazim.UI.Meeting.VoteDaggersView
+  daggersContainer: {fileID: 952299622}
+  daggerIconPrefab: {fileID: 7881069409881167981, guid: 08327dea27503904f9bb585ada9e552b, type: 3}
 --- !u!1 &980842425
 GameObject:
   m_ObjectHideFlags: 0
@@ -3546,8 +3714,6 @@ MonoBehaviour:
   timerText: {fileID: 1767380663}
   skipCountText: {fileID: 251312379}
   voteController: {fileID: 1655890106}
-  resultsPanel: {fileID: 980181106}
-  resultsText: {fileID: 439288499}
 --- !u!1 &982821814
 GameObject:
   m_ObjectHideFlags: 0
@@ -3718,7 +3884,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 0.000019073, y: -33.0783}
+  m_AnchoredPosition: {x: 0.000015258789, y: -33.0783}
   m_SizeDelta: {x: 46.822, y: 66.1566}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &1000115950
@@ -3759,6 +3925,98 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
+--- !u!1 &1084624528
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1084624529}
+  - component: {fileID: 1084624531}
+  - component: {fileID: 1084624530}
+  - component: {fileID: 1084624532}
+  m_Layer: 0
+  m_Name: DaggersContainer
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &1084624529
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1084624528}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 884687766}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 1, y: 0.5}
+  m_AnchorMax: {x: 1, y: 0.5}
+  m_AnchoredPosition: {x: 10, y: 0}
+  m_SizeDelta: {x: 0, y: 0}
+  m_Pivot: {x: 0, y: 0.5}
+--- !u!114 &1084624530
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1084624528}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3245ec927659c4140ac4f8d17403cc18, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.ContentSizeFitter
+  m_HorizontalFit: 2
+  m_VerticalFit: 2
+--- !u!114 &1084624531
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1084624528}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 30649d3a9faa99c48a7b1166b86bf2a0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.HorizontalLayoutGroup
+  m_Padding:
+    m_Left: 0
+    m_Right: 0
+    m_Top: 0
+    m_Bottom: 0
+  m_ChildAlignment: 3
+  m_Spacing: 4
+  m_ChildForceExpandWidth: 0
+  m_ChildForceExpandHeight: 0
+  m_ChildControlWidth: 0
+  m_ChildControlHeight: 0
+  m_ChildScaleWidth: 0
+  m_ChildScaleHeight: 0
+  m_ReverseArrangement: 0
+--- !u!114 &1084624532
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1084624528}
+  m_Enabled: 0
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9172d46437cb8f449916e9f06dc3a346, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Kavkazim.UI.Meeting.VoteDaggersView
+  daggersContainer: {fileID: 1084624529}
+  daggerIconPrefab: {fileID: 7881069409881167981, guid: 08327dea27503904f9bb585ada9e552b, type: 3}
 --- !u!1 &1160643317
 GameObject:
   m_ObjectHideFlags: 0
@@ -4393,6 +4651,190 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1263388801}
   m_CullTransparentMesh: 1
+--- !u!1 &1290979920
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1290979921}
+  - component: {fileID: 1290979923}
+  - component: {fileID: 1290979922}
+  - component: {fileID: 1290979924}
+  m_Layer: 0
+  m_Name: DaggersContainer
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &1290979921
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1290979920}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 592540854}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 1, y: 0.5}
+  m_AnchorMax: {x: 1, y: 0.5}
+  m_AnchoredPosition: {x: 10, y: 0}
+  m_SizeDelta: {x: 0, y: 0}
+  m_Pivot: {x: 0, y: 0.5}
+--- !u!114 &1290979922
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1290979920}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3245ec927659c4140ac4f8d17403cc18, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.ContentSizeFitter
+  m_HorizontalFit: 2
+  m_VerticalFit: 2
+--- !u!114 &1290979923
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1290979920}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 30649d3a9faa99c48a7b1166b86bf2a0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.HorizontalLayoutGroup
+  m_Padding:
+    m_Left: 0
+    m_Right: 0
+    m_Top: 0
+    m_Bottom: 0
+  m_ChildAlignment: 3
+  m_Spacing: 4
+  m_ChildForceExpandWidth: 0
+  m_ChildForceExpandHeight: 0
+  m_ChildControlWidth: 0
+  m_ChildControlHeight: 0
+  m_ChildScaleWidth: 0
+  m_ChildScaleHeight: 0
+  m_ReverseArrangement: 0
+--- !u!114 &1290979924
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1290979920}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9172d46437cb8f449916e9f06dc3a346, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Kavkazim.UI.Meeting.VoteDaggersView
+  daggersContainer: {fileID: 1290979921}
+  daggerIconPrefab: {fileID: 7881069409881167981, guid: 08327dea27503904f9bb585ada9e552b, type: 3}
+--- !u!1 &1303995522
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1303995523}
+  - component: {fileID: 1303995525}
+  - component: {fileID: 1303995524}
+  - component: {fileID: 1303995526}
+  m_Layer: 0
+  m_Name: DaggersContainer
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &1303995523
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1303995522}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1897846504}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 1, y: 0.92666674}
+  m_AnchorMax: {x: 1, y: 0.92666674}
+  m_AnchoredPosition: {x: 10, y: -64}
+  m_SizeDelta: {x: 0, y: 0}
+  m_Pivot: {x: 0, y: 0.5}
+--- !u!114 &1303995524
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1303995522}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3245ec927659c4140ac4f8d17403cc18, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.ContentSizeFitter
+  m_HorizontalFit: 2
+  m_VerticalFit: 2
+--- !u!114 &1303995525
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1303995522}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 30649d3a9faa99c48a7b1166b86bf2a0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.HorizontalLayoutGroup
+  m_Padding:
+    m_Left: 0
+    m_Right: 0
+    m_Top: 0
+    m_Bottom: 0
+  m_ChildAlignment: 3
+  m_Spacing: 4
+  m_ChildForceExpandWidth: 0
+  m_ChildForceExpandHeight: 0
+  m_ChildControlWidth: 0
+  m_ChildControlHeight: 0
+  m_ChildScaleWidth: 0
+  m_ChildScaleHeight: 0
+  m_ReverseArrangement: 0
+--- !u!114 &1303995526
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1303995522}
+  m_Enabled: 0
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9172d46437cb8f449916e9f06dc3a346, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Kavkazim.UI.Meeting.VoteDaggersView
+  daggersContainer: {fileID: 1303995523}
+  daggerIconPrefab: {fileID: 7881069409881167981, guid: 08327dea27503904f9bb585ada9e552b, type: 3}
 --- !u!1 &1324485115
 GameObject:
   m_ObjectHideFlags: 0
@@ -4997,6 +5439,142 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
+--- !u!1 &1462818808
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1462818811}
+  - component: {fileID: 1462818810}
+  - component: {fileID: 1462818809}
+  m_Layer: 0
+  m_Name: VoteCountText
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1462818809
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1462818808}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f4688fdb7df04437aeb418b961361dc5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.TextMeshPro::TMPro.TextMeshProUGUI
+  m_Material: {fileID: 0}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_RaycastTarget: 1
+  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
+  m_Maskable: 1
+  m_OnCullStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  m_text: 
+  m_isRightToLeft: 0
+  m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  m_fontSharedMaterials: []
+  m_fontMaterial: {fileID: 0}
+  m_fontMaterials: []
+  m_fontColor32:
+    serializedVersion: 2
+    rgba: 4294967295
+  m_fontColor: {r: 1, g: 1, b: 1, a: 1}
+  m_enableVertexGradient: 0
+  m_colorMode: 3
+  m_fontColorGradient:
+    topLeft: {r: 1, g: 1, b: 1, a: 1}
+    topRight: {r: 1, g: 1, b: 1, a: 1}
+    bottomLeft: {r: 1, g: 1, b: 1, a: 1}
+    bottomRight: {r: 1, g: 1, b: 1, a: 1}
+  m_fontColorGradientPreset: {fileID: 0}
+  m_spriteAsset: {fileID: 0}
+  m_tintAllSprites: 0
+  m_StyleSheet: {fileID: 0}
+  m_TextStyleHashCode: -1183493901
+  m_overrideHtmlColors: 0
+  m_faceColor:
+    serializedVersion: 2
+    rgba: 4294967295
+  m_fontSize: 18
+  m_fontSizeBase: 18
+  m_fontWeight: 400
+  m_enableAutoSizing: 0
+  m_fontSizeMin: 18
+  m_fontSizeMax: 72
+  m_fontStyle: 0
+  m_HorizontalAlignment: 2
+  m_VerticalAlignment: 512
+  m_textAlignment: 65535
+  m_characterSpacing: 0
+  m_wordSpacing: 0
+  m_lineSpacing: 0
+  m_lineSpacingMax: 0
+  m_paragraphSpacing: 0
+  m_charWidthMaxAdj: 0
+  m_TextWrappingMode: 1
+  m_wordWrappingRatios: 0.4
+  m_overflowMode: 0
+  m_linkedTextComponent: {fileID: 0}
+  parentLinkedComponent: {fileID: 0}
+  m_enableKerning: 0
+  m_ActiveFontFeatures: 6e72656b
+  m_enableExtraPadding: 0
+  checkPaddingRequired: 0
+  m_isRichText: 1
+  m_EmojiFallbackSupport: 1
+  m_parseCtrlCharacters: 1
+  m_isOrthographic: 1
+  m_isCullingEnabled: 0
+  m_horizontalMapping: 0
+  m_verticalMapping: 0
+  m_uvLineOffset: 0
+  m_geometrySortingOrder: 0
+  m_IsTextObjectScaleStatic: 0
+  m_VertexBufferAutoSizeReduction: 0
+  m_useMaxVisibleDescender: 1
+  m_pageToDisplay: 1
+  m_margin: {x: 0, y: 0, z: 0, w: 0}
+  m_isUsingLegacyAnimationComponent: 0
+  m_isVolumetricText: 0
+  m_hasFontAssetChanged: 0
+  m_baseMaterial: {fileID: 0}
+  m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
+--- !u!222 &1462818810
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1462818808}
+  m_CullTransparentMesh: 1
+--- !u!224 &1462818811
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1462818808}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 897215327}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 1, y: 1}
+  m_AnchorMax: {x: 1, y: 1}
+  m_AnchoredPosition: {x: -5, y: -5}
+  m_SizeDelta: {x: 30, y: 25}
+  m_Pivot: {x: 1, y: 1}
 --- !u!1 &1477797782
 GameObject:
   m_ObjectHideFlags: 0
@@ -5223,6 +5801,98 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
+--- !u!1 &1582860644
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1582860645}
+  - component: {fileID: 1582860647}
+  - component: {fileID: 1582860646}
+  - component: {fileID: 1582860648}
+  m_Layer: 0
+  m_Name: DaggersContainer
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &1582860645
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1582860644}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 78801566}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 1, y: 0.5}
+  m_AnchorMax: {x: 1, y: 0.5}
+  m_AnchoredPosition: {x: 10, y: 0}
+  m_SizeDelta: {x: 0, y: 0}
+  m_Pivot: {x: 0, y: 0.5}
+--- !u!114 &1582860646
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1582860644}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3245ec927659c4140ac4f8d17403cc18, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.ContentSizeFitter
+  m_HorizontalFit: 2
+  m_VerticalFit: 2
+--- !u!114 &1582860647
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1582860644}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 30649d3a9faa99c48a7b1166b86bf2a0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.HorizontalLayoutGroup
+  m_Padding:
+    m_Left: 0
+    m_Right: 0
+    m_Top: 0
+    m_Bottom: 0
+  m_ChildAlignment: 3
+  m_Spacing: 4
+  m_ChildForceExpandWidth: 0
+  m_ChildForceExpandHeight: 0
+  m_ChildControlWidth: 0
+  m_ChildControlHeight: 0
+  m_ChildScaleWidth: 0
+  m_ChildScaleHeight: 0
+  m_ReverseArrangement: 0
+--- !u!114 &1582860648
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1582860644}
+  m_Enabled: 0
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9172d46437cb8f449916e9f06dc3a346, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Kavkazim.UI.Meeting.VoteDaggersView
+  daggersContainer: {fileID: 1582860645}
+  daggerIconPrefab: {fileID: 7881069409881167981, guid: 08327dea27503904f9bb585ada9e552b, type: 3}
 --- !u!1 &1585256397
 GameObject:
   m_ObjectHideFlags: 0
@@ -5359,6 +6029,98 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1585256397}
   m_CullTransparentMesh: 1
+--- !u!1 &1647844711
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1647844712}
+  - component: {fileID: 1647844714}
+  - component: {fileID: 1647844713}
+  - component: {fileID: 1647844715}
+  m_Layer: 0
+  m_Name: DaggersContainer
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &1647844712
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1647844711}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1683326670}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 1, y: 0.5}
+  m_AnchorMax: {x: 1, y: 0.5}
+  m_AnchoredPosition: {x: 10, y: 0}
+  m_SizeDelta: {x: 0, y: 0}
+  m_Pivot: {x: 0, y: 0.5}
+--- !u!114 &1647844713
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1647844711}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3245ec927659c4140ac4f8d17403cc18, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.ContentSizeFitter
+  m_HorizontalFit: 2
+  m_VerticalFit: 2
+--- !u!114 &1647844714
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1647844711}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 30649d3a9faa99c48a7b1166b86bf2a0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.HorizontalLayoutGroup
+  m_Padding:
+    m_Left: 0
+    m_Right: 0
+    m_Top: 0
+    m_Bottom: 0
+  m_ChildAlignment: 3
+  m_Spacing: 4
+  m_ChildForceExpandWidth: 0
+  m_ChildForceExpandHeight: 0
+  m_ChildControlWidth: 0
+  m_ChildControlHeight: 0
+  m_ChildScaleWidth: 0
+  m_ChildScaleHeight: 0
+  m_ReverseArrangement: 0
+--- !u!114 &1647844715
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1647844711}
+  m_Enabled: 0
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9172d46437cb8f449916e9f06dc3a346, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Kavkazim.UI.Meeting.VoteDaggersView
+  daggersContainer: {fileID: 1647844712}
+  daggerIconPrefab: {fileID: 7881069409881167981, guid: 08327dea27503904f9bb585ada9e552b, type: 3}
 --- !u!1 &1655890104
 GameObject:
   m_ObjectHideFlags: 0
@@ -5416,6 +6178,7 @@ MonoBehaviour:
   - {fileID: 592540855}
   - {fileID: 2101159534}
   slotsContainer: {fileID: 0}
+  resultsDelaySeconds: 10
 --- !u!1 &1659661937
 GameObject:
   m_ObjectHideFlags: 0
@@ -5502,6 +6265,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1683326670}
   - component: {fileID: 1683326671}
+  - component: {fileID: 1683326672}
   m_Layer: 0
   m_Name: MeetingPlayerSlot_4
   m_TagString: Untagged
@@ -5525,6 +6289,7 @@ RectTransform:
   - {fileID: 1373383269}
   - {fileID: 1959953952}
   - {fileID: 1451785567}
+  - {fileID: 1647844712}
   m_Father: {fileID: 1398185520}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
@@ -5547,11 +6312,26 @@ MonoBehaviour:
   playerNameText: {fileID: 1377841213}
   selectionRing: {fileID: 1451785569}
   deadOverlay: {fileID: 1959953954}
+  voteDaggersView: {fileID: 1683326672}
   localPlayerNameColor: {r: 1, g: 0.92156863, b: 0.015686275, a: 1}
   normalPlayerNameColor: {r: 1, g: 1, b: 1, a: 1}
   deadPlayerNameColor: {r: 0.5, g: 0.5, b: 0.5, a: 1}
   hoverScale: 1.1
   animationDuration: 0.2
+--- !u!114 &1683326672
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1683326668}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9172d46437cb8f449916e9f06dc3a346, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Kavkazim.UI.Meeting.VoteDaggersView
+  daggersContainer: {fileID: 1647844712}
+  daggerIconPrefab: {fileID: 7881069409881167981, guid: 08327dea27503904f9bb585ada9e552b, type: 3}
 --- !u!1 &1687776597
 GameObject:
   m_ObjectHideFlags: 0
@@ -5802,7 +6582,6 @@ RectTransform:
   - {fileID: 251312381}
   - {fileID: 897215327}
   - {fileID: 1398185520}
-  - {fileID: 980181109}
   - {fileID: 980842426}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -5896,6 +6675,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1765084252}
   - component: {fileID: 1765084253}
+  - component: {fileID: 1765084254}
   m_Layer: 0
   m_Name: MeetingPlayerSlot_7
   m_TagString: Untagged
@@ -5919,6 +6699,7 @@ RectTransform:
   - {fileID: 657465652}
   - {fileID: 319980569}
   - {fileID: 1576384729}
+  - {fileID: 2054734977}
   m_Father: {fileID: 1398185520}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
@@ -5941,11 +6722,26 @@ MonoBehaviour:
   playerNameText: {fileID: 1994673540}
   selectionRing: {fileID: 1576384731}
   deadOverlay: {fileID: 319980571}
+  voteDaggersView: {fileID: 1765084254}
   localPlayerNameColor: {r: 1, g: 0.92156863, b: 0.015686275, a: 1}
   normalPlayerNameColor: {r: 1, g: 1, b: 1, a: 1}
   deadPlayerNameColor: {r: 0.5, g: 0.5, b: 0.5, a: 1}
   hoverScale: 1.1
   animationDuration: 0.2
+--- !u!114 &1765084254
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1765084250}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9172d46437cb8f449916e9f06dc3a346, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Kavkazim.UI.Meeting.VoteDaggersView
+  daggersContainer: {fileID: 2054734977}
+  daggerIconPrefab: {fileID: 7881069409881167981, guid: 08327dea27503904f9bb585ada9e552b, type: 3}
 --- !u!1 &1767380662
 GameObject:
   m_ObjectHideFlags: 0
@@ -6294,6 +7090,98 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1843490579}
   m_CullTransparentMesh: 1
+--- !u!1 &1875414841
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1875414842}
+  - component: {fileID: 1875414844}
+  - component: {fileID: 1875414843}
+  - component: {fileID: 1875414845}
+  m_Layer: 0
+  m_Name: DaggersContainer
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &1875414842
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1875414841}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 867698712}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 1, y: 0.5}
+  m_AnchorMax: {x: 1, y: 0.5}
+  m_AnchoredPosition: {x: 10, y: 0}
+  m_SizeDelta: {x: 0, y: 0}
+  m_Pivot: {x: 0, y: 0.5}
+--- !u!114 &1875414843
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1875414841}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3245ec927659c4140ac4f8d17403cc18, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.ContentSizeFitter
+  m_HorizontalFit: 2
+  m_VerticalFit: 2
+--- !u!114 &1875414844
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1875414841}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 30649d3a9faa99c48a7b1166b86bf2a0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.HorizontalLayoutGroup
+  m_Padding:
+    m_Left: 0
+    m_Right: 0
+    m_Top: 0
+    m_Bottom: 0
+  m_ChildAlignment: 3
+  m_Spacing: 4
+  m_ChildForceExpandWidth: 0
+  m_ChildForceExpandHeight: 0
+  m_ChildControlWidth: 0
+  m_ChildControlHeight: 0
+  m_ChildScaleWidth: 0
+  m_ChildScaleHeight: 0
+  m_ReverseArrangement: 0
+--- !u!114 &1875414845
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1875414841}
+  m_Enabled: 0
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9172d46437cb8f449916e9f06dc3a346, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Kavkazim.UI.Meeting.VoteDaggersView
+  daggersContainer: {fileID: 1875414842}
+  daggerIconPrefab: {fileID: 7881069409881167981, guid: 08327dea27503904f9bb585ada9e552b, type: 3}
 --- !u!1 &1897846502
 GameObject:
   m_ObjectHideFlags: 0
@@ -6304,6 +7192,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1897846504}
   - component: {fileID: 1897846505}
+  - component: {fileID: 1897846506}
   m_Layer: 0
   m_Name: MeetingPlayerSlot_0
   m_TagString: Untagged
@@ -6327,6 +7216,7 @@ RectTransform:
   - {fileID: 125332254}
   - {fileID: 1000115949}
   - {fileID: 466391128}
+  - {fileID: 1303995523}
   m_Father: {fileID: 1398185520}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
@@ -6349,11 +7239,26 @@ MonoBehaviour:
   playerNameText: {fileID: 1926406908}
   selectionRing: {fileID: 466391130}
   deadOverlay: {fileID: 1000115951}
+  voteDaggersView: {fileID: 1897846506}
   localPlayerNameColor: {r: 1, g: 0.92156863, b: 0.015686275, a: 1}
   normalPlayerNameColor: {r: 1, g: 1, b: 1, a: 1}
   deadPlayerNameColor: {r: 0.5, g: 0.5, b: 0.5, a: 1}
   hoverScale: 1.1
   animationDuration: 0.2
+--- !u!114 &1897846506
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1897846502}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9172d46437cb8f449916e9f06dc3a346, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Kavkazim.UI.Meeting.VoteDaggersView
+  daggersContainer: {fileID: 1303995523}
+  daggerIconPrefab: {fileID: 7881069409881167981, guid: 08327dea27503904f9bb585ada9e552b, type: 3}
 --- !u!1 &1898519594
 GameObject:
   m_ObjectHideFlags: 0
@@ -6987,6 +7892,98 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
+--- !u!1 &2054734976
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2054734977}
+  - component: {fileID: 2054734979}
+  - component: {fileID: 2054734978}
+  - component: {fileID: 2054734980}
+  m_Layer: 0
+  m_Name: DaggersContainer
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &2054734977
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2054734976}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1765084252}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 1, y: 0.5}
+  m_AnchorMax: {x: 1, y: 0.5}
+  m_AnchoredPosition: {x: 10, y: 0}
+  m_SizeDelta: {x: 0, y: 0}
+  m_Pivot: {x: 0, y: 0.5}
+--- !u!114 &2054734978
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2054734976}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3245ec927659c4140ac4f8d17403cc18, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.ContentSizeFitter
+  m_HorizontalFit: 2
+  m_VerticalFit: 2
+--- !u!114 &2054734979
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2054734976}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 30649d3a9faa99c48a7b1166b86bf2a0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.HorizontalLayoutGroup
+  m_Padding:
+    m_Left: 0
+    m_Right: 0
+    m_Top: 0
+    m_Bottom: 0
+  m_ChildAlignment: 3
+  m_Spacing: 4
+  m_ChildForceExpandWidth: 0
+  m_ChildForceExpandHeight: 0
+  m_ChildControlWidth: 0
+  m_ChildControlHeight: 0
+  m_ChildScaleWidth: 0
+  m_ChildScaleHeight: 0
+  m_ReverseArrangement: 0
+--- !u!114 &2054734980
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2054734976}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9172d46437cb8f449916e9f06dc3a346, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Kavkazim.UI.Meeting.VoteDaggersView
+  daggersContainer: {fileID: 2054734977}
+  daggerIconPrefab: {fileID: 7881069409881167981, guid: 08327dea27503904f9bb585ada9e552b, type: 3}
 --- !u!1 &2101159531
 GameObject:
   m_ObjectHideFlags: 0
@@ -6997,6 +7994,7 @@ GameObject:
   m_Component:
   - component: {fileID: 2101159533}
   - component: {fileID: 2101159534}
+  - component: {fileID: 2101159535}
   m_Layer: 0
   m_Name: MeetingPlayerSlot_9
   m_TagString: Untagged
@@ -7020,6 +8018,7 @@ RectTransform:
   - {fileID: 496717023}
   - {fileID: 828868355}
   - {fileID: 1209150121}
+  - {fileID: 504459279}
   m_Father: {fileID: 1398185520}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
@@ -7042,11 +8041,26 @@ MonoBehaviour:
   playerNameText: {fileID: 982821817}
   selectionRing: {fileID: 1209150123}
   deadOverlay: {fileID: 828868357}
+  voteDaggersView: {fileID: 2101159535}
   localPlayerNameColor: {r: 1, g: 0.92156863, b: 0.015686275, a: 1}
   normalPlayerNameColor: {r: 1, g: 1, b: 1, a: 1}
   deadPlayerNameColor: {r: 0.5, g: 0.5, b: 0.5, a: 1}
   hoverScale: 1.1
   animationDuration: 0.2
+--- !u!114 &2101159535
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2101159531}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9172d46437cb8f449916e9f06dc3a346, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Kavkazim.UI.Meeting.VoteDaggersView
+  daggersContainer: {fileID: 504459279}
+  daggerIconPrefab: {fileID: 7881069409881167981, guid: 08327dea27503904f9bb585ada9e552b, type: 3}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0

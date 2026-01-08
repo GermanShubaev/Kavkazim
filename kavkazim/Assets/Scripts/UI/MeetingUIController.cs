@@ -27,13 +27,8 @@ namespace Kavkazim.UI.Meeting
         [Header("Sub-Controllers")]
         [SerializeField] private MeetingVoteUIController voteController;
 
-        [Header("Results Panel")]
-        [SerializeField] private GameObject resultsPanel;
-        [SerializeField] private TextMeshProUGUI resultsText;
-
         private MeetingManager _meetingManager;
-        private ulong _localClientId;
-        
+
         // Settings panel
         private GameObject _settingsPanel;
         private bool _isSettingsPanelOpen = false;
@@ -96,18 +91,11 @@ namespace Kavkazim.UI.Meeting
             // Get local client ID
             if (NetworkManager.Singleton != null)
             {
-                _localClientId = NetworkManager.Singleton.LocalClientId;
             }
 
             // Subscribe to MeetingManager events
             _meetingManager.TimeRemaining.OnValueChanged += OnTimerChanged;
             _meetingManager.SkipVoteCount.OnValueChanged += OnSkipCountChanged; 
-
-            // Hide results panel initially
-            if (resultsPanel != null)
-            {
-                resultsPanel.SetActive(false);
-            }
 
             // Set center text
             if (centerText != null)
@@ -184,45 +172,6 @@ namespace Kavkazim.UI.Meeting
             {
                 skipCountText.text = $"VOTES SKIPPED: {skipCount}";
             }
-        }
-
-        /// <summary>
-        /// Show results panel with meeting results.
-        /// Can be called by MeetingManager or externally.
-        /// </summary>
-        public void ShowResults(MeetingResult result)
-        {
-            if (resultsPanel != null)
-            {
-                resultsPanel.SetActive(true);
-            }
-
-            if (resultsText != null)
-            {
-                // Build results text
-                string text = "";
-
-                if (result.IsTie)
-                {
-                    text = "TIE - NO ELIMINATION";
-                }
-                else if (result.SkipWon)
-                {
-                    text = "SKIP WON - NO ELIMINATION";
-                }
-                else if (result.EliminatedId != ulong.MaxValue)
-                {
-                    text = $"{result.EliminatedName} WAS ELIMINATED\n({result.EliminatedVoteCount} votes)";
-                }
-                else
-                {
-                    text = "NO ELIMINATION";
-                }
-
-                resultsText.text = text;
-            }
-
-            Debug.Log($"[MeetingUIController] Showing results: {result}");
         }
 
         // ========== SETTINGS PANEL ==========
