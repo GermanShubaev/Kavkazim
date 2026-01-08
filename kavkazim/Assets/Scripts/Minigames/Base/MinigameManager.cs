@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using Minigames.Base;
 using UnityEngine;
 
 namespace Minigames

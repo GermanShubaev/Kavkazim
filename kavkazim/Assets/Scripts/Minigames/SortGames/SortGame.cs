@@ -1,30 +1,37 @@
 using System.Collections.Generic;
+using Minigames.Base;
+using Minigames.Base.Strategies;
 using UnityEngine;
-using UnityEngine.UI;
 using UnityEngine.EventSystems;
+using UnityEngine.UI;
 
-namespace Kavkazim.UI
+namespace Minigames.SortGames
 {
-    public class SortGame : MonoBehaviour
+    public class SortGame : BaseMinigame
     {
         [Header("UI References")]
         [SerializeField] protected Canvas popupCanvas;
         [SerializeField] protected RectTransform popupWindow;
-        [SerializeField] protected RectTransform lowerSection; // Where elements are randomly placed
-        [SerializeField] protected RectTransform upperSection; // Row of cells for ordering
-        [SerializeField] protected GameObject cellPrefab; // Prefab for cells in upper section
-        [SerializeField] protected GameObject elementPrefab; // Prefab for draggable photo elements
+        [SerializeField] protected RectTransform lowerSection; 
+        [SerializeField] protected RectTransform upperSection; 
+        [SerializeField] protected GameObject cellPrefab; 
+        [SerializeField] protected GameObject elementPrefab; 
 
         [Header("Game Settings")]
-        [SerializeField] protected int numberOfElements = 6;
+        [SerializeField] protected int numberOfElements;
         [SerializeField] protected float cellSpacing = 50f;
         [SerializeField] protected float elementSize = 1000f;
-        [SerializeField] protected float minDistanceBetweenElements = 120f; // To prevent overlap
-        [SerializeField] protected float snapProximityDistance = 120f; // Distance within which element snaps to cell
+        [SerializeField] protected float minDistanceBetweenElements = 120f; 
+        [SerializeField] protected float snapProximityDistance = 120f; 
 
-        protected List<DraggableElement> elements = new List<DraggableElement>();
-        protected List<Cell> cells = new List<Cell>();
-        protected DraggableElement currentlyDragging;
+        protected readonly List<DraggableElement> Elements = new List<DraggableElement>();
+        protected readonly List<Cell> Cells = new List<Cell>();
+        protected DraggableElement CurrentlyDragging;
+
+        /// <summary>
+        /// Exposes Cells list for win condition strategy.
+        /// </summary>
+        public IReadOnlyList<Cell> GetCells() => Cells;
 
         protected virtual void Awake()
         {
@@ -33,11 +40,44 @@ namespace Kavkazim.UI
             
             if (popupWindow == null)
                 popupWindow = GetComponent<RectTransform>();
+            
+            // Initialize default win condition strategy if not set
+            if (_winConditionStrategy == null)
+            {
+                _winConditionStrategy = new SortGameWinConditionStrategy();
+            }
+            
+            // Initialize default UI builder if not set
+            if (_uiBuilder == null)
+            {
+                _uiBuilder = new Base.UI.SortGameUIBuilder();
+            }
+        }
+        
+        // Helper methods for UI builder
+        public void SetUpperSection(RectTransform section)
+        {
+            upperSection = section;
+        }
+        
+        public void SetLowerSection(RectTransform section)
+        {
+            lowerSection = section;
+        }
+        
+        public void SetPopupWindowReference(RectTransform window)
+        {
+            popupWindow = window;
+            if (popupCanvas == null && _canvas != null)
+            {
+                popupCanvas = _canvas;
+            }
         }
 
         protected virtual void Start()
         {
-            InitializeGame();
+            // InitializeGame is now called from InitializeGameUI
+            // This Start method is kept for backward compatibility
         }
 
         protected virtual void InitializeGame()
@@ -50,7 +90,7 @@ namespace Kavkazim.UI
         {
             if (upperSection == null || cellPrefab == null) return;
 
-            cells.Clear();
+            Cells.Clear();
             float totalWidth = (numberOfElements * elementSize) + ((numberOfElements - 1) * cellSpacing);
             float startX = -totalWidth / 2f + elementSize / 2f;
 
@@ -73,7 +113,7 @@ namespace Kavkazim.UI
                     cell = cellObj.AddComponent<Cell>();
                 
                 cell.Initialize(i, this);
-                cells.Add(cell);
+                Cells.Add(cell);
             }
         }
 
@@ -81,7 +121,7 @@ namespace Kavkazim.UI
         {
             if (lowerSection == null || elementPrefab == null) return;
 
-            elements.Clear();
+            Elements.Clear();
             List<Vector2> positions = GenerateRandomPositions(numberOfElements);
 
             for (int i = 0; i < numberOfElements; i++)
@@ -98,34 +138,31 @@ namespace Kavkazim.UI
                 elementRect.anchorMax = new Vector2(0.5f, 0f);
                 elementRect.pivot = new Vector2(0.5f, 0.5f);
 
-                DraggableElement element = elementObj.GetComponent<DraggableElement>();
+                var element = elementObj.GetComponent<DraggableElement>();
                 if (element == null)
                     element = elementObj.AddComponent<DraggableElement>();
                 
-                // Initialize with index, image, and correct cell index
-                // Override GetElementImage and GetCorrectCellForElement in derived classes
                 element.Initialize(i, this, GetElementImage(i), GetCorrectCellForElement(i));
-                elements.Add(element);
+                Elements.Add(element);
             }
         }
 
         protected virtual List<Vector2> GenerateRandomPositions(int count)
         {
-            List<Vector2> positions = new List<Vector2>();
-            Rect bounds = lowerSection.rect;
+            var positions = new List<Vector2>();
+            var bounds = lowerSection.rect;
             
-            // Account for element size to keep elements within bounds
-            float minX = bounds.xMin + elementSize / 2f;
-            float maxX = bounds.xMax - elementSize / 2f;
-            float minY = bounds.yMin + elementSize / 2f;
-            float maxY = bounds.yMax - elementSize / 2f;
+            var minX = bounds.xMin + elementSize / 2f;
+            var maxX = bounds.xMax - elementSize / 2f;
+            var minY = bounds.yMin + elementSize / 2f;
+            var maxY = bounds.yMax - elementSize / 2f;
 
-            int maxAttempts = 1000;
-            for (int i = 0; i < count; i++)
+            var maxAttempts = 1000;
+            for (var i = 0; i < count; i++)
             {
-                Vector2 position = Vector2.zero;
-                bool validPosition = false;
-                int attempts = 0;
+                var position = Vector2.zero;
+                var validPosition = false;
+                var attempts = 0;
 
                 while (!validPosition && attempts < maxAttempts)
                 {
@@ -154,15 +191,9 @@ namespace Kavkazim.UI
 
         protected virtual Sprite GetElementImage(int index)
         {
-            // Override in derived classes to provide specific images
             return null;
         }
 
-        /// <summary>
-        /// Returns the correct cell index for an element at the given index.
-        /// Override in derived classes to customize element-to-cell mapping.
-        /// By default, element index matches its correct cell index (element 0 goes to cell 0, etc.).
-        /// </summary>
         protected virtual int GetCorrectCellForElement(int elementIndex)
         {
             return elementIndex;
@@ -170,24 +201,21 @@ namespace Kavkazim.UI
 
         public virtual void OnElementDragStart(DraggableElement element)
         {
-            currentlyDragging = element;
-            element.transform.SetAsLastSibling(); // Bring to front
+            CurrentlyDragging = element;
+            element.transform.SetAsLastSibling();
         }
 
         public virtual void OnElementDrag(DraggableElement element, Vector2 position)
         {
-            // Convert screen position to local position in upper section
             RectTransformUtility.ScreenPointToLocalPointInRectangle(
                 upperSection, position, popupCanvas.worldCamera, out Vector2 localPoint);
 
-            // Reset all cell highlights
-            foreach (Cell cell in cells)
+            foreach (var cell in Cells)
             {
                 cell.SetHighlight(false);
             }
 
-            // Find closest cell and highlight if within proximity
-            Cell closestCell = FindClosestCell(localPoint);
+            var closestCell = FindClosestCell(localPoint);
             if (closestCell != null && IsWithinSnapProximity(localPoint, closestCell))
             {
                 closestCell.SetHighlight(true);
@@ -196,29 +224,21 @@ namespace Kavkazim.UI
 
         public virtual void OnElementDragEnd(DraggableElement element, Vector2 position)
         {
-            // Reset all cell highlights
-            foreach (Cell cell in cells)
+            foreach (var cell in Cells)
             {
                 cell.SetHighlight(false);
             }
 
-            // Check if position is within upper section bounds
             RectTransformUtility.ScreenPointToLocalPointInRectangle(
                 upperSection, position, popupCanvas.worldCamera, out Vector2 upperLocalPoint);
             
-            // Find closest cell and check proximity
             Cell closestCell = FindClosestCell(upperLocalPoint);
             if (closestCell != null && IsWithinSnapProximity(upperLocalPoint, closestCell))
             {
                 SnapToCell(element, closestCell);
             }
-            else
-            {
-                // Keep element at current position if dropped outside snap range
-                // Element stays where it was dropped (no automatic return)
-            }
 
-            currentlyDragging = null;
+            CurrentlyDragging = null;
         }
 
         protected virtual Cell FindClosestCell(Vector2 position)
@@ -226,7 +246,7 @@ namespace Kavkazim.UI
             Cell closest = null;
             float minDistance = float.MaxValue;
 
-            foreach (Cell cell in cells)
+            foreach (Cell cell in Cells)
             {
                 float distance = Vector2.Distance(position, cell.GetRectTransform().anchoredPosition);
                 if (distance < minDistance)
@@ -239,21 +259,17 @@ namespace Kavkazim.UI
             return closest;
         }
 
-        /// <summary>
-        /// Checks if a position is within snap proximity of a cell (distance-based).
-        /// </summary>
         protected virtual bool IsWithinSnapProximity(Vector2 position, Cell cell)
         {
-            RectTransform cellRect = cell.GetRectTransform();
-            Vector2 cellPos = cellRect.anchoredPosition;
+            var cellRect = cell.GetRectTransform();
+            var cellPos = cellRect.anchoredPosition;
             float distance = Vector2.Distance(position, cellPos);
             return distance <= snapProximityDistance;
         }
 
-        protected virtual void SnapToCell(DraggableElement element, Cell cell)
+        public virtual void SnapToCell(DraggableElement element, Cell cell)
         {
-            // Remove element from previous cell if any
-            foreach (Cell c in cells)
+            foreach (Cell c in Cells)
             {
                 if (c.GetElement() == element)
                 {
@@ -262,73 +278,47 @@ namespace Kavkazim.UI
                 }
             }
 
-            // If cell already has an element, return it to lower section
-            DraggableElement existingElement = cell.GetElement();
+            var existingElement = cell.GetElement();
             if (existingElement != null)
             {
-                // Return existing element to lower section with random position
-                RectTransform existingRect = existingElement.GetRectTransform();
+                var existingRect = existingElement.GetRectTransform();
                 existingRect.SetParent(lowerSection);
-                // Restore anchors for lower section (center-bottom)
                 existingRect.anchorMin = new Vector2(0.5f, 0f);
                 existingRect.anchorMax = new Vector2(0.5f, 0f);
-                Vector2 randomPos = GenerateRandomPositions(1)[0];
+                var randomPos = GenerateRandomPositions(1)[0];
                 existingRect.anchoredPosition = randomPos;
                 cell.SetElement(null);
             }
 
-            // Place element in cell - match anchors to cell's anchors
             RectTransform elementRect = element.GetRectTransform();
             RectTransform cellRect = cell.GetRectTransform();
             
             elementRect.SetParent(upperSection);
-            // Set element's anchors to match the cell's anchors so positioning works correctly
             elementRect.anchorMin = cellRect.anchorMin;
             elementRect.anchorMax = cellRect.anchorMax;
             elementRect.anchoredPosition = cellRect.anchoredPosition;
             cell.SetElement(element);
 
-            // Check if all elements are correctly placed
             CheckWinCondition();
         }
 
-        /// <summary>
-        /// Checks if all cells contain their correct elements.
-        /// </summary>
         protected virtual void CheckWinCondition()
         {
-            // All cells must have an element with matching correctCellIndex
-            foreach (Cell cell in cells)
+            if (_winConditionStrategy != null && _winConditionStrategy.CheckWinCondition(this))
             {
-                DraggableElement element = cell.GetElement();
-                
-                // If any cell is empty, game is not complete
-                if (element == null)
-                    return;
-                
-                // If element's correctCellIndex doesn't match cell's index, game is not complete
-                if (element.GetCorrectCellIndex() != cell.GetIndex())
-                    return;
+                _winConditionStrategy.OnWin(this);
             }
-
-            // All elements are correctly placed - game complete!
-            OnGameComplete();
         }
 
-        /// <summary>
-        /// Called when all elements are correctly placed in their matching cells.
-        /// Override in derived classes for custom completion behavior.
-        /// </summary>
-        protected virtual void OnGameComplete()
+        public override void OnGameComplete()
         {
-            Debug.Log("SortGame: All elements correctly placed! Game complete.");
+            base.OnGameComplete(); // Mark as completed successfully
             HidePopup();
         }
 
         protected virtual void ReturnToLowerSection(DraggableElement element)
         {
-            // Remove from cell if it was in one
-            foreach (Cell cell in cells)
+            foreach (var cell in Cells)
             {
                 if (cell.GetElement() == element)
                 {
@@ -337,13 +327,11 @@ namespace Kavkazim.UI
                 }
             }
 
-            // Return to lower section with a random position
-            RectTransform elementRect = element.GetRectTransform();
+            var elementRect = element.GetRectTransform();
             elementRect.SetParent(lowerSection);
-            // Restore anchors for lower section (center-bottom)
             elementRect.anchorMin = new Vector2(0.5f, 0f);
             elementRect.anchorMax = new Vector2(0.5f, 0f);
-            Vector2 newPos = GenerateRandomPositions(1)[0];
+            var newPos = GenerateRandomPositions(1)[0];
             elementRect.anchoredPosition = newPos;
         }
 
@@ -353,131 +341,17 @@ namespace Kavkazim.UI
                 popupCanvas.gameObject.SetActive(true);
         }
 
-        public virtual void HidePopup()
+        protected virtual void HidePopup()
         {
             if (popupCanvas != null)
                 popupCanvas.gameObject.SetActive(false);
         }
-    }
 
-    // Draggable Element Component
-    public class DraggableElement : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandler
-    {
-        private int index;
-        private int correctCellIndex; // The cell index where this element should be placed
-        protected SortGame game;
-        protected RectTransform rectTransform;
-        private Image image;
-
-        public void Initialize(int idx, SortGame sortGame, Sprite sprite)
+        protected override void InitializeGameUI()
         {
-            Initialize(idx, sortGame, sprite, idx); // Default: correctCellIndex matches index
-        }
-
-        public void Initialize(int idx, SortGame sortGame, Sprite sprite, int correctCell)
-        {
-            index = idx;
-            correctCellIndex = correctCell;
-            game = sortGame;
-            rectTransform = GetComponent<RectTransform>();
-            
-            image = GetComponent<Image>();
-            if (image == null)
-                image = gameObject.AddComponent<Image>();
-            
-            if (sprite != null)
-                image.sprite = sprite;
-        }
-
-        public RectTransform GetRectTransform() => rectTransform;
-        public int GetIndex() => index;
-        public int GetCorrectCellIndex() => correctCellIndex;
-
-        public void OnBeginDrag(PointerEventData eventData)
-        {
-            if (game != null)
-                game.OnElementDragStart(this);
-        }
-
-        public virtual void OnDrag(PointerEventData eventData)
-        {
-            if (game != null && rectTransform != null)
-            {
-                RectTransform parentRect = rectTransform.parent as RectTransform;
-                Canvas canvas = game.GetComponentInParent<Canvas>();
-                Camera cam = canvas != null && canvas.renderMode != RenderMode.ScreenSpaceOverlay 
-                    ? canvas.worldCamera : null;
-                
-                RectTransformUtility.ScreenPointToLocalPointInRectangle(
-                    parentRect,
-                    eventData.position,
-                    cam,
-                    out Vector2 localPoint);
-                
-                // Calculate anchor position in parent's local space (relative to parent's center/pivot)
-                Vector2 parentSize = parentRect.rect.size;
-                Vector2 anchorCenter = (rectTransform.anchorMin + rectTransform.anchorMax) / 2f;
-                Vector2 anchorLocalPos = new Vector2(
-                    (anchorCenter.x - 0.5f) * parentSize.x,
-                    (anchorCenter.y - 0.5f) * parentSize.y
-                );
-                
-                // Set anchoredPosition so element center follows cursor exactly
-                rectTransform.anchoredPosition = localPoint - anchorLocalPos;
-                game.OnElementDrag(this, eventData.position);
-            }
-        }
-
-        public void OnEndDrag(PointerEventData eventData)
-        {
-            if (game != null)
-                game.OnElementDragEnd(this, eventData.position);
-        }
-    }
-
-    // Cell Component
-    public class Cell : MonoBehaviour
-    {
-        private int index;
-        private SortGame game;
-        private RectTransform rectTransform;
-        private DraggableElement currentElement;
-        private Image backgroundImage;
-        private Color normalColor = new Color(1f, 1f, 1f, 0.2f);
-        private Color highlightColor = new Color(0.2f, 0.8f, 0.2f, 0.5f);
-
-        public void Initialize(int idx, SortGame sortGame)
-        {
-            index = idx;
-            game = sortGame;
-            rectTransform = GetComponent<RectTransform>();
-            
-            backgroundImage = GetComponent<Image>();
-            if (backgroundImage == null)
-                backgroundImage = gameObject.AddComponent<Image>();
-            
-            // Set a semi-transparent background to show cell boundaries
-            backgroundImage.color = normalColor;
-        }
-
-        public RectTransform GetRectTransform() => rectTransform;
-        public DraggableElement GetElement() => currentElement;
-        public int GetIndex() => index;
-
-        public void SetElement(DraggableElement element)
-        {
-            currentElement = element;
-        }
-
-        /// <summary>
-        /// Sets visual highlight state for the cell (used during drag proximity feedback).
-        /// </summary>
-        public void SetHighlight(bool highlighted)
-        {
-            if (backgroundImage != null)
-            {
-                backgroundImage.color = highlighted ? highlightColor : normalColor;
-            }
+            // Initialize the game after UI is set up
+            // Derived classes can override this and call base.InitializeGameUI() if they need custom UI
+            InitializeGame();
         }
     }
 }

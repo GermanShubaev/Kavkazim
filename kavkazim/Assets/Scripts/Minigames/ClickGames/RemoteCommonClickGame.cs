@@ -1,18 +1,13 @@
+using UnityEditor;
 using UnityEngine;
 using UnityEngine.UI;
-#if UNITY_EDITOR
-using UnityEditor;
-#endif
 
-namespace Minigames
+namespace Minigames.ClickGames
 {
-    /// <summary>
-    /// A minigame simulating an AC remote control.
-    /// Left buttons control temperature (+1/-1), right buttons control fan speed.
-    /// Temperature is shown as a number, fan speed as vertical lines.
-    /// </summary>
-    public class RemoteCommonClickGame : BaseMinigame
+    public class RemoteCommonClickGame : ClickGame
     {
+        private const string RemotePath = "Assets/Art/Images/temperature/common_remote.png";
+
         [Header("Remote Settings")]
         [SerializeField] private int minTemperature = 16;
         [SerializeField] private int maxTemperature = 30;
@@ -55,11 +50,11 @@ namespace Minigames
         private void LoadImages()
         {
             #if UNITY_EDITOR
-            string remotePath = "Assets/Art/Images/temperature/common_remote.png";
-            _remoteSprite = AssetDatabase.LoadAssetAtPath<Sprite>(remotePath);
+            
+            _remoteSprite = AssetDatabase.LoadAssetAtPath<Sprite>(RemotePath);
             if (_remoteSprite == null)
             {
-                Texture2D tex = AssetDatabase.LoadAssetAtPath<Texture2D>(remotePath);
+                Texture2D tex = AssetDatabase.LoadAssetAtPath<Texture2D>(RemotePath);
                 if (tex != null)
                 {
                     _remoteSprite = Sprite.Create(tex, new Rect(0, 0, tex.width, tex.height), new Vector2(0.5f, 0.5f));
@@ -406,7 +401,13 @@ namespace Minigames
                 _resultText.color = Color.green;
             }
 
+            OnGameComplete();
             StartCoroutine(CloseAfterDelay(2f));
+        }
+
+        public override void OnGameComplete()
+        {
+            base.OnGameComplete(); // Mark as completed successfully
         }
 
         private System.Collections.IEnumerator CloseAfterDelay(float delay)

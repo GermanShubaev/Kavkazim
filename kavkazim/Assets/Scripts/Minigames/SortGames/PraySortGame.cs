@@ -1,47 +1,42 @@
 using System.Collections.Generic;
-using UnityEngine;
-using UnityEngine.UI;
-using UnityEngine.EventSystems;
 using Kavkazim.UI;
-#if UNITY_EDITOR
+using Minigames.Base;
 using UnityEditor;
-#endif
+using UnityEngine;
+using UnityEngine.EventSystems;
+using UnityEngine.UI;
 
-namespace Minigames
+namespace Minigames.SortGames
 {
-    /// <summary>
-    /// A minigame where players drag prayer images to order them correctly using SortGame's two-section layout.
-    /// </summary>
-    public class PraySortGame : SortGame, IMinigame
+    public class PraySortGame : SortGame
     {
         [Header("Popup Settings")]
         [SerializeField] private int canvasSortingOrder = 200;
         [SerializeField] private Color backgroundColor = new Color(0, 0, 0, 0.7f);
         [SerializeField] private bool showCloseButton = true;
 
-        private GameObject _popupWindow;
-        private Canvas _canvas;
-        private GameObject _backgroundPanel;
-        private GameObject _contentPanel;
-        private Button _closeButton;
+        // Note: _popupWindow, _canvas, _backgroundPanel, _contentPanel, _closeButton are inherited from BaseMinigame
         private Text _resultText;
-        private Sprite[] _targetOrder; // Array of images in correct order
+        private Sprite[] _targetOrder; 
         private List<PrayWordElement> _wordElements = new List<PrayWordElement>();
-        private float cellSize = 250f; // Cell size (3x original 100)
+        private float cellSize = 250f; 
 
-        public bool IsActive => _popupWindow != null && _popupWindow.activeSelf;
-        public GameObject PopupWindow => _popupWindow;
+        // IsActive and PopupWindow properties are inherited from BaseMinigame
 
         protected override void Awake()
         {
-            // Don't call base.Awake() as we'll set up our own popup structure
-            // Load images early
             LoadPrayImages();
         }
 
         protected override void Start()
         {
-            // Don't call base.Start() - we'll initialize when StartGame() is called
+            if (IsActive)
+            {
+                Debug.LogWarning($"{GetType().Name} is already active!");
+                return;
+            }
+
+            StartGame();
         }
 
         private void LoadPrayImages()
@@ -117,7 +112,7 @@ namespace Minigames
         {
             if (upperSection == null) return;
 
-            cells.Clear();
+            Cells.Clear();
             // Use cellSize for cell dimensions (3x original = 300)
             float totalWidth = (numberOfElements * cellSize) + ((numberOfElements - 1) * cellSpacing);
             float startX = -totalWidth / 2f + cellSize / 2f;
@@ -136,7 +131,7 @@ namespace Minigames
 
                 Cell cell = cellObj.AddComponent<Cell>();
                 cell.Initialize(i, this);
-                cells.Add(cell);
+                Cells.Add(cell);
 
                 // Add background image to show cell boundaries
                 Image bgImage = cellObj.AddComponent<Image>();
@@ -266,9 +261,9 @@ namespace Minigames
 
         private void CheckWinCondition()
         {
-            if (cells == null || cells.Count != 6)
+            if (Cells == null || Cells.Count != 6)
             {
-                Debug.Log($"[PraySortGame] Win check skipped: cells.Count = {cells?.Count ?? 0}, expected 6");
+                Debug.Log($"[PraySortGame] Win check skipped: cells.Count = {Cells?.Count ?? 0}, expected 6");
                 return;
             }
 
@@ -290,9 +285,9 @@ namespace Minigames
             };
 
             // Check if all cells have elements
-            for (int i = 0; i < cells.Count; i++)
+            for (int i = 0; i < Cells.Count; i++)
             {
-                Cell cell = cells[i];
+                Cell cell = Cells[i];
                 DraggableElement element = cell.GetElement();
 
                 if (element == null)
@@ -306,9 +301,9 @@ namespace Minigames
 
             // All cells are filled, now check if they're in correct order
             bool allCorrect = true;
-            for (int i = 0; i < cells.Count && i < expectedTypes.Length; i++)
+            for (int i = 0; i < Cells.Count && i < expectedTypes.Length; i++)
             {
-                Cell cell = cells[i];
+                Cell cell = Cells[i];
                 DraggableElement element = cell.GetElement();
 
                 if (element == null)
@@ -344,6 +339,7 @@ namespace Minigames
                     _resultText.color = Color.green;
                 }
                 Debug.Log("[PraySortGame] All images correctly ordered! Game complete.");
+                OnGameComplete();
                 StartCoroutine(CloseAfterDelay(2f));
             }
             else
@@ -356,32 +352,30 @@ namespace Minigames
             }
         }
 
+        public override void OnGameComplete()
+        {
+            base.OnGameComplete(); // Mark as completed successfully - this triggers progress bar update and task removal
+        }
+
         private System.Collections.IEnumerator CloseAfterDelay(float delay)
         {
             yield return new WaitForSeconds(delay);
             CloseGame();
         }
 
-        // IMinigame implementation
-        public void StartGame()
-        {
-            if (IsActive)
-            {
-                Debug.LogWarning($"{GetType().Name} is already active!");
-                return;
-            }
-
-            CreatePopupWindow();
-            _popupWindow.SetActive(true);
-        }
-
-        public void CloseGame()
+        public override void CloseGame()
         {
             if (!IsActive)
             {
                 return;
             }
 
+            // Cleanup is handled by CleanupGameUI() and base.CloseGame()
+            base.CloseGame();
+        }
+
+        protected override void CleanupGameUI()
+        {
             // Clean up elements
             foreach (var element in _wordElements)
             {
@@ -392,66 +386,36 @@ namespace Minigames
             }
             _wordElements.Clear();
 
-            if (_popupWindow != null)
-            {
-                Destroy(_popupWindow);
-                _popupWindow = null;
-            }
-
-            _canvas = null;
-            _backgroundPanel = null;
-            _contentPanel = null;
-            _closeButton = null;
             upperSection = null;
             lowerSection = null;
         }
 
-        private void CreatePopupWindow()
+        protected override void InitializeGameUI()
         {
-            // Create root canvas object
-            _popupWindow = new GameObject($"{GetType().Name}Popup");
-            _popupWindow.transform.SetParent(null);
-
-            // Add Canvas component
-            _canvas = _popupWindow.AddComponent<Canvas>();
-            _canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-            _canvas.sortingOrder = canvasSortingOrder;
-            _popupWindow.AddComponent<CanvasScaler>();
-            _popupWindow.AddComponent<GraphicRaycaster>();
-
-            // Ensure EventSystem exists
-            if (EventSystem.current == null)
+            // Adjust content panel layout (matching LaundrySortGame implementation)
+            RectTransform contentRect = _contentPanel.GetComponent<RectTransform>();
+            if (contentRect != null)
             {
-                GameObject eventSystem = new GameObject("EventSystem");
-                eventSystem.AddComponent<EventSystem>();
-                eventSystem.AddComponent<UnityEngine.InputSystem.UI.InputSystemUIInputModule>();
+                contentRect.anchorMin = new Vector2(0.125f, 0.125f);
+                contentRect.anchorMax = new Vector2(0.875f, 0.875f);
+                contentRect.sizeDelta = Vector2.zero;
+                contentRect.anchoredPosition = Vector2.zero;
+                Image contentImage = _contentPanel.GetComponent<Image>();
+                if (contentImage != null)
+                {
+                    contentImage.color = new Color(0.15f, 0.15f, 0.2f, 0.95f);
+                }
             }
 
-            // Create background overlay
-            _backgroundPanel = new GameObject("Background");
-            _backgroundPanel.transform.SetParent(_popupWindow.transform, false);
-            Image bgImage = _backgroundPanel.AddComponent<Image>();
-            bgImage.color = backgroundColor;
-            RectTransform bgRect = _backgroundPanel.GetComponent<RectTransform>();
-            bgRect.anchorMin = Vector2.zero;
-            bgRect.anchorMax = Vector2.one;
-            bgRect.sizeDelta = Vector2.zero;
-
-            // Create content panel (centered, 75% of screen)
-            _contentPanel = new GameObject("ContentPanel");
-            _contentPanel.transform.SetParent(_popupWindow.transform, false);
-            Image contentImage = _contentPanel.AddComponent<Image>();
-            contentImage.color = new Color(0.15f, 0.15f, 0.2f, 0.95f);
-            RectTransform contentRect = _contentPanel.GetComponent<RectTransform>();
-            // Use anchors for 75% screen coverage (12.5% margin on each side)
-            contentRect.anchorMin = new Vector2(0.125f, 0.125f);
-            contentRect.anchorMax = new Vector2(0.875f, 0.875f);
-            contentRect.sizeDelta = Vector2.zero;
-            contentRect.anchoredPosition = Vector2.zero;
-
-            // Set popupWindow reference for SortGame
-            popupWindow = contentRect;
-            popupCanvas = _canvas;
+            // Set popup window reference for SortGame
+            if (_popupWindow != null)
+            {
+                popupWindow = _contentPanel.GetComponent<RectTransform>();
+            }
+            if (_canvas != null)
+            {
+                popupCanvas = _canvas;
+            }
 
             // Create title text
             GameObject titleObj = new GameObject("TitleText");
@@ -485,62 +449,31 @@ namespace Minigames
             resultRect.sizeDelta = Vector2.zero;
             resultRect.anchoredPosition = Vector2.zero;
 
-            // Create upper section (for ordered cells)
-            GameObject upperSectionObj = new GameObject("UpperSection");
-            upperSectionObj.transform.SetParent(_contentPanel.transform, false);
-            upperSection = upperSectionObj.AddComponent<RectTransform>();
-            upperSection.anchorMin = new Vector2(0, 0.5f);
-            upperSection.anchorMax = new Vector2(1, 0.85f);
-            upperSection.sizeDelta = Vector2.zero;
-            upperSection.anchoredPosition = Vector2.zero;
-
-            // Create lower section (for random placement)
-            GameObject lowerSectionObj = new GameObject("LowerSection");
-            lowerSectionObj.transform.SetParent(_contentPanel.transform, false);
-            lowerSection = lowerSectionObj.AddComponent<RectTransform>();
-            lowerSection.anchorMin = new Vector2(0, 0);
-            lowerSection.anchorMax = new Vector2(1, 0.5f);
-            lowerSection.sizeDelta = Vector2.zero;
-            lowerSection.anchoredPosition = Vector2.zero;
-
-            // Create close button if enabled
-            if (showCloseButton)
+            // Ensure sections exist (SortGameUIBuilder should create them, but create if missing)
+            if (upperSection == null)
             {
-                CreateCloseButton();
+                GameObject upperSectionObj = new GameObject("UpperSection");
+                upperSectionObj.transform.SetParent(_contentPanel.transform, false);
+                upperSection = upperSectionObj.AddComponent<RectTransform>();
+                upperSection.anchorMin = new Vector2(0, 0.5f);
+                upperSection.anchorMax = new Vector2(1, 0.85f);
+                upperSection.sizeDelta = Vector2.zero;
+                upperSection.anchoredPosition = Vector2.zero;
             }
 
-            // Initialize the game (sets up sections)
+            if (lowerSection == null)
+            {
+                GameObject lowerSectionObj = new GameObject("LowerSection");
+                lowerSectionObj.transform.SetParent(_contentPanel.transform, false);
+                lowerSection = lowerSectionObj.AddComponent<RectTransform>();
+                lowerSection.anchorMin = new Vector2(0, 0f);
+                lowerSection.anchorMax = new Vector2(1, 0.5f);
+                lowerSection.sizeDelta = Vector2.zero;
+                lowerSection.anchoredPosition = Vector2.zero;
+            }
+
+            // Initialize game logic
             InitializeGame();
-        }
-
-        private void CreateCloseButton()
-        {
-            GameObject closeBtnObj = new GameObject("CloseButton");
-            closeBtnObj.transform.SetParent(_contentPanel.transform, false);
-            _closeButton = closeBtnObj.AddComponent<Button>();
-            Image btnImage = closeBtnObj.AddComponent<Image>();
-            btnImage.color = new Color(0.8f, 0.2f, 0.2f, 1f);
-
-            RectTransform btnRect = closeBtnObj.GetComponent<RectTransform>();
-            btnRect.sizeDelta = new Vector2(40, 40);
-            btnRect.anchorMin = new Vector2(1, 1);
-            btnRect.anchorMax = new Vector2(1, 1);
-            btnRect.anchoredPosition = new Vector2(-20, -20);
-
-            GameObject txtObj = new GameObject("Text");
-            txtObj.transform.SetParent(closeBtnObj.transform, false);
-            Text txt = txtObj.AddComponent<Text>();
-            txt.text = "X";
-            txt.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-            txt.fontSize = 24;
-            txt.alignment = TextAnchor.MiddleCenter;
-            txt.color = Color.white;
-            RectTransform txtRect = txtObj.GetComponent<RectTransform>();
-            txtRect.anchorMin = Vector2.zero;
-            txtRect.anchorMax = Vector2.one;
-            txtRect.sizeDelta = Vector2.zero;
-
-            _closeButton.onClick.AddListener(CloseGame);
         }
 
         protected virtual void OnDestroy()
@@ -549,9 +482,6 @@ namespace Minigames
         }
     }
 
-    /// <summary>
-    /// Custom draggable element for prayer images that works with SortGame's system.
-    /// </summary>
     public class PrayWordElement : DraggableElement
     {
         private Sprite _praySprite;
@@ -568,10 +498,6 @@ namespace Minigames
             _canvas = GetComponentInParent<Canvas>();
         }
 
-        /// <summary>
-        /// Gets the sprite type identifier based on sprite name.
-        /// Returns a string identifier for the sprite type.
-        /// </summary>
         private string GetSpriteTypeFromName(string spriteName)
         {
             string lowerName = spriteName.ToLower();
@@ -598,21 +524,19 @@ namespace Minigames
 
         public override void OnDrag(PointerEventData eventData)
         {
-            // Get rectTransform if not cached
-            if (rectTransform == null)
+            if (RectTransform == null)
             {
-                rectTransform = GetComponent<RectTransform>();
+                RectTransform = GetComponent<RectTransform>();
             }
             
-            // Get canvas if not cached
             if (_canvas == null)
             {
                 _canvas = GetComponentInParent<Canvas>();
             }
             
-            if (game != null && rectTransform != null && _canvas != null)
+            if (Game != null && RectTransform != null && _canvas != null)
             {
-                RectTransform parentRect = rectTransform.parent as RectTransform;
+                RectTransform parentRect = RectTransform.parent as RectTransform;
                 
                 // Use the cached canvas instead of trying to get it from game component
                 Camera cam = _canvas.renderMode != RenderMode.ScreenSpaceOverlay ? _canvas.worldCamera : null;
@@ -623,17 +547,15 @@ namespace Minigames
                     cam,
                     out Vector2 localPoint);
                 
-                // Calculate anchor position in parent's local space (relative to parent's center/pivot)
                 Vector2 parentSize = parentRect.rect.size;
-                Vector2 anchorCenter = (rectTransform.anchorMin + rectTransform.anchorMax) / 2f;
+                Vector2 anchorCenter = (RectTransform.anchorMin + RectTransform.anchorMax) / 2f;
                 Vector2 anchorLocalPos = new Vector2(
                     (anchorCenter.x - 0.5f) * parentSize.x,
                     (anchorCenter.y - 0.5f) * parentSize.y
                 );
                 
-                // Set anchoredPosition so element center follows cursor exactly
-                rectTransform.anchoredPosition = localPoint - anchorLocalPos;
-                game.OnElementDrag(this, eventData.position);
+                RectTransform.anchoredPosition = localPoint - anchorLocalPos;
+                Game.OnElementDrag(this, eventData.position);
             }
         }
     }

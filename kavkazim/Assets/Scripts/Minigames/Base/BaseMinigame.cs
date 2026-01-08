@@ -1,11 +1,10 @@
 using UnityEngine;
 using UnityEngine.UI;
+using Minigames.Base.Strategies;
+using Minigames.Base.UI;
 
-namespace Minigames
+namespace Minigames.Base
 {
-    /// <summary>
-    /// Abstract base class for all minigames. Handles common popup window creation and lifecycle.
-    /// </summary>
     public abstract class BaseMinigame : MonoBehaviour, IMinigame
     {
         [Header("Popup Settings")]
@@ -18,60 +17,35 @@ namespace Minigames
         protected GameObject _backgroundPanel;
         protected GameObject _contentPanel;
         protected Button _closeButton;
+        protected bool _wasCompletedSuccessfully = false;
+        
+        /// <summary>
+        /// Strategy for checking win conditions. Can be set by derived classes.
+        /// </summary>
+        protected IWinConditionStrategy _winConditionStrategy;
+        
+        /// <summary>
+        /// UI builder for creating popup windows. Can be set by derived classes.
+        /// </summary>
+        protected IPopupUIBuilder _uiBuilder;
 
         public bool IsActive => _popupWindow != null && _popupWindow.activeSelf;
+        public bool WasCompletedSuccessfully => _wasCompletedSuccessfully;
         public GameObject PopupWindow => _popupWindow;
 
         /// <summary>
         /// Creates the popup window structure. Called automatically by StartGame().
+        /// Uses UI builder pattern if available, otherwise falls back to default implementation.
         /// </summary>
         protected virtual void CreatePopupWindow()
         {
-            // Create root canvas object
-            _popupWindow = new GameObject($"{GetType().Name}Popup");
-            _popupWindow.transform.SetParent(null); // Independent of scene hierarchy
-
-            // Add Canvas component
-            _canvas = _popupWindow.AddComponent<Canvas>();
-            _canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-            _canvas.sortingOrder = canvasSortingOrder;
-            _popupWindow.AddComponent<CanvasScaler>();
-            _popupWindow.AddComponent<GraphicRaycaster>();
-
-            // Ensure EventSystem exists
-            if (UnityEngine.EventSystems.EventSystem.current == null)
+            // Use UI builder if set, otherwise use default builder
+            if (_uiBuilder == null)
             {
-                GameObject eventSystem = new GameObject("EventSystem");
-                eventSystem.AddComponent<UnityEngine.EventSystems.EventSystem>();
-                eventSystem.AddComponent<UnityEngine.InputSystem.UI.InputSystemUIInputModule>();
+                _uiBuilder = new DefaultPopupUIBuilder();
             }
 
-            // Create background overlay
-            _backgroundPanel = new GameObject("Background");
-            _backgroundPanel.transform.SetParent(_popupWindow.transform, false);
-            Image bgImage = _backgroundPanel.AddComponent<Image>();
-            bgImage.color = backgroundColor;
-            RectTransform bgRect = _backgroundPanel.GetComponent<RectTransform>();
-            bgRect.anchorMin = Vector2.zero;
-            bgRect.anchorMax = Vector2.one;
-            bgRect.sizeDelta = Vector2.zero;
-
-            // Create content panel (centered)
-            _contentPanel = new GameObject("ContentPanel");
-            _contentPanel.transform.SetParent(_popupWindow.transform, false);
-            Image contentImage = _contentPanel.AddComponent<Image>();
-            contentImage.color = new Color(0.2f, 0.2f, 0.2f, 1f);
-            RectTransform contentRect = _contentPanel.GetComponent<RectTransform>();
-            contentRect.sizeDelta = new Vector2(1000, 700); // Default size, can be overridden
-            contentRect.anchoredPosition = Vector2.zero;
-            contentRect.anchorMin = new Vector2(0.5f, 0.5f);
-            contentRect.anchorMax = new Vector2(0.5f, 0.5f);
-
-            // Create close button if enabled
-            if (showCloseButton)
-            {
-                CreateCloseButton();
-            }
+            _popupWindow = _uiBuilder.BuildPopup(this);
 
             // Initialize minigame-specific UI
             InitializeGameUI();
@@ -146,6 +120,10 @@ namespace Minigames
 
             if (_popupWindow != null)
             {
+                if (_uiBuilder != null)
+                {
+                    _uiBuilder.Cleanup(_popupWindow);
+                }
                 Destroy(_popupWindow);
                 _popupWindow = null;
             }
@@ -154,6 +132,43 @@ namespace Minigames
             _backgroundPanel = null;
             _contentPanel = null;
             _closeButton = null;
+        }
+
+        // Helper methods for UI builder
+        public int GetCanvasSortingOrder() => canvasSortingOrder;
+        public Color GetBackgroundColor() => backgroundColor;
+        public bool ShouldShowCloseButton() => showCloseButton;
+        
+        public void SetPopupReferences(GameObject popupWindow, Canvas canvas, GameObject backgroundPanel, GameObject contentPanel)
+        {
+            _popupWindow = popupWindow;
+            _canvas = canvas;
+            _backgroundPanel = backgroundPanel;
+            _contentPanel = contentPanel;
+        }
+        
+        public void SetCloseButton(Button closeButton)
+        {
+            _closeButton = closeButton;
+        }
+        
+        // Expose content panel for UI builders
+        public GameObject GetContentPanel() => _contentPanel;
+        
+        /// <summary>
+        /// Called when the minigame is completed successfully.
+        /// Derived classes should override this and call base.OnGameComplete() to set the completion flag.
+        /// Made public to allow win condition strategies to call it.
+        /// </summary>
+        public virtual void OnGameComplete()
+        {
+            _wasCompletedSuccessfully = true;
+        }
+        
+        protected virtual System.Collections.IEnumerator CloseAfterDelay(float delay)
+        {
+            yield return new WaitForSeconds(delay);
+            CloseGame();
         }
 
         protected virtual void OnDestroy()

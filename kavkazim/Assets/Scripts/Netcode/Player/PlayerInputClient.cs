@@ -1,10 +1,13 @@
-﻿// Assets/Scripts/Netcode/Player/PlayerInputClient.cs
+// Assets/Scripts/Netcode/Player/PlayerInputClient.cs
 
 using Kavkazim.Netcode;
 using Minigames;
+using Minigames.Base;
+using Minigames.Progress;
 using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UI;
 
 namespace Netcode.Player
 {
@@ -15,6 +18,7 @@ namespace Netcode.Player
         private InputAction _move;
         private PlayerAvatar _avatar;
         private IMinigame _currentMinigame;
+        private MinigameTriggerPoint _currentTrigger;
 
 
         private void Start()
@@ -67,11 +71,11 @@ namespace Netcode.Player
 
         private void HandleMinigameTrigger()
         {
-            // If a minigame is already active, close it
+            // If a minigame is already active, close it (without marking as completed)
             if (_currentMinigame != null && _currentMinigame.IsActive)
             {
                 _currentMinigame.CloseGame();
-                _currentMinigame = null;
+                OnMinigameClosed();
                 return;
             }
 
@@ -90,20 +94,118 @@ namespace Netcode.Player
             {
                 Debug.Log($"[PlayerInputClient] Trigger found! Game: {trigger.GameType}, Distance: {distance:F2}");
                 
+                // Check if this minigame is assigned to the player
+                if (!trigger.IsAssignedToLocalPlayer())
+                {
+                    Debug.Log($"[PlayerInputClient] Minigame {trigger.GameType} is not assigned to this player. Cannot start.");
+                    return;
+                }
+                
+                // Store the trigger point for later task completion
+                _currentTrigger = trigger;
+                
                 // Create and start the minigame
                 _currentMinigame = MinigameFactory.CreateMinigame(trigger.GameType);
                 if (_currentMinigame != null)
                 {
                     _currentMinigame.StartGame();
+                    
+                    // Subscribe to minigame completion if it's a BaseMinigame
+                    if (_currentMinigame is BaseMinigame baseMinigame)
+                    {
+                        // We'll check completion status when the minigame closes
+                        StartCoroutine(MonitorMinigameCompletion());
+                    }
                 }
                 else
                 {
                     Debug.LogError($"[PlayerInputClient] Failed to create minigame of type {trigger.GameType}");
+                    _currentTrigger = null;
                 }
             }
             else
             {
                 Debug.Log("[PlayerInputClient] No minigame trigger point within range.");
+            }
+        }
+        
+        private System.Collections.IEnumerator MonitorMinigameCompletion()
+        {
+            // Wait until minigame is no longer active
+            while (_currentMinigame != null && _currentMinigame.IsActive)
+            {
+                yield return null;
+            }
+            
+            // Check if minigame completed successfully
+            if (_currentMinigame is BaseMinigame baseMinigame && baseMinigame.WasCompletedSuccessfully)
+            {
+                MarkTaskAsCompleted();
+            }
+            
+            OnMinigameClosed();
+        }
+        
+        private void OnMinigameClosed()
+        {
+            _currentMinigame = null;
+            _currentTrigger = null;
+        }
+        
+        private void MarkTaskAsCompleted()
+        {
+            if (_currentTrigger == null || GameplayUI.Instance == null) return;
+            
+            // Find the task that matches this trigger point
+            ulong localClientId = _avatar != null ? _avatar.OwnerClientId : 0;
+            var taskAssignments = GameplayUI.Instance.GetTaskAssignments();
+            
+            if (taskAssignments == null || !taskAssignments.ContainsKey(localClientId))
+            {
+                return;
+            }
+            
+            var playerTasks = taskAssignments[localClientId];
+            float positionTolerance = 0.1f;
+            
+            foreach (var task in playerTasks)
+            {
+                if (Vector2.Distance(task.Location, _currentTrigger.Position) < positionTolerance &&
+                    task.MinigameType == _currentTrigger.GameType)
+                {
+                    // Mark this task as completed locally
+                    GameplayUI.Instance.MarkTaskAsCompleted(task);
+                    Debug.Log($"[PlayerInputClient] Task completed: {task.Description}");
+                    
+                    // Notify server about task completion
+                    NotifyTaskCompletedServerRpc();
+                    break;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Server RPC to notify that a task has been completed.
+        /// Decrements the TasksLeft counter on the server.
+        /// </summary>
+        [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Owner)]
+        private void NotifyTaskCompletedServerRpc(RpcParams rpcParams = default)
+        {
+            if (GameSessionManager.Instance == null) return;
+            
+            // Decrement TasksLeft by 1
+            int currentTasks = GameSessionManager.Instance.TasksLeft.Value;
+            if (currentTasks > 0)
+            {
+                GameSessionManager.Instance.TasksLeft.Value = currentTasks - 1;
+                Debug.Log($"[PlayerInputClient] Server: Task completed. TasksLeft: {currentTasks - 1}");
+                
+                // Check win condition when tasks reach 0
+                if (GameSessionManager.Instance.TasksLeft.Value == 0)
+                {
+                    Debug.Log("[PlayerInputClient] Server: All tasks completed! Innocents win!");
+                    GameSessionManager.Instance.CheckWinConditions();
+                }
             }
         }
 

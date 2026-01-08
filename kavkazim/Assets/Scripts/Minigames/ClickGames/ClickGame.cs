@@ -1,14 +1,12 @@
 using System.Collections.Generic;
+using Minigames.Base;
+using Minigames.Base.Strategies;
 using UnityEngine;
-using UnityEngine.UI;
 using UnityEngine.EventSystems;
+using UnityEngine.UI;
 
-namespace Minigames
+namespace Minigames.ClickGames
 {
-    /// <summary>
-    /// Abstract base class for click-to-remove games.
-    /// Displays a main image with clickable "stains" that disappear when clicked.
-    /// </summary>
     public abstract class ClickGame : BaseMinigame
     {
         [Header("Click Game Settings")]
@@ -22,14 +20,11 @@ namespace Minigames
         [SerializeField] protected bool useScreenPercentage = false;
         [SerializeField] [Range(0.1f, 1f)] protected float screenPercentage = 0.75f;
 
-        protected GameObject _mainImageObject;
-        protected Image _mainImageComponent;
-        protected List<ClickableStain> _activeStains = new List<ClickableStain>();
-        protected int _stainsRemaining;
+        private GameObject _mainImageObject;
+        private Image _mainImageComponent;
+        private readonly List<ClickableStain> _activeStains = new List<ClickableStain>();
+        private int _stainsRemaining;
 
-        /// <summary>
-        /// Data structure defining a stain's appearance and position.
-        /// </summary>
         [System.Serializable]
         public class StainData
         {
@@ -51,7 +46,18 @@ namespace Minigames
 
         protected override void InitializeGameUI()
         {
-            // Resize content panel if using screen percentage
+            // Initialize default win condition strategy if not set
+            if (_winConditionStrategy == null)
+            {
+                _winConditionStrategy = new ClickGameWinConditionStrategy();
+            }
+            
+            // Initialize default UI builder if not set
+            if (_uiBuilder == null)
+            {
+                _uiBuilder = new Base.UI.ClickGameUIBuilder();
+            }
+            
             if (useScreenPercentage)
             {
                 ResizeContentPanelToScreenPercentage();
@@ -62,9 +68,6 @@ namespace Minigames
             _stainsRemaining = _activeStains.Count;
         }
 
-        /// <summary>
-        /// Resizes the content panel to a percentage of the screen size.
-        /// </summary>
         protected virtual void ResizeContentPanelToScreenPercentage()
         {
             if (_contentPanel == null) return;
@@ -75,18 +78,14 @@ namespace Minigames
             float screenWidth = Screen.width;
             float screenHeight = Screen.height;
             
-            float targetWidth = screenWidth * screenPercentage;
-            float targetHeight = screenHeight * screenPercentage;
+            var targetWidth = screenWidth * screenPercentage;
+            var targetHeight = screenHeight * screenPercentage;
             
             contentRect.sizeDelta = new Vector2(targetWidth, targetHeight);
             
-            // Also update mainImageSize to match the content panel
-            mainImageSize = new Vector2(targetWidth - 40, targetHeight - 40); // Small padding
+            mainImageSize = new Vector2(targetWidth - 40, targetHeight - 40);
         }
 
-        /// <summary>
-        /// Creates the main background image in the content panel.
-        /// </summary>
         protected virtual void CreateMainImage()
         {
             _mainImageObject = new GameObject("MainImage");
@@ -95,7 +94,7 @@ namespace Minigames
             _mainImageComponent = _mainImageObject.AddComponent<Image>();
             _mainImageComponent.sprite = GetMainImage();
             _mainImageComponent.preserveAspect = true;
-            _mainImageComponent.raycastTarget = false; // Stains handle clicks
+            _mainImageComponent.raycastTarget = false;
 
             RectTransform rect = _mainImageObject.GetComponent<RectTransform>();
             rect.sizeDelta = mainImageSize;
@@ -104,9 +103,6 @@ namespace Minigames
             rect.anchorMax = new Vector2(0.5f, 0.5f);
         }
 
-        /// <summary>
-        /// Creates all stain objects based on stain data.
-        /// </summary>
         protected virtual void CreateStains()
         {
             _activeStains.Clear();
@@ -125,40 +121,34 @@ namespace Minigames
 
             for (int i = 0; i < stains.Count; i++)
             {
-                StainData data = stains[i];
+                var data = stains[i];
                 Vector2 position = randomizeStainPositions 
                     ? positions[i] 
                     : new Vector2(data.normalizedPosition.x * mainImageSize.x, 
                                   data.normalizedPosition.y * mainImageSize.y);
 
-                ClickableStain stain = CreateStain(i, data, position);
+                var stain = CreateStain(i, data, position);
                 _activeStains.Add(stain);
             }
         }
 
-        /// <summary>
-        /// Creates a single clickable stain.
-        /// </summary>
         protected virtual ClickableStain CreateStain(int index, StainData data, Vector2 position)
         {
             GameObject stainObj = new GameObject($"Stain_{index}");
             stainObj.transform.SetParent(_mainImageObject.transform, false);
 
-            // Add Image component
             Image stainImage = stainObj.AddComponent<Image>();
             
             if (data.stainSprite != null)
             {
                 stainImage.sprite = data.stainSprite;
-                stainImage.color = Color.white; // Use sprite's own colors
+                stainImage.color = Color.white; 
             }
             else
             {
-                // Create a default circular stain appearance
                 stainImage.color = data.stainColor;
             }
 
-            // Setup RectTransform
             RectTransform rect = stainObj.GetComponent<RectTransform>();
             rect.sizeDelta = data.size;
             rect.anchoredPosition = position;
@@ -166,30 +156,26 @@ namespace Minigames
             rect.anchorMax = new Vector2(0.5f, 0.5f);
             rect.localRotation = Quaternion.Euler(0, 0, data.rotation);
 
-            // Add ClickableStain component
             ClickableStain stain = stainObj.AddComponent<ClickableStain>();
             stain.Initialize(index, this, data);
 
             return stain;
         }
 
-        /// <summary>
-        /// Generates random positions within the main image bounds.
-        /// </summary>
         protected virtual List<Vector2> GenerateRandomPositions(int count)
         {
-            List<Vector2> positions = new List<Vector2>();
-            float margin = 0.1f; // 10% margin from edges
-            float halfWidth = mainImageSize.x * (0.5f - margin);
-            float halfHeight = mainImageSize.y * (0.5f - margin);
-            float minDistance = Mathf.Min(mainImageSize.x, mainImageSize.y) * 0.15f;
+            var positions = new List<Vector2>();
+            const float margin = 0.1f; 
+            var halfWidth = mainImageSize.x * (0.5f - margin);
+            var halfHeight = mainImageSize.y * (0.5f - margin);
+            var minDistance = Mathf.Min(mainImageSize.x, mainImageSize.y) * 0.15f;
 
-            int maxAttempts = 100;
-            for (int i = 0; i < count; i++)
+            var maxAttempts = 100;
+            for (var i = 0; i < count; i++)
             {
                 Vector2 position = Vector2.zero;
-                bool validPosition = false;
-                int attempts = 0;
+                var validPosition = false;
+                var attempts = 0;
 
                 while (!validPosition && attempts < maxAttempts)
                 {
@@ -216,28 +202,20 @@ namespace Minigames
             return positions;
         }
 
-        /// <summary>
-        /// Called when a stain is clicked. Handles removal and win condition check.
-        /// </summary>
         public virtual void OnStainClicked(ClickableStain stain)
         {
             if (!_activeStains.Contains(stain))
                 return;
 
-            // Remove stain with optional animation
             StartCoroutine(RemoveStainCoroutine(stain));
         }
 
-        /// <summary>
-        /// Coroutine to animate stain removal.
-        /// </summary>
         protected virtual System.Collections.IEnumerator RemoveStainCoroutine(ClickableStain stain)
         {
             Image stainImage = stain.GetComponent<Image>();
             
             if (stainFadeOutDuration > 0 && stainImage != null)
             {
-                // Fade out animation
                 float elapsed = 0f;
                 Color startColor = stainImage.color;
 
@@ -252,7 +230,6 @@ namespace Minigames
                 }
             }
 
-            // Remove from active list and destroy
             _activeStains.Remove(stain);
             _stainsRemaining--;
             
@@ -263,36 +240,30 @@ namespace Minigames
 
             OnStainRemoved(stain);
 
-            // Check win condition
             if (_stainsRemaining <= 0)
             {
                 OnAllStainsRemoved();
             }
         }
 
-        /// <summary>
-        /// Called after a stain is removed. Override for custom behavior.
-        /// </summary>
         protected virtual void OnStainRemoved(ClickableStain stain)
         {
             // Override in derived classes for effects, sounds, etc.
         }
 
-        /// <summary>
-        /// Called when all stains have been removed. Override for custom completion behavior.
-        /// </summary>
         protected virtual void OnAllStainsRemoved()
         {
-            Debug.Log($"{GetType().Name}: All stains removed! Game complete.");
-            OnGameComplete();
+            // Check win condition using strategy
+            if (_winConditionStrategy != null && _winConditionStrategy.CheckWinCondition(this))
+            {
+                _winConditionStrategy.OnWin(this);
+            }
         }
 
-        /// <summary>
-        /// Called when the game is successfully completed.
-        /// </summary>
-        protected virtual void OnGameComplete()
+        
+        public override void OnGameComplete()
         {
-            // Default: close the game after a short delay
+            base.OnGameComplete(); // Mark as completed successfully
             StartCoroutine(CloseAfterDelay(1f));
         }
 
@@ -302,17 +273,11 @@ namespace Minigames
             CloseGame();
         }
 
-        /// <summary>
-        /// Override to provide the main background image.
-        /// </summary>
         protected virtual Sprite GetMainImage()
         {
             return mainImage;
         }
-
-        /// <summary>
-        /// Override to provide stain data. By default uses the serialized list.
-        /// </summary>
+        
         protected virtual List<StainData> GetStainData()
         {
             return stainDataList;
@@ -326,20 +291,11 @@ namespace Minigames
             _mainImageComponent = null;
         }
 
-        /// <summary>
-        /// Returns the number of stains remaining.
-        /// </summary>
         public int GetStainsRemaining() => _stainsRemaining;
 
-        /// <summary>
-        /// Returns the total number of stains at game start.
-        /// </summary>
         public int GetTotalStains() => GetStainData()?.Count ?? 0;
     }
 
-    /// <summary>
-    /// Component for clickable stain objects.
-    /// </summary>
     public class ClickableStain : MonoBehaviour, IPointerClickHandler
     {
         private ClickGame _game;

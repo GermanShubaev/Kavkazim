@@ -1,18 +1,12 @@
 using System.Collections.Generic;
-using UnityEngine;
-using UnityEngine.UI;
-using UnityEngine.EventSystems;
-#if UNITY_EDITOR
 using UnityEditor;
-#endif
+using UnityEngine;
+using UnityEngine.EventSystems;
+using UnityEngine.UI;
 
-namespace Minigames
+namespace Minigames.SortGames
 {
-    /// <summary>
-    /// A minigame where players recreate a shashlik skewer by clicking ingredient buttons in the correct order.
-    /// The target skewer shows 5 random ingredients, and players must match it on the empty skewer above.
-    /// </summary>
-    public class ShashlikSortGame : MonoBehaviour, IMinigame
+    public class ShashlikSortGame : SortGame
     {
         [Header("Popup Settings")]
         [SerializeField] private int canvasSortingOrder = 200;
@@ -25,36 +19,27 @@ namespace Minigames
         [SerializeField] private float ingredientSpacing = 120f;
         [SerializeField] private int totalRounds = 3;
 
-        private GameObject _popupWindow;
-        private Canvas _canvas;
-        private GameObject _backgroundPanel;
-        private GameObject _contentPanel;
-        private Button _closeButton;
+        // Note: _popupWindow, _canvas, _backgroundPanel, _contentPanel, _closeButton are inherited from BaseMinigame
         private Text _resultText;
 
-        // Images
         private Sprite _skewerSprite;
         private Dictionary<string, Sprite> _ingredientSprites = new Dictionary<string, Sprite>();
         private string[] _ingredientNames = { "meat", "tomato", "onion", "tofu", "fried_chicken" };
 
-        // Game state
-        private List<string> _targetSequence = new List<string>(); // The sequence to match
-        private List<string> _playerSequence = new List<string>(); // Player's current sequence
-        private List<Image> _playerSkewerSlots = new List<Image>(); // Visual slots on player's skewer
+        private List<string> _targetSequence = new List<string>();
+        private List<string> _playerSequence = new List<string>();
+        private List<Image> _playerSkewerSlots = new List<Image>();
         private List<Button> _ingredientButtons = new List<Button>();
         
-        // Two-phase game state
         private bool _isMemorizationPhase = true;
         private GameObject _memorizationPanel;
         private GameObject _gameplayPanel;
         
-        // Round tracking
         private int _currentRound = 1;
         private Text _roundText;
         private Text _memorizationRoundText;
 
-        public bool IsActive => _popupWindow != null && _popupWindow.activeSelf;
-        public GameObject PopupWindow => _popupWindow;
+        // IsActive and PopupWindow properties are inherited from BaseMinigame
 
         private void Awake()
         {
@@ -64,7 +49,6 @@ namespace Minigames
         private void LoadImages()
         {
             #if UNITY_EDITOR
-            // Load skewer
             string skewerPath = "Assets/Art/Images/shashlik/shashlik_skewer.png";
             _skewerSprite = AssetDatabase.LoadAssetAtPath<Sprite>(skewerPath);
             if (_skewerSprite == null)
@@ -74,7 +58,6 @@ namespace Minigames
                     _skewerSprite = Sprite.Create(tex, new Rect(0, 0, tex.width, tex.height), new Vector2(0.5f, 0.5f));
             }
 
-            // Load ingredients
             foreach (string ingredient in _ingredientNames)
             {
                 string path = $"Assets/Art/Images/shashlik/shashlik_{ingredient}.png";
@@ -93,7 +76,6 @@ namespace Minigames
             }
             #endif
 
-            // Fallback to Resources
             if (_skewerSprite == null)
             {
                 _skewerSprite = Resources.Load<Sprite>("Art/Images/shashlik/shashlik_skewer");
@@ -119,7 +101,7 @@ namespace Minigames
             Debug.Log($"[ShashlikSortGame] Loaded {_ingredientSprites.Count} ingredient sprites");
         }
 
-        public void StartGame()
+        protected override void Start()
         {
             if (IsActive)
             {
@@ -127,29 +109,25 @@ namespace Minigames
                 return;
             }
 
-            CreatePopupWindow();
-            _popupWindow.SetActive(true);
+            StartGame();
         }
-
-        public void CloseGame()
+        
+        public override void CloseGame()
         {
             if (!IsActive) return;
 
+            // Cleanup is handled by CleanupGameUI() and base.CloseGame()
+            base.CloseGame();
+        }
+
+        protected override void CleanupGameUI()
+        {
+            StopAllCoroutines();
             _targetSequence.Clear();
             _playerSequence.Clear();
             _playerSkewerSlots.Clear();
             _ingredientButtons.Clear();
 
-            if (_popupWindow != null)
-            {
-                Destroy(_popupWindow);
-                _popupWindow = null;
-            }
-
-            _canvas = null;
-            _backgroundPanel = null;
-            _contentPanel = null;
-            _closeButton = null;
             _resultText = null;
             _memorizationPanel = null;
             _gameplayPanel = null;
@@ -159,66 +137,35 @@ namespace Minigames
             _memorizationRoundText = null;
         }
 
-        private void CreatePopupWindow()
+        protected override void InitializeGameUI()
         {
-            // Create root canvas
-            _popupWindow = new GameObject($"{GetType().Name}Popup");
-            _popupWindow.transform.SetParent(null);
-
-            _canvas = _popupWindow.AddComponent<Canvas>();
-            _canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-            _canvas.sortingOrder = canvasSortingOrder;
-            _popupWindow.AddComponent<CanvasScaler>();
-            _popupWindow.AddComponent<GraphicRaycaster>();
-
-            if (EventSystem.current == null)
+            // Adjust content panel layout (matching LaundrySortGame implementation)
+            RectTransform contentRect = _contentPanel.GetComponent<RectTransform>();
+            if (contentRect != null)
             {
-                GameObject eventSystem = new GameObject("EventSystem");
-                eventSystem.AddComponent<EventSystem>();
-                eventSystem.AddComponent<UnityEngine.InputSystem.UI.InputSystemUIInputModule>();
+                contentRect.anchorMin = new Vector2(0.125f, 0.125f);
+                contentRect.anchorMax = new Vector2(0.875f, 0.875f);
+                contentRect.sizeDelta = Vector2.zero;
+                contentRect.anchoredPosition = Vector2.zero;
+                Image contentImage = _contentPanel.GetComponent<Image>();
+                if (contentImage != null)
+                {
+                    contentImage.color = new Color(0.15f, 0.15f, 0.2f, 0.95f);
+                }
             }
 
-            // Background overlay
-            _backgroundPanel = new GameObject("Background");
-            _backgroundPanel.transform.SetParent(_popupWindow.transform, false);
-            Image bgImage = _backgroundPanel.AddComponent<Image>();
-            bgImage.color = backgroundColor;
-            RectTransform bgRect = _backgroundPanel.GetComponent<RectTransform>();
-            bgRect.anchorMin = Vector2.zero;
-            bgRect.anchorMax = Vector2.one;
-            bgRect.sizeDelta = Vector2.zero;
-
-            // Content panel (75% of screen)
-            _contentPanel = new GameObject("ContentPanel");
-            _contentPanel.transform.SetParent(_popupWindow.transform, false);
-            Image contentImage = _contentPanel.AddComponent<Image>();
-            contentImage.color = new Color(0.15f, 0.15f, 0.2f, 0.95f);
-            RectTransform contentRect = _contentPanel.GetComponent<RectTransform>();
-            contentRect.anchorMin = new Vector2(0.125f, 0.125f);
-            contentRect.anchorMax = new Vector2(0.875f, 0.875f);
-            contentRect.sizeDelta = Vector2.zero;
-            contentRect.anchoredPosition = Vector2.zero;
-
-            // Generate random target sequence
             GenerateTargetSequence();
 
-            // Create the two phases
             _isMemorizationPhase = true;
             CreateMemorizationPhase();
             CreateGameplayPhase();
 
-            // Start with memorization phase visible, gameplay hidden
             _memorizationPanel.SetActive(true);
             _gameplayPanel.SetActive(false);
-
-            // Close button
-            if (showCloseButton)
-                CreateCloseButton();
         }
 
         private void CreateMemorizationPhase()
         {
-            // Container for memorization phase
             _memorizationPanel = new GameObject("MemorizationPanel");
             _memorizationPanel.transform.SetParent(_contentPanel.transform, false);
             RectTransform panelRect = _memorizationPanel.AddComponent<RectTransform>();
@@ -227,7 +174,6 @@ namespace Minigames
             panelRect.sizeDelta = Vector2.zero;
             panelRect.anchoredPosition = Vector2.zero;
 
-            // Round indicator
             GameObject roundObj = new GameObject("RoundText");
             roundObj.transform.SetParent(_memorizationPanel.transform, false);
             _memorizationRoundText = roundObj.AddComponent<Text>();
@@ -241,7 +187,6 @@ namespace Minigames
             roundRect.anchorMax = new Vector2(1, 1);
             roundRect.sizeDelta = Vector2.zero;
 
-            // Title
             GameObject titleObj = new GameObject("Title");
             titleObj.transform.SetParent(_memorizationPanel.transform, false);
             Text titleText = titleObj.AddComponent<Text>();
@@ -256,16 +201,13 @@ namespace Minigames
             titleRect.anchorMax = new Vector2(1, 0.92f);
             titleRect.sizeDelta = Vector2.zero;
 
-            // Target skewer to memorize
             CreateTargetSkewerInPanel(_memorizationPanel, 0.35f, 0.75f);
 
-            // GO! Button
             CreateGoButton();
         }
 
         private void CreateGameplayPhase()
         {
-            // Container for gameplay phase
             _gameplayPanel = new GameObject("GameplayPanel");
             _gameplayPanel.transform.SetParent(_contentPanel.transform, false);
             RectTransform panelRect = _gameplayPanel.AddComponent<RectTransform>();
@@ -274,7 +216,6 @@ namespace Minigames
             panelRect.sizeDelta = Vector2.zero;
             panelRect.anchoredPosition = Vector2.zero;
 
-            // Round indicator
             GameObject roundObj = new GameObject("RoundText");
             roundObj.transform.SetParent(_gameplayPanel.transform, false);
             _roundText = roundObj.AddComponent<Text>();
@@ -288,7 +229,6 @@ namespace Minigames
             roundRect.anchorMax = new Vector2(1, 1);
             roundRect.sizeDelta = Vector2.zero;
 
-            // Title
             GameObject titleObj = new GameObject("Title");
             titleObj.transform.SetParent(_gameplayPanel.transform, false);
             Text titleText = titleObj.AddComponent<Text>();
@@ -303,16 +243,12 @@ namespace Minigames
             titleRect.anchorMax = new Vector2(1, 0.92f);
             titleRect.sizeDelta = Vector2.zero;
 
-            // Result text
             CreateResultText();
 
-            // Player's empty skewer
             CreatePlayerSkewer();
 
-            // Ingredient buttons (all ingredients)
             CreateIngredientButtons();
 
-            // Go Back button
             CreateGoBackButton();
         }
 
@@ -339,7 +275,6 @@ namespace Minigames
             btnRect.sizeDelta = Vector2.zero;
             btnRect.anchoredPosition = Vector2.zero;
 
-            // Text
             GameObject textObj = new GameObject("Text");
             textObj.transform.SetParent(goBtnObj.transform, false);
             Text goText = textObj.AddComponent<Text>();
@@ -387,7 +322,6 @@ namespace Minigames
             btnRect.sizeDelta = Vector2.zero;
             btnRect.anchoredPosition = Vector2.zero;
 
-            // Text
             GameObject textObj = new GameObject("Text");
             textObj.transform.SetParent(goBackObj.transform, false);
             Text goBackText = textObj.AddComponent<Text>();
@@ -414,7 +348,6 @@ namespace Minigames
 
         private void CreateTargetSkewerInPanel(GameObject parent, float yMin, float yMax)
         {
-            // Container for target skewer
             GameObject targetSkewerContainer = new GameObject("TargetSkewerContainer");
             targetSkewerContainer.transform.SetParent(parent.transform, false);
             RectTransform containerRect = targetSkewerContainer.AddComponent<RectTransform>();
@@ -423,7 +356,6 @@ namespace Minigames
             containerRect.sizeDelta = Vector2.zero;
             containerRect.anchoredPosition = Vector2.zero;
 
-            // Skewer image
             GameObject skewerObj = new GameObject("TargetSkewer");
             skewerObj.transform.SetParent(targetSkewerContainer.transform, false);
             Image skewerImage = skewerObj.AddComponent<Image>();
@@ -434,7 +366,6 @@ namespace Minigames
             skewerRect.anchorMax = new Vector2(0.9f, 0.9f);
             skewerRect.sizeDelta = Vector2.zero;
 
-            // Place target ingredients on skewer
             float startX = -ingredientSpacing * 2;
             for (int i = 0; i < numberOfSlots; i++)
             {
@@ -480,7 +411,6 @@ namespace Minigames
             _targetSequence.Clear();
             List<string> availableIngredients = new List<string>(_ingredientNames);
 
-            // Shuffle and pick 5 random ingredients (can repeat)
             for (int i = 0; i < numberOfSlots; i++)
             {
                 int randomIndex = Random.Range(0, availableIngredients.Count);
@@ -492,7 +422,6 @@ namespace Minigames
 
         private void CreatePlayerSkewer()
         {
-            // Container for player's skewer (now takes more vertical space since no target skewer)
             GameObject playerSkewerContainer = new GameObject("PlayerSkewerContainer");
             playerSkewerContainer.transform.SetParent(_gameplayPanel.transform, false);
             RectTransform containerRect = playerSkewerContainer.AddComponent<RectTransform>();
@@ -501,7 +430,6 @@ namespace Minigames
             containerRect.sizeDelta = Vector2.zero;
             containerRect.anchoredPosition = Vector2.zero;
 
-            // Label
             GameObject labelObj = new GameObject("Label");
             labelObj.transform.SetParent(playerSkewerContainer.transform, false);
             Text labelText = labelObj.AddComponent<Text>();
@@ -515,7 +443,6 @@ namespace Minigames
             labelRect.anchorMax = new Vector2(1, 1);
             labelRect.sizeDelta = Vector2.zero;
 
-            // Skewer image
             GameObject skewerObj = new GameObject("PlayerSkewer");
             skewerObj.transform.SetParent(playerSkewerContainer.transform, false);
             Image skewerImage = skewerObj.AddComponent<Image>();
@@ -526,7 +453,6 @@ namespace Minigames
             skewerRect.anchorMax = new Vector2(0.9f, 0.8f);
             skewerRect.sizeDelta = Vector2.zero;
 
-            // Create ingredient slots on the skewer
             _playerSkewerSlots.Clear();
             float startX = -ingredientSpacing * 2;
             for (int i = 0; i < numberOfSlots; i++)
@@ -534,7 +460,7 @@ namespace Minigames
                 GameObject slotObj = new GameObject($"PlayerSlot_{i}");
                 slotObj.transform.SetParent(skewerObj.transform, false);
                 Image slotImage = slotObj.AddComponent<Image>();
-                slotImage.color = new Color(1, 1, 1, 0); // Transparent until filled
+                slotImage.color = new Color(1, 1, 1, 0);
                 slotImage.preserveAspect = true;
 
                 RectTransform slotRect = slotObj.GetComponent<RectTransform>();
@@ -549,7 +475,6 @@ namespace Minigames
 
         private void CreateIngredientButtons()
         {
-            // Container for buttons (lower area)
             GameObject buttonContainer = new GameObject("ButtonContainer");
             buttonContainer.transform.SetParent(_gameplayPanel.transform, false);
             RectTransform containerRect = buttonContainer.AddComponent<RectTransform>();
@@ -558,7 +483,6 @@ namespace Minigames
             containerRect.sizeDelta = Vector2.zero;
             containerRect.anchoredPosition = Vector2.zero;
 
-            // Label
             GameObject labelObj = new GameObject("Label");
             labelObj.transform.SetParent(buttonContainer.transform, false);
             Text labelText = labelObj.AddComponent<Text>();
@@ -572,10 +496,8 @@ namespace Minigames
             labelRect.anchorMax = new Vector2(1, 1);
             labelRect.sizeDelta = Vector2.zero;
 
-            // Use ALL ingredients (not just unique ones from target) to make it harder
             List<string> buttonIngredients = new List<string>(_ingredientNames);
             
-            // Shuffle button order
             for (int i = buttonIngredients.Count - 1; i > 0; i--)
             {
                 int j = Random.Range(0, i + 1);
@@ -584,7 +506,6 @@ namespace Minigames
                 buttonIngredients[j] = temp;
             }
 
-            // Create buttons
             _ingredientButtons.Clear();
             float buttonSize = 100f;
             float buttonSpacing = 20f;
@@ -599,7 +520,6 @@ namespace Minigames
                 GameObject buttonObj = new GameObject($"Button_{ingredient}");
                 buttonObj.transform.SetParent(buttonContainer.transform, false);
 
-                // Button background
                 Image buttonBg = buttonObj.AddComponent<Image>();
                 buttonBg.color = new Color(0.3f, 0.3f, 0.3f, 1f);
 
@@ -618,7 +538,6 @@ namespace Minigames
                 buttonRect.sizeDelta = new Vector2(buttonSize, buttonSize);
                 buttonRect.anchoredPosition = new Vector2(startX + i * (buttonSize + buttonSpacing), 0);
 
-                // Ingredient image on button
                 GameObject imgObj = new GameObject("Image");
                 imgObj.transform.SetParent(buttonObj.transform, false);
                 Image ingredientImg = imgObj.AddComponent<Image>();
@@ -749,6 +668,7 @@ namespace Minigames
                         _resultText.text = "All rounds complete! Master Chef!";
                         _resultText.color = Color.green;
                     }
+                    OnGameComplete();
                     StartCoroutine(CloseAfterDelay(2f));
                 }
                 else
@@ -825,6 +745,11 @@ namespace Minigames
 
             // Create new skewer with new ingredients
             CreateTargetSkewerInPanel(_memorizationPanel, 0.35f, 0.75f);
+        }
+
+        public override void OnGameComplete()
+        {
+            base.OnGameComplete(); // Mark as completed successfully - this triggers progress bar update and task removal
         }
 
         private System.Collections.IEnumerator CloseAfterDelay(float delay)
