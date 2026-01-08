@@ -7,6 +7,5 @@ features :
 
 bugs :
 1.add colliders and fix irregularity
-2.all game UI elements should be relative & dynamic
-3.add fixed trigger points
-4.clean project
+2.add fixed trigger points
+3.clean project

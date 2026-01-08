@@ -84,10 +84,12 @@ namespace Minigames.ClickGames
         {
             base.CreatePopupWindow();
             
+            // Resize content panel relative to reference resolution (2560x1440)
+            // CanvasScaler will handle scaling to different screen sizes
             RectTransform contentRect = _contentPanel.GetComponent<RectTransform>();
-            float screenWidth = Screen.width;
-            float screenHeight = Screen.height;
-            contentRect.sizeDelta = new Vector2(screenWidth * 0.75f, screenHeight * 0.75f);
+            const float referenceWidth = 2560f;
+            const float referenceHeight = 1440f;
+            contentRect.sizeDelta = new Vector2(referenceWidth * 0.75f, referenceHeight * 0.75f);
         }
 
         protected override void InitializeGameUI()

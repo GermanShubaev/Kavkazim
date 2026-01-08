@@ -75,15 +75,19 @@ namespace Minigames.ClickGames
             RectTransform contentRect = _contentPanel.GetComponent<RectTransform>();
             if (contentRect == null) return;
 
-            float screenWidth = Screen.width;
-            float screenHeight = Screen.height;
+            // Use reference resolution (2560x1440) for consistent scaling across all screen sizes
+            // CanvasScaler will handle the actual scaling to different resolutions
+            const float referenceWidth = 2560f;
+            const float referenceHeight = 1440f;
             
-            var targetWidth = screenWidth * screenPercentage;
-            var targetHeight = screenHeight * screenPercentage;
+            var targetWidth = referenceWidth * screenPercentage;
+            var targetHeight = referenceHeight * screenPercentage;
             
             contentRect.sizeDelta = new Vector2(targetWidth, targetHeight);
             
-            mainImageSize = new Vector2(targetWidth - 40, targetHeight - 40);
+            // Padding scaled for reference resolution
+            const float padding = 40f;
+            mainImageSize = new Vector2(targetWidth - padding, targetHeight - padding);
         }
 
         protected virtual void CreateMainImage()

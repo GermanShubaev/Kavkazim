@@ -63,9 +63,11 @@ namespace Minigames.Base
             btnImage.color = new Color(0.8f, 0.2f, 0.2f, 1f);
 
             RectTransform btnRect = closeBtnObj.GetComponent<RectTransform>();
+            // Button size scaled for 2560x1440 reference resolution
             btnRect.sizeDelta = new Vector2(40, 40);
             btnRect.anchorMin = new Vector2(1, 1);
             btnRect.anchorMax = new Vector2(1, 1);
+            // Position offset scaled for 2560x1440 reference resolution
             btnRect.anchoredPosition = new Vector2(-20, -20);
 
             // Add text to button
@@ -74,6 +76,7 @@ namespace Minigames.Base
             Text txt = txtObj.AddComponent<Text>();
             txt.text = "X";
             txt.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            // Font size scaled for 2560x1440 reference resolution
             txt.fontSize = 24;
             txt.alignment = TextAnchor.MiddleCenter;
             txt.color = Color.white;

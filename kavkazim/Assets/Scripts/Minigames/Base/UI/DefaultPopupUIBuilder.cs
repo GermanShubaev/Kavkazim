@@ -20,7 +20,14 @@ namespace Minigames.Base.UI
             Canvas canvas = popupWindow.AddComponent<Canvas>();
             canvas.renderMode = RenderMode.ScreenSpaceOverlay;
             canvas.sortingOrder = minigame.GetCanvasSortingOrder();
-            popupWindow.AddComponent<CanvasScaler>();
+            
+            // Configure CanvasScaler for dynamic scaling relative to QHD (2560x1440)
+            CanvasScaler scaler = popupWindow.AddComponent<CanvasScaler>();
+            scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+            scaler.referenceResolution = new Vector2(2560f, 1440f);
+            scaler.screenMatchMode = CanvasScaler.ScreenMatchMode.MatchWidthOrHeight;
+            scaler.matchWidthOrHeight = 0.5f; // Balance between width and height
+            
             popupWindow.AddComponent<GraphicRaycaster>();
 
             // Ensure EventSystem exists
@@ -42,12 +49,14 @@ namespace Minigames.Base.UI
             bgRect.sizeDelta = Vector2.zero;
 
             // Create content panel (centered)
+            // Size is relative to reference resolution 2560x1440
             GameObject contentPanel = new GameObject("ContentPanel");
             contentPanel.transform.SetParent(popupWindow.transform, false);
             Image contentImage = contentPanel.AddComponent<Image>();
             contentImage.color = new Color(0.2f, 0.2f, 0.2f, 1f);
             RectTransform contentRect = contentPanel.GetComponent<RectTransform>();
-            contentRect.sizeDelta = new Vector2(1000, 700); // Default size, can be overridden
+            // Default size scaled for 2560x1440 (approximately 39% width, 49% height)
+            contentRect.sizeDelta = new Vector2(1000, 700);
             contentRect.anchoredPosition = Vector2.zero;
             contentRect.anchorMin = new Vector2(0.5f, 0.5f);
             contentRect.anchorMax = new Vector2(0.5f, 0.5f);
@@ -73,9 +82,11 @@ namespace Minigames.Base.UI
             btnImage.color = new Color(0.8f, 0.2f, 0.2f, 1f);
 
             RectTransform btnRect = closeBtnObj.GetComponent<RectTransform>();
+            // Button size scaled for 2560x1440 reference resolution
             btnRect.sizeDelta = new Vector2(40, 40);
             btnRect.anchorMin = new Vector2(1, 1);
             btnRect.anchorMax = new Vector2(1, 1);
+            // Position offset scaled for 2560x1440 reference resolution
             btnRect.anchoredPosition = new Vector2(-20, -20);
 
             // Add text to button
@@ -84,6 +95,7 @@ namespace Minigames.Base.UI
             Text txt = txtObj.AddComponent<Text>();
             txt.text = "X";
             txt.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            // Font size scaled for 2560x1440 reference resolution
             txt.fontSize = 24;
             txt.alignment = TextAnchor.MiddleCenter;
             txt.color = Color.white;
