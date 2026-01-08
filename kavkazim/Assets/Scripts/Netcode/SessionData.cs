@@ -87,10 +87,6 @@ namespace Kavkazim.Netcode
             Math.Abs(KillCooldown - other.KillCooldown) < 0.01f &&
             MissionsPerInnocent == other.MissionsPerInnocent &&
             TestMode == other.TestMode;
-
-        public override bool Equals(object obj) => obj is LobbySettings other && Equals(other);
-        
-        public override int GetHashCode() => HashCode.Combine(MaxPlayers, KavkaziCount, VotingTime, MoveSpeed);
         
         public override string ToString() => 
             $"MaxPlayers={MaxPlayers}, Kavkazi={KavkaziCount}, VotingTime={VotingTime}s, " +
@@ -192,10 +188,6 @@ namespace Kavkazim.Netcode
             WinnerNames.Equals(other.WinnerNames) &&
             ReasonKey.Equals(other.ReasonKey) &&
             HasEnded == other.HasEnded;
-
-        public override bool Equals(object obj) => obj is WinResultData other && Equals(other);
-        
-        public override int GetHashCode() => HashCode.Combine(WinningTeam, HasEnded);
         
         /// <summary>
         /// Parses winner names from the comma-separated string.

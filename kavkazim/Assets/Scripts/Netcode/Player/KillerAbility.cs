@@ -24,11 +24,11 @@ namespace Kavkazim.Netcode
         [SerializeField] private PlayerAvatar avatar;
         
         /// <summary>
-        /// Network-synced cooldown end time. Clients can read this for UI display.
-        /// Value is the Time.time when cooldown ends.
+        /// Network-synced cooldown end time using ServerTime.
+        /// Value is the server time when cooldown ends.
         /// </summary>
-        public NetworkVariable<float> CooldownEndTime = new NetworkVariable<float>(
-            0f,
+        public NetworkVariable<double> CooldownEndTime = new NetworkVariable<double>(
+            0,
             NetworkVariableReadPermission.Everyone,
             NetworkVariableWritePermission.Server
         );
@@ -73,14 +73,19 @@ namespace Kavkazim.Netcode
         }
 
         /// <summary>
+        /// Current server time (synchronized across all clients).
+        /// </summary>
+        private double ServerTime => NetworkManager.Singleton?.ServerTime.Time ?? 0;
+
+        /// <summary>
         /// Check if kill is off cooldown.
         /// </summary>
-        public bool IsKillReady => Time.time >= CooldownEndTime.Value;
+        public bool IsKillReady => ServerTime >= CooldownEndTime.Value;
 
         /// <summary>
         /// Get remaining cooldown time in seconds.
         /// </summary>
-        public float RemainingCooldown => Mathf.Max(0f, CooldownEndTime.Value - Time.time);
+        public float RemainingCooldown => Mathf.Max(0f, (float)(CooldownEndTime.Value - ServerTime));
 
         /// <summary>
         /// Attempts to kill the nearest valid target.
@@ -206,7 +211,7 @@ namespace Kavkazim.Netcode
             // === EXECUTE KILL ===
             
             // Start cooldown
-            CooldownEndTime.Value = Time.time + KillCooldown;
+            CooldownEndTime.Value = ServerTime + KillCooldown;
             
             // Kill the target
             targetState.Kill();

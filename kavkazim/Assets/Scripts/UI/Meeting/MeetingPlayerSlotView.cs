@@ -15,6 +15,8 @@ namespace Kavkazim.UI.Meeting
         [SerializeField] private TextMeshProUGUI playerNameText;
         [SerializeField] private Image selectionRing; // The "Glowy" ring
         [SerializeField] private Image deadOverlay;   // Visual for dead players
+        [SerializeField] private Image voteCountShield; // Shield image for vote count
+        [SerializeField] private TextMeshProUGUI voteCountText; // Number on shield
 
         [Header("Settings")]
         [SerializeField] private Color localPlayerNameColor = Color.yellow;
@@ -34,11 +36,6 @@ namespace Kavkazim.UI.Meeting
         {
             _originalScale = transform.localScale;
             
-            if (playerNameText == null)
-            {
-                playerNameText = GetComponentInChildren<TextMeshProUGUI>();
-            }
-            
             // Force disable ring immediately to avoid visual glitches
             if (selectionRing != null) 
             {
@@ -46,6 +43,17 @@ namespace Kavkazim.UI.Meeting
                 selectionRing.raycastTarget = false; // Ensure it never blocks
             }
             
+            // Hide vote count shield initially
+            if (voteCountShield != null)
+            {
+                voteCountShield.enabled = false;
+                voteCountShield.raycastTarget = false;
+            }
+            if (voteCountText != null)
+            {
+                voteCountText.enabled = false;
+                voteCountText.raycastTarget = false;
+            }
         }
 
         public void Setup(ulong clientId, string playerName, bool isLocalPlayer, bool isDead)
@@ -100,6 +108,30 @@ namespace Kavkazim.UI.Meeting
             if (selectionRing != null)
             {
                 selectionRing.enabled = isSelected;
+            }
+        }
+
+        /// <summary>
+        /// Returns the client ID this slot represents.
+        /// </summary>
+        public ulong ClientId => _clientId;
+
+        /// <summary>
+        /// Show the vote count on the shield.
+        /// Hidden if count is 0.
+        /// </summary>
+        public void SetVoteCount(int count)
+        {
+            bool show = count > 0;
+            
+            if (voteCountShield != null)
+            {
+                voteCountShield.enabled = show;
+            }
+            if (voteCountText != null)
+            {
+                voteCountText.enabled = show;
+                voteCountText.text = count.ToString();
             }
         }
 

@@ -772,7 +772,6 @@ GameObject:
   - component: {fileID: 1215751965}
   - component: {fileID: 1215751967}
   - component: {fileID: 1215751966}
-  - component: {fileID: 1215751968}
   - component: {fileID: 1215751969}
   - component: {fileID: 1215751970}
   m_Layer: 0
@@ -868,18 +867,6 @@ MonoBehaviour:
     OldPrefabList: []
   RunInBackground: 1
   LogLevel: 1
---- !u!114 &1215751968
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1215751964}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 0d55153c2c3d82e4dbb270a3cf07c749, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::LocalNetworkHUD
 --- !u!114 &1215751969
 MonoBehaviour:
   m_ObjectHideFlags: 0

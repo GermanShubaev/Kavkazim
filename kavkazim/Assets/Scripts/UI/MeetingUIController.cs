@@ -20,9 +20,7 @@ namespace Kavkazim.UI.Meeting
     {
         [Header("UI References")]
         [SerializeField] private Image backgroundImage;
-        [SerializeField] private TextMeshProUGUI centerText;
         [SerializeField] private TextMeshProUGUI timerText;
-        [SerializeField] private TextMeshProUGUI skipCountText;
         
         [Header("Sub-Controllers")]
         [SerializeField] private MeetingVoteUIController voteController;
@@ -52,23 +50,6 @@ namespace Kavkazim.UI.Meeting
                 canvas.gameObject.AddComponent<GraphicRaycaster>();
             }
             
-            // Auto-wire helper components
-            if (voteController == null)
-                voteController = GetComponentInChildren<MeetingVoteUIController>();
-
-            // Auto-wire text references
-            if (timerText == null)
-            {
-                GameObject timerObj = GameObject.Find("TimerText");
-                if (timerObj != null) timerText = timerObj.GetComponent<TextMeshProUGUI>();
-            }
-            
-            if (skipCountText == null)
-            {
-                GameObject skipCountObj = GameObject.Find("SkipCountText");
-                if (skipCountObj != null) skipCountText = skipCountObj.GetComponent<TextMeshProUGUI>();
-            }
-            
             // Create settings panel with its own canvas
             CreateSettingsPanel();
             
@@ -95,24 +76,9 @@ namespace Kavkazim.UI.Meeting
 
             // Subscribe to MeetingManager events
             _meetingManager.TimeRemaining.OnValueChanged += OnTimerChanged;
-            _meetingManager.SkipVoteCount.OnValueChanged += OnSkipCountChanged; 
-
-            // Set center text
-            if (centerText != null)
-            {
-                centerText.text = "WHO IS THE IMPOSTOR?";
-            }
 
             // Update UI immediately
             UpdateTimerDisplay(_meetingManager.TimeRemaining.Value);
-            
-            // In new design, maybe we show skip count or hide it? 
-            // Usually skip count is hidden or shows 0 until end/meeting update.
-            // Keeping original logic:
-            if (skipCountText != null)
-            {
-                skipCountText.text = "VOTING IN PROGRESS...";
-            }
         }
 
         private void OnDestroy()
@@ -121,7 +87,6 @@ namespace Kavkazim.UI.Meeting
             if (_meetingManager != null)
             {
                 _meetingManager.TimeRemaining.OnValueChanged -= OnTimerChanged;
-                _meetingManager.SkipVoteCount.OnValueChanged -= OnSkipCountChanged;
             }
             
             // Clean up our settings canvas
@@ -138,17 +103,6 @@ namespace Kavkazim.UI.Meeting
             UpdateTimerDisplay(newValue);
         }
 
-        private void OnSkipCountChanged(int previousValue, int newValue)
-        {
-            // Only update if meeting ended? Or always?
-            // "When a player selects a choice" requirements were for INPUT.
-            // NetworkVariable SkipVoteCount usually updates live. 
-            // But standard Among Us hides counts until end. 
-            // MeetingManager updates it immediately on vote.
-            // We'll trust existing design choice:
-            UpdateSkipCountDisplay(newValue);
-        }
-
         // ========== UI UPDATES ==========
 
         private void UpdateTimerDisplay(float timeRemaining)
@@ -161,16 +115,6 @@ namespace Kavkazim.UI.Meeting
                 // Visual urgency
                 if (seconds <= 10) timerText.color = Color.red;
                 else timerText.color = Color.white;
-            }
-        }
-
-        private void UpdateSkipCountDisplay(int skipCount)
-        {
-            // Only show count if meeting ended, arguably? 
-            // For now, let's just show what the server sends.
-            if (skipCountText != null && _meetingManager.HasEnded.Value)
-            {
-                skipCountText.text = $"VOTES SKIPPED: {skipCount}";
             }
         }
 

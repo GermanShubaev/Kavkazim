@@ -14,6 +14,8 @@ namespace Kavkazim.UI.Meeting
         [Header("UI References")]
         [SerializeField] private Image selectionBorder; // Yellow outline
         [SerializeField] private TextMeshProUGUI labelText;
+        [SerializeField] private Image skipCountShield; // Shield image for skip count
+        [SerializeField] private TextMeshProUGUI skipCountText; // Number on shield
 
         [Header("Settings")]
         [SerializeField] private float hoverScale = 1.1f;
@@ -29,6 +31,18 @@ namespace Kavkazim.UI.Meeting
         {
             _originalScale = transform.localScale;
             if (selectionBorder != null) selectionBorder.enabled = false;
+            
+            // Hide skip count shield initially
+            if (skipCountShield != null)
+            {
+                skipCountShield.enabled = false;
+                skipCountShield.raycastTarget = false;
+            }
+            if (skipCountText != null)
+            {
+                skipCountText.enabled = false;
+                skipCountText.raycastTarget = false;
+            }
         }
 
         /// <summary>
@@ -54,6 +68,25 @@ namespace Kavkazim.UI.Meeting
             if (selectionBorder != null)
             {
                 selectionBorder.enabled = isSelected;
+            }
+        }
+
+        /// <summary>
+        /// Show the skip vote count on the shield.
+        /// Hidden if count is 0.
+        /// </summary>
+        public void SetSkipCount(int count)
+        {
+            bool show = count > 0;
+            
+            if (skipCountShield != null)
+            {
+                skipCountShield.enabled = show;
+            }
+            if (skipCountText != null)
+            {
+                skipCountText.enabled = show;
+                skipCountText.text = count.ToString();
             }
         }
 

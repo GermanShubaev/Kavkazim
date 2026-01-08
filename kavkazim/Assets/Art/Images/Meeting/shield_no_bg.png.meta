@@ -1,10 +1,10 @@
-﻿fileFormatVersion: 2
-guid: ec569c2de8ba8d943abe843f631a8e2c
+fileFormatVersion: 2
+guid: 08b92f215493e5944985050eaa48a639
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: 5623772131367556192
-    second: VotingLobby_0
+      213: 877060376695423196
+    second: shield_no_bg_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -113,13 +113,13 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: VotingLobby_0
+      name: shield_no_bg_0
       rect:
         serializedVersion: 2
-        x: 0
-        y: 0
-        width: 2048
-        height: 2048
+        x: 183
+        y: 55
+        width: 656
+        height: 872
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -128,8 +128,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 06497eb15f6ab0e40800000000000000
-      internalID: 5623772131367556192
+      spriteID: cd0408704c1fb2c00800000000000000
+      internalID: 877060376695423196
       vertices: []
       indices: 
       edges: []
@@ -148,7 +148,7 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      VotingLobby_0: 5623772131367556192
+      shield_no_bg_0: 877060376695423196
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 
