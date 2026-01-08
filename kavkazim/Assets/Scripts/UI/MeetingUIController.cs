@@ -20,20 +20,13 @@ namespace Kavkazim.UI.Meeting
     {
         [Header("UI References")]
         [SerializeField] private Image backgroundImage;
-        [SerializeField] private TextMeshProUGUI centerText;
         [SerializeField] private TextMeshProUGUI timerText;
-        [SerializeField] private TextMeshProUGUI skipCountText;
         
         [Header("Sub-Controllers")]
         [SerializeField] private MeetingVoteUIController voteController;
 
-        [Header("Results Panel")]
-        [SerializeField] private GameObject resultsPanel;
-        [SerializeField] private TextMeshProUGUI resultsText;
-
         private MeetingManager _meetingManager;
-        private ulong _localClientId;
-        
+
         // Settings panel
         private GameObject _settingsPanel;
         private bool _isSettingsPanelOpen = false;
@@ -55,23 +48,6 @@ namespace Kavkazim.UI.Meeting
             {
                 Debug.Log("[MeetingUIController] Adding GraphicRaycaster to Canvas...");
                 canvas.gameObject.AddComponent<GraphicRaycaster>();
-            }
-            
-            // Auto-wire helper components
-            if (voteController == null)
-                voteController = GetComponentInChildren<MeetingVoteUIController>();
-
-            // Auto-wire text references
-            if (timerText == null)
-            {
-                GameObject timerObj = GameObject.Find("TimerText");
-                if (timerObj != null) timerText = timerObj.GetComponent<TextMeshProUGUI>();
-            }
-            
-            if (skipCountText == null)
-            {
-                GameObject skipCountObj = GameObject.Find("SkipCountText");
-                if (skipCountObj != null) skipCountText = skipCountObj.GetComponent<TextMeshProUGUI>();
             }
             
             // Create settings panel with its own canvas
@@ -96,35 +72,13 @@ namespace Kavkazim.UI.Meeting
             // Get local client ID
             if (NetworkManager.Singleton != null)
             {
-                _localClientId = NetworkManager.Singleton.LocalClientId;
             }
 
             // Subscribe to MeetingManager events
             _meetingManager.TimeRemaining.OnValueChanged += OnTimerChanged;
-            _meetingManager.SkipVoteCount.OnValueChanged += OnSkipCountChanged; 
-
-            // Hide results panel initially
-            if (resultsPanel != null)
-            {
-                resultsPanel.SetActive(false);
-            }
-
-            // Set center text
-            if (centerText != null)
-            {
-                centerText.text = "WHO IS THE IMPOSTOR?";
-            }
 
             // Update UI immediately
             UpdateTimerDisplay(_meetingManager.TimeRemaining.Value);
-            
-            // In new design, maybe we show skip count or hide it? 
-            // Usually skip count is hidden or shows 0 until end/meeting update.
-            // Keeping original logic:
-            if (skipCountText != null)
-            {
-                skipCountText.text = "VOTING IN PROGRESS...";
-            }
         }
 
         private void OnDestroy()
@@ -133,7 +87,6 @@ namespace Kavkazim.UI.Meeting
             if (_meetingManager != null)
             {
                 _meetingManager.TimeRemaining.OnValueChanged -= OnTimerChanged;
-                _meetingManager.SkipVoteCount.OnValueChanged -= OnSkipCountChanged;
             }
             
             // Clean up our settings canvas
@@ -150,17 +103,6 @@ namespace Kavkazim.UI.Meeting
             UpdateTimerDisplay(newValue);
         }
 
-        private void OnSkipCountChanged(int previousValue, int newValue)
-        {
-            // Only update if meeting ended? Or always?
-            // "When a player selects a choice" requirements were for INPUT.
-            // NetworkVariable SkipVoteCount usually updates live. 
-            // But standard Among Us hides counts until end. 
-            // MeetingManager updates it immediately on vote.
-            // We'll trust existing design choice:
-            UpdateSkipCountDisplay(newValue);
-        }
-
         // ========== UI UPDATES ==========
 
         private void UpdateTimerDisplay(float timeRemaining)
@@ -174,55 +116,6 @@ namespace Kavkazim.UI.Meeting
                 if (seconds <= 10) timerText.color = Color.red;
                 else timerText.color = Color.white;
             }
-        }
-
-        private void UpdateSkipCountDisplay(int skipCount)
-        {
-            // Only show count if meeting ended, arguably? 
-            // For now, let's just show what the server sends.
-            if (skipCountText != null && _meetingManager.HasEnded.Value)
-            {
-                skipCountText.text = $"VOTES SKIPPED: {skipCount}";
-            }
-        }
-
-        /// <summary>
-        /// Show results panel with meeting results.
-        /// Can be called by MeetingManager or externally.
-        /// </summary>
-        public void ShowResults(MeetingResult result)
-        {
-            if (resultsPanel != null)
-            {
-                resultsPanel.SetActive(true);
-            }
-
-            if (resultsText != null)
-            {
-                // Build results text
-                string text = "";
-
-                if (result.IsTie)
-                {
-                    text = "TIE - NO ELIMINATION";
-                }
-                else if (result.SkipWon)
-                {
-                    text = "SKIP WON - NO ELIMINATION";
-                }
-                else if (result.EliminatedId != ulong.MaxValue)
-                {
-                    text = $"{result.EliminatedName} WAS ELIMINATED\n({result.EliminatedVoteCount} votes)";
-                }
-                else
-                {
-                    text = "NO ELIMINATION";
-                }
-
-                resultsText.text = text;
-            }
-
-            Debug.Log($"[MeetingUIController] Showing results: {result}");
         }
 
         // ========== SETTINGS PANEL ==========

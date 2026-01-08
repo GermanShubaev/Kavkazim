@@ -16,36 +16,11 @@ namespace Kavkazim.UI.Meeting
         [SerializeField] private MeetingSkipView skipView;
         [SerializeField] private List<MeetingPlayerSlotView> slotViews;
         
-        [Header("Container (Optional)")]
-        [Tooltip("If slots are not assigned, will search in this container")]
-        [SerializeField] private Transform slotsContainer;
 
         private MeetingManager _meetingManager;
         private ulong _localClientId;
         private bool _hasVotedLocally = false;
-
-        private void Awake()
-        {
-            // Auto-find slots if empty
-            if (slotViews == null || slotViews.Count == 0)
-            {
-                if (slotsContainer != null)
-                {
-                    slotViews = new List<MeetingPlayerSlotView>(slotsContainer.GetComponentsInChildren<MeetingPlayerSlotView>(true));
-                }
-                else
-                {
-                    // Fallback to finding all in children of this object
-                    slotViews = new List<MeetingPlayerSlotView>(GetComponentsInChildren<MeetingPlayerSlotView>(true));
-                }
-            }
-
-            // Auto-find skip view
-            if (skipView == null)
-            {
-                skipView = GetComponentInChildren<MeetingSkipView>();
-            }
-        }
+        
 
         private void Start()
         {
@@ -63,6 +38,7 @@ namespace Kavkazim.UI.Meeting
 
             // Subscribe
             MeetingManager.OnVoteSubmitted += OnVoteConfirmed;
+            MeetingManager.OnVoteCountsReceived += OnVoteCountsReceived;
             _meetingManager.PlayersInMeeting.OnListChanged += OnPlayersListChanged;
 
             // Initial setup if data exists
@@ -75,6 +51,7 @@ namespace Kavkazim.UI.Meeting
         private void OnDestroy()
         {
             MeetingManager.OnVoteSubmitted -= OnVoteConfirmed;
+            MeetingManager.OnVoteCountsReceived -= OnVoteCountsReceived;
             if (_meetingManager != null && _meetingManager.PlayersInMeeting != null)
             {
                 _meetingManager.PlayersInMeeting.OnListChanged -= OnPlayersListChanged;
@@ -231,6 +208,38 @@ namespace Kavkazim.UI.Meeting
                 }
             }
             return $"Player {clientId}";
+        }
+
+        /// <summary>
+        /// Called when vote counts are received from server at meeting end.
+        /// Updates the UI to display vote counts on shields.
+        /// </summary>
+        private void OnVoteCountsReceived(ulong[] playerIds, int[] voteCounts, int skipCount)
+        {
+            Debug.Log($"[MeetingVoteUIController] Received vote counts: {playerIds.Length} players, skip={skipCount}");
+
+            // Update skip view
+            if (skipView != null)
+            {
+                skipView.SetSkipCount(skipCount);
+            }
+
+            // Update player slots
+            for (int i = 0; i < playerIds.Length; i++)
+            {
+                ulong playerId = playerIds[i];
+                int voteCount = voteCounts[i];
+
+                // Find the slot for this player
+                foreach (var slot in slotViews)
+                {
+                    if (slot.gameObject.activeSelf && slot.ClientId == playerId)
+                    {
+                        slot.SetVoteCount(voteCount);
+                        break;
+                    }
+                }
+            }
         }
     }
 }

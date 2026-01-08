@@ -16,8 +16,6 @@ namespace Netcode
         Task<bool> QuickJoinAsync();
         Task<bool> JoinByCodeAsync(string lobbyCode);
         Task LeaveLobbyAsync();
-        string CurrentJoinCode { get; }
-        string LobbyCode { get; }
     }
 
     public class NetworkBootstrap : INetworkBootstrap

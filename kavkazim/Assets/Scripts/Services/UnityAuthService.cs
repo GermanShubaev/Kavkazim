@@ -10,7 +10,6 @@ namespace Kavkazim.Services
     {
         Task InitializeAsync();
         Task SignInAnonymouslyAsync(string displayName);
-        string PlayerId { get; }
     }
 
     public class UnityAuthService : IUnityAuthService

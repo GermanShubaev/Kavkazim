@@ -6,16 +6,6 @@ namespace Kavkazim.Netcode.WinConditions
     /// <summary>
     /// Evaluates win conditions in priority order.
     /// Returns the first matching condition's result.
-    /// 
-    /// Usage:
-    ///   var evaluator = new WinConditionEvaluator();
-    ///   evaluator.AddCondition(new ImposterMajorityWinCondition());
-    ///   evaluator.AddCondition(new AllImpostersEliminatedWinCondition());
-    ///   
-    ///   if (evaluator.TryEvaluate(snapshot, out var result))
-    ///   {
-    ///       // Handle win
-    ///   }
     /// </summary>
     public class WinConditionEvaluator
     {
@@ -34,33 +24,6 @@ namespace Kavkazim.Netcode.WinConditions
             }
             
             _conditions.Add(condition);
-            Debug.Log($"[WinConditionEvaluator] Added condition: {condition.ConditionName}");
-        }
-
-        /// <summary>
-        /// Removes a win condition by type.
-        /// </summary>
-        public bool RemoveCondition<T>() where T : IWinCondition
-        {
-            for (int i = 0; i < _conditions.Count; i++)
-            {
-                if (_conditions[i] is T)
-                {
-                    Debug.Log($"[WinConditionEvaluator] Removed condition: {_conditions[i].ConditionName}");
-                    _conditions.RemoveAt(i);
-                    return true;
-                }
-            }
-            return false;
-        }
-
-        /// <summary>
-        /// Clears all win conditions.
-        /// </summary>
-        public void ClearConditions()
-        {
-            _conditions.Clear();
-            Debug.Log("[WinConditionEvaluator] Cleared all conditions.");
         }
 
         /// <summary>
@@ -84,11 +47,6 @@ namespace Kavkazim.Netcode.WinConditions
             
             return false;
         }
-
-        /// <summary>
-        /// Gets the number of registered conditions.
-        /// </summary>
-        public int ConditionCount => _conditions.Count;
 
         /// <summary>
         /// Creates an evaluator with the default win conditions:
