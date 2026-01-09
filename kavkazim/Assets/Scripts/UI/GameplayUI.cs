@@ -180,7 +180,10 @@ namespace UI
             _canvasObj.transform.SetParent(transform, false); // Keep with this object
             Canvas canvas = _canvasObj.AddComponent<Canvas>();
             canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-            _canvasObj.AddComponent<CanvasScaler>();
+            CanvasScaler scaler = _canvasObj.AddComponent<CanvasScaler>();
+            scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+            scaler.referenceResolution = new Vector2(1920, 1080);
+            scaler.matchWidthOrHeight = 0.5f;
             _canvasObj.AddComponent<GraphicRaycaster>();
 
             // 2. Create Settings Button (Top Right)
