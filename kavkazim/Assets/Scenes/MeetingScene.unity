@@ -1429,7 +1429,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 821, y: -26.134}
+  m_AnchoredPosition: {x: 800, y: -26.134}
   m_SizeDelta: {x: 150, y: 133.7313}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &290838258
@@ -3935,7 +3935,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0}
   m_AnchorMax: {x: 0.5, y: 0}
-  m_AnchoredPosition: {x: 27.4473, y: 25.8394}
+  m_AnchoredPosition: {x: 27.4473, y: 25.839355}
   m_SizeDelta: {x: 371.2059, y: 74.1606}
   m_Pivot: {x: 0.5, y: 0}
 --- !u!114 &897215328
@@ -3994,7 +3994,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -717, y: -7}
+  m_AnchoredPosition: {x: -698, y: -9}
   m_SizeDelta: {x: 150, y: 150}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &923253631
@@ -4141,7 +4141,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Kavkazim.UI.Meeting.MeetingUIController
   backgroundImage: {fileID: 145803948}
   timerText: {fileID: 1767380663}
-  skipCountText: {fileID: 251312379}
   voteController: {fileID: 1655890106}
 --- !u!1 &982821814
 GameObject:
@@ -6902,7 +6901,6 @@ MonoBehaviour:
   - {fileID: 1765084253}
   - {fileID: 592540855}
   - {fileID: 2101159534}
-  slotsContainer: {fileID: 0}
 --- !u!1 &1659661937
 GameObject:
   m_ObjectHideFlags: 0
@@ -8595,7 +8593,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -25.406403, y: 7.5}
+  m_AnchoredPosition: {x: -25.405, y: 7.5}
   m_SizeDelta: {x: 50.813, y: -15}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &1898519596

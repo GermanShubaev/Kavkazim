@@ -128,7 +128,10 @@ namespace Kavkazim.UI.Meeting
             _settingsCanvas = settingsCanvasObj.AddComponent<Canvas>();
             _settingsCanvas.renderMode = RenderMode.ScreenSpaceOverlay;
             _settingsCanvas.sortingOrder = 100; // Ensure it's above other UI
-            settingsCanvasObj.AddComponent<CanvasScaler>();
+            CanvasScaler scaler = settingsCanvasObj.AddComponent<CanvasScaler>();
+            scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+            scaler.referenceResolution = new Vector2(1920, 1080);
+            scaler.matchWidthOrHeight = 0.5f;
             settingsCanvasObj.AddComponent<GraphicRaycaster>();
 
             // Create Settings Button (Top Right)
