@@ -855,7 +855,10 @@ namespace UI
             if (!_isHost || GameSessionManager.Instance == null) return;
             if (GameSessionManager.Instance.CurrentPhase.Value != MatchPhase.LobbyOpen) return;
 
-            bool testModeEnabled = false;
+            bool testModeEnabled = _testModeToggle != null && _testModeToggle.isOn;
+#if !UNITY_EDITOR && !DEVELOPMENT_BUILD
+            testModeEnabled = false; // Force false in production builds
+#endif
 
             var settings = new LobbySettings
             {
