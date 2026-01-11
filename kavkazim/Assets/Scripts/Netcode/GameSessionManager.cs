@@ -40,7 +40,6 @@ namespace Kavkazim.Netcode
         public static Dictionary<ulong, string> CachedPlayerNames { get; private set; } = new Dictionary<ulong, string>();
 
         [Header("Configuration")]
-        //[SerializeField] private float postMatchDuration = 5f;
         [SerializeField] private float transitionDuration = 1.0f;
 
         // ========== NETWORKED STATE ==========

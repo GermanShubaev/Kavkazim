@@ -255,7 +255,9 @@ namespace Kavkazim.Netcode
         /// </summary>
         private PlayerState FindClosestTarget()
         {
-            PlayerState[] allPlayers = Object.FindObjectsByType<PlayerState>(FindObjectsSortMode.None);
+            // Optimization: Use cached list from registry
+            var allPlayers = PlayerState.ActivePlayers;
+            
             PlayerState closest = null;
             float minDistance = KillRange;
 

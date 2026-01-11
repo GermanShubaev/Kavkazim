@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using Kavkazim.Netcode;
+using Kavkazim.Utils;
 using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -20,11 +21,8 @@ namespace UI
     /// </summary>
     public class LobbyUI : MonoBehaviour
     {
-        [Header("Configuration")]
-        [SerializeField] private Color hostColor = new Color(1f, 0.84f, 0f); // Gold
-        [SerializeField] private Color readyColor = new Color(0.2f, 0.8f, 0.2f); // Green
-        [SerializeField] private Color notReadyColor = new Color(0.8f, 0.2f, 0.2f); // Red
-        [SerializeField] private Color waitingColor = new Color(0.5f, 0.5f, 0.5f); // Gray
+        [SerializeField] private Color notReadyColor = UIUtils.ColorNotReady; // Red
+        [SerializeField] private Color waitingColor = UIUtils.ColorWaiting;
 
         // UI Elements (created dynamically)
         private GameObject _canvasObj;
@@ -141,12 +139,7 @@ namespace UI
             _validator = new LobbyValidator();
 
             // Ensure EventSystem exists
-            if (FindFirstObjectByType<UnityEngine.EventSystems.EventSystem>() == null)
-            {
-                GameObject eventSystem = new GameObject("EventSystem");
-                eventSystem.AddComponent<UnityEngine.EventSystems.EventSystem>();
-                eventSystem.AddComponent<UnityEngine.InputSystem.UI.InputSystemUIInputModule>();
-            }
+            UIUtils.EnsureEventSystem();
 
             // Create Canvas
             _canvasObj = new GameObject("LobbyCanvas");
@@ -363,7 +356,7 @@ namespace UI
             
             Text labelText = labelObj.AddComponent<Text>();
             labelText.text = "TEST MODE";
-            labelText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            labelText.font = UIUtils.GetDefaultFont();
             labelText.fontSize = 16;
             labelText.fontStyle = FontStyle.Bold;
             labelText.color = new Color(1f, 0.6f, 0.2f); // Orange to indicate dev feature
@@ -416,7 +409,7 @@ namespace UI
             
             _testModeStatusText = statusObj.AddComponent<Text>();
             _testModeStatusText.text = "OFF";
-            _testModeStatusText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            _testModeStatusText.font = UIUtils.GetDefaultFont();
             _testModeStatusText.fontSize = 14;
             _testModeStatusText.fontStyle = FontStyle.Bold;
             _testModeStatusText.color = new Color(0.6f, 0.6f, 0.6f);
@@ -534,7 +527,7 @@ namespace UI
         {
             // Start Game button (Host only)
             _startGameButton = CreateButton(_lobbyPanel.transform, "StartGame", "START GAME", 
-                new Color(0.2f, 0.7f, 0.2f), new Vector2(0.15f, 0.02f), new Vector2(0.35f, 0.1f));
+                UIUtils.ColorReady, new Vector2(0.15f, 0.02f), new Vector2(0.35f, 0.1f));
             _startGameButton.onClick.AddListener(OnStartGameClicked);
 
             // Ready button (Clients)
@@ -545,7 +538,7 @@ namespace UI
 
             // Leave button
             _leaveButton = CreateButton(_lobbyPanel.transform, "Leave", "LEAVE", 
-                new Color(0.7f, 0.2f, 0.2f), new Vector2(0.65f, 0.02f), new Vector2(0.85f, 0.1f));
+                UIUtils.ColorNotReady, new Vector2(0.65f, 0.02f), new Vector2(0.85f, 0.1f));
             _leaveButton.onClick.AddListener(OnLeaveClicked);
         }
 
@@ -644,7 +637,7 @@ namespace UI
             
             Text nameTxt = nameObj.AddComponent<Text>();
             nameTxt.text = nameText;
-            nameTxt.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            nameTxt.font = UIUtils.GetDefaultFont();
             nameTxt.fontSize = 24; // Increased from 14
             nameTxt.color = Color.white;
             nameTxt.alignment = TextAnchor.MiddleLeft;
@@ -664,7 +657,7 @@ namespace UI
             
             Text statusTxt = statusObj.AddComponent<Text>();
             statusTxt.text = $"<color={statusColor}><b>{statusText}</b></color>";
-            statusTxt.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            statusTxt.font = UIUtils.GetDefaultFont();
             statusTxt.fontSize = 22; // Increased from 13
             statusTxt.color = Color.white;
             statusTxt.alignment = TextAnchor.MiddleRight;
@@ -947,7 +940,7 @@ namespace UI
             textObj.transform.SetParent(parent, false);
             Text txt = textObj.AddComponent<Text>();
             txt.text = text;
-            txt.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            txt.font = UIUtils.GetDefaultFont();
             txt.fontSize = fontSize;
             txt.fontStyle = style;
             txt.color = Color.white;
@@ -991,7 +984,7 @@ namespace UI
             textObj.transform.SetParent(btnObj.transform, false);
             Text txt = textObj.AddComponent<Text>();
             txt.text = text;
-            txt.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            txt.font = UIUtils.GetDefaultFont();
             txt.fontSize = 20;
             txt.fontStyle = FontStyle.Bold;
             txt.color = Color.white;

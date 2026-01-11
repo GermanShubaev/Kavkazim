@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using Kavkazim.Netcode;
+using Kavkazim.Utils;
 using Kavkazim.Netcode.Meeting;
 using Netcode;
 using Netcode.Player;
@@ -34,21 +35,11 @@ namespace Kavkazim.UI.Meeting
         private void Awake()
         {
             // CRITICAL: Ensure EventSystem exists for UI input
-            if (UnityEngine.EventSystems.EventSystem.current == null)
-            {
-                Debug.Log("[MeetingUIController] Creating EventSystem...");
-                GameObject eventSystem = new GameObject("EventSystem");
-                eventSystem.AddComponent<UnityEngine.EventSystems.EventSystem>();
-                eventSystem.AddComponent<UnityEngine.InputSystem.UI.InputSystemUIInputModule>();
-            }
+            UIUtils.EnsureEventSystem();
             
             // Ensure Canvas has GraphicRaycaster for button clicks
             Canvas canvas = FindFirstObjectByType<Canvas>();
-            if (canvas != null && canvas.GetComponent<GraphicRaycaster>() == null)
-            {
-                Debug.Log("[MeetingUIController] Adding GraphicRaycaster to Canvas...");
-                canvas.gameObject.AddComponent<GraphicRaycaster>();
-            }
+            UIUtils.EnsureGraphicRaycaster(canvas);
             
             // Create settings panel with its own canvas
             CreateSettingsPanel();
@@ -199,7 +190,7 @@ namespace Kavkazim.UI.Meeting
             leaveButtonObj.transform.SetParent(_settingsPanel.transform, false);
             
             Image leaveBg = leaveButtonObj.AddComponent<Image>();
-            leaveBg.color = new Color(0.8f, 0.2f, 0.2f, 1f);
+            leaveBg.color = UIUtils.ColorNotReady;
             
             Button leaveButton = leaveButtonObj.AddComponent<Button>();
             leaveButton.onClick.AddListener(OnLeaveClicked);

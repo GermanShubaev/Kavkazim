@@ -9,6 +9,7 @@ using UnityEngine.UI;
 using Kavkazim.UI;
 using Minigames.Progress;
 using System.Collections.Generic;
+using Kavkazim.Utils;
 
 namespace UI
 {
@@ -822,7 +823,7 @@ namespace UI
                     noTasksObj.transform.SetParent(_taskListContentContainer.transform, false);
                     Text noTasksText = noTasksObj.AddComponent<Text>();
                     noTasksText.text = "No tasks assigned yet.";
-                    noTasksText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+                    noTasksText.font = UIUtils.GetDefaultFont();
                     noTasksText.alignment = TextAnchor.MiddleLeft;
                     noTasksText.color = Color.white;
                     noTasksText.fontSize = 14;

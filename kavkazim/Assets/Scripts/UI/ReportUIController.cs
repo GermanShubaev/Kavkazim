@@ -1,4 +1,5 @@
 using Kavkazim.Netcode;
+using Kavkazim.Utils;
 using Kavkazim.Netcode.Reporting;
 using Netcode.Player;
 using UnityEngine;
@@ -83,7 +84,7 @@ namespace Kavkazim.UI
             iconObj.transform.SetParent(_reportContainer.transform, false);
             Text iconText = iconObj.AddComponent<Text>();
             iconText.text = "!";
-            iconText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            iconText.font = UIUtils.GetDefaultFont();
             iconText.alignment = TextAnchor.MiddleCenter;
             iconText.color = Color.white;
             iconText.fontSize = 40;
@@ -99,7 +100,7 @@ namespace Kavkazim.UI
             textObj.transform.SetParent(_reportContainer.transform, false);
             _reportText = textObj.AddComponent<Text>();
             _reportText.text = "REPORT";
-            _reportText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            _reportText.font = UIUtils.GetDefaultFont();
             _reportText.alignment = TextAnchor.MiddleCenter;
             _reportText.color = Color.white;
             _reportText.fontSize = 12;
@@ -140,8 +141,8 @@ namespace Kavkazim.UI
             if (_reportFill != null)
             {
                 _reportFill.color = canReport 
-                    ? new Color(1f, 0.6f, 0f, 0.9f)   // Orange - can report
-                    : new Color(0.4f, 0.4f, 0.4f, 0.6f); // Gray - nothing in range
+                    ? UIUtils.ColorOrange   // Orange - can report
+                    : UIUtils.ColorNotReady; // Gray - nothing in range
             }
         }
 

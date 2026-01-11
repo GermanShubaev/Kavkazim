@@ -4,6 +4,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
 using System.Collections;
+using Kavkazim.Utils;
 
 namespace UI
 {
@@ -101,7 +102,7 @@ namespace UI
             // Set title with team color
             string teamName = result.GetWinningTeamDisplay();
             Color teamColor = result.WinningTeam == 2 
-                ? new Color(1f, 0.3f, 0.3f) // Red for Kavkazi
+                ? UIUtils.ColorNotReady // Red for Kavkazi
                 : new Color(0.3f, 0.8f, 1f); // Cyan for Innocent
 
             _titleText.text = $"{teamName.ToUpper()} WIN!";
