@@ -27,11 +27,7 @@ namespace Kavkazim.Netcode
         /// Network-synced cooldown end time using ServerTime.
         /// Value is the server time when cooldown ends.
         /// </summary>
-        public NetworkVariable<double> CooldownEndTime = new NetworkVariable<double>(
-            0,
-            NetworkVariableReadPermission.Everyone,
-            NetworkVariableWritePermission.Server
-        );
+        public NetworkVariable<double> CooldownEndTime = new ();
 
         private PlayerState _playerState;
         
@@ -45,9 +41,7 @@ namespace Kavkazim.Netcode
                 // Use lobby settings if available
                 if (GameSessionManager.Instance != null)
                     return GameSessionManager.Instance.Settings.Value.KillCooldown;
-                // Fallback to config
-                if (config != null)
-                    return config.killCooldown;
+                
                 return defaultKillCooldown;
             }
         }

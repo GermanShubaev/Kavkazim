@@ -43,8 +43,6 @@ namespace Netcode.Player
             float moveSpeed = 3.5f;
             if (Kavkazim.Netcode.GameSessionManager.Instance != null)
                 moveSpeed = Kavkazim.Netcode.GameSessionManager.Instance.Settings.Value.MoveSpeed;
-            else if (config != null)
-                moveSpeed = config.moveSpeed;
             
             _serverVelocity = clamped * moveSpeed;
         }
