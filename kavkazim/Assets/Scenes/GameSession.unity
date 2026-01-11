@@ -1822,8 +1822,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fa4adf4f67e8b204d90c0f1000c9bc8e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::UI.LobbyUI
-  hostColor: {r: 1, g: 0.84, b: 0, a: 1}
-  readyColor: {r: 0.2, g: 0.8, b: 0.2, a: 1}
   notReadyColor: {r: 0.8, g: 0.2, b: 0.2, a: 1}
   waitingColor: {r: 0.5, g: 0.5, b: 0.5, a: 1}
 --- !u!224 &1084558025
