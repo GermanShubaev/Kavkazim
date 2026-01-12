@@ -4,6 +4,7 @@ using UnityEngine;
 using Unity.Netcode;
 using Kavkazim.Netcode;
 using Minigames.Base;
+using Minigames;
 
 namespace Minigames.Progress
 {
@@ -63,12 +64,43 @@ namespace Minigames.Progress
 
             int missionsPerInnocent = GameSessionManager.Instance.Settings.Value.MissionsPerInnocent;
             
-            // Get all available minigame trigger points
-            MinigameTriggerPoint[] allTriggerPoints = Object.FindObjectsByType<MinigameTriggerPoint>(FindObjectsSortMode.None);
+            // Get all available minigame trigger points from MinigameTriggerPointManager
+            List<MinigameTriggerPoint> allTriggerPoints = new List<MinigameTriggerPoint>();
             
-            if (allTriggerPoints == null || allTriggerPoints.Length == 0)
+            // Get or create the MinigameTriggerPointManager instance
+            MinigameTriggerPointManager triggerPointManager = MinigameTriggerPointManager.Instance;
+            
+            // Ensure trigger points are spawned
+            if (triggerPointManager != null)
             {
-                Debug.LogWarning("[TaskDistributor] No minigame trigger points found in the scene. Cannot distribute tasks.");
+                allTriggerPoints = triggerPointManager.GetSpawnedTriggerPoints();
+                
+                // If no points are spawned yet, spawn them now
+                if (allTriggerPoints == null || allTriggerPoints.Count == 0)
+                {
+                    Debug.Log("[TaskDistributor] No trigger points spawned yet. Spawning them now...");
+                    triggerPointManager.SpawnAllTriggerPoints();
+                    allTriggerPoints = triggerPointManager.GetSpawnedTriggerPoints();
+                }
+                
+                Debug.Log($"[TaskDistributor] Found {allTriggerPoints.Count} trigger points from MinigameTriggerPointManager.");
+            }
+            
+            // Fallback: if manager still has no points, find all trigger points in scene
+            if (allTriggerPoints == null || allTriggerPoints.Count == 0)
+            {
+                Debug.LogWarning("[TaskDistributor] MinigameTriggerPointManager has no trigger points. Falling back to finding all trigger points in scene.");
+                MinigameTriggerPoint[] sceneTriggerPoints = Object.FindObjectsByType<MinigameTriggerPoint>(FindObjectsSortMode.None);
+                if (sceneTriggerPoints != null && sceneTriggerPoints.Length > 0)
+                {
+                    allTriggerPoints = sceneTriggerPoints.ToList();
+                    Debug.Log($"[TaskDistributor] Found {allTriggerPoints.Count} trigger points in scene.");
+                }
+            }
+            
+            if (allTriggerPoints == null || allTriggerPoints.Count == 0)
+            {
+                Debug.LogError("[TaskDistributor] No minigame trigger points found. Cannot distribute tasks.");
                 return taskAssignments;
             }
 
@@ -224,25 +256,22 @@ namespace Minigames.Progress
             return taskAssignments[playerId];
         }
 
-        /// <summary>
-        /// Gets a short description for a minigame type.
-        /// </summary>
         private static string GetTaskDescription(MinigameType minigameType)
         {
             return minigameType switch
             {
-                MinigameType.LezginkaSort => "Sort the Lezginka dance moves",
-                MinigameType.PraySortGame => "Organize the prayer items",
-                MinigameType.PapakhaClick => "Click on the Papakha hats",
-                MinigameType.DishClick => "Click on the traditional dishes",
-                MinigameType.WolfClick => "Click on the wolf symbols",
-                MinigameType.TakedownClick => "Click on the takedown targets",
-                MinigameType.ShashlikSort => "Sort the shashlik skewers",
-                MinigameType.RemoteCommonClick => "Click on the remote controls",
-                MinigameType.LaundrySort => "Sort the laundry items",
-                MinigameType.TapachkiClick => "Click on the tapachki shoes",
-                MinigameType.EmptyPopup => "Complete the task",
-                _ => "Complete the task"
+                MinigameType.LezginkaSort => "Dance Lezginka",
+                MinigameType.PraySortGame => "Shabbat prayer",
+                MinigameType.PapakhaClick => "Clean Papakha",
+                MinigameType.DishClick => "Wash dishes",
+                MinigameType.WolfClick => "Blame Amir and Solomon",
+                MinigameType.TakedownClick => "Send him 2-3 years Dagestan and forget",
+                MinigameType.ShashlikSort => "Make Shashliks",
+                MinigameType.RemoteCommonClick => "Its cold",
+                MinigameType.LaundrySort => "Sort the laundry",
+                MinigameType.TapachkiClick => "Take off shoes",
+                MinigameType.EmptyPopup => "",
+                _ => ""
             };
         }
     }
