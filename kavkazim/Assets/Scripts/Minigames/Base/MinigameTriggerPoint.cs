@@ -136,7 +136,7 @@ namespace Minigames
 
             RectTransform canvasRect = _indicatorCanvas.GetComponent<RectTransform>();
             canvasRect.sizeDelta = new Vector2(indicatorSize.x, indicatorSize.y);
-            canvasRect.localScale = Vector3.one * 0.01f;
+            canvasRect.localScale = Vector3.one * 0.2f;
 
             CanvasScaler scaler = _indicatorCanvas.AddComponent<CanvasScaler>();
             scaler.uiScaleMode = CanvasScaler.ScaleMode.ConstantPixelSize;

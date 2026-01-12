@@ -140,7 +140,7 @@ namespace Kavkazim.Netcode.Reporting
         /// </summary>
         public static DeadBody FindNearestReportableBody(Vector3 position)
         {
-            DeadBody[] allBodies = UnityEngine.Object.FindObjectsByType<DeadBody>(FindObjectsSortMode.None);
+            var allBodies = DeadBody.ActiveBodies;
             DeadBody nearest = null;
             float minDistance = _reportRange;
 

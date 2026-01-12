@@ -9,6 +9,7 @@ using UnityEngine.UI;
 using Kavkazim.UI;
 using Minigames.Progress;
 using System.Collections.Generic;
+using Kavkazim.Utils;
 
 namespace UI
 {
@@ -180,7 +181,10 @@ namespace UI
             _canvasObj.transform.SetParent(transform, false); // Keep with this object
             Canvas canvas = _canvasObj.AddComponent<Canvas>();
             canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-            _canvasObj.AddComponent<CanvasScaler>();
+            CanvasScaler scaler = _canvasObj.AddComponent<CanvasScaler>();
+            scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+            scaler.referenceResolution = new Vector2(1920, 1080);
+            scaler.matchWidthOrHeight = 0.5f;
             _canvasObj.AddComponent<GraphicRaycaster>();
 
             // 2. Create Settings Button (Top Right)
@@ -819,7 +823,7 @@ namespace UI
                     noTasksObj.transform.SetParent(_taskListContentContainer.transform, false);
                     Text noTasksText = noTasksObj.AddComponent<Text>();
                     noTasksText.text = "No tasks assigned yet.";
-                    noTasksText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+                    noTasksText.font = UIUtils.GetDefaultFont();
                     noTasksText.alignment = TextAnchor.MiddleLeft;
                     noTasksText.color = Color.white;
                     noTasksText.fontSize = 14;

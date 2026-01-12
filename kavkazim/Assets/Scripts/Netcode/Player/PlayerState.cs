@@ -12,6 +12,12 @@ namespace Netcode.Player
     public class PlayerState : NetworkBehaviour
     {
         /// <summary>
+        /// Global list of all active PlayerState components.
+        /// Replaces slow FindObjectsByType calls.
+        /// </summary>
+        public static readonly System.Collections.Generic.List<PlayerState> ActivePlayers = new System.Collections.Generic.List<PlayerState>();
+
+        /// <summary>
         /// Event fired on the server when any player is killed.
         /// Used by GameSessionManager to check win conditions.
         /// </summary>
@@ -87,6 +93,9 @@ namespace Netcode.Player
         {
             base.OnNetworkSpawn();
             
+            if (!ActivePlayers.Contains(this))
+                ActivePlayers.Add(this);
+            
             // Subscribe to state changes
             IsAlive.OnValueChanged += OnAliveStateChanged;
             
@@ -98,6 +107,9 @@ namespace Netcode.Player
 
         public override void OnNetworkDespawn()
         {
+            if (ActivePlayers.Contains(this))
+                ActivePlayers.Remove(this);
+            
             IsAlive.OnValueChanged -= OnAliveStateChanged;
             base.OnNetworkDespawn();
         }

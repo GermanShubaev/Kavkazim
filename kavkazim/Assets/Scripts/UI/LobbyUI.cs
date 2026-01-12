@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using Kavkazim.Netcode;
+using Kavkazim.Utils;
 using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -20,11 +21,8 @@ namespace UI
     /// </summary>
     public class LobbyUI : MonoBehaviour
     {
-        [Header("Configuration")]
-        [SerializeField] private Color hostColor = new Color(1f, 0.84f, 0f); // Gold
-        [SerializeField] private Color readyColor = new Color(0.2f, 0.8f, 0.2f); // Green
-        [SerializeField] private Color notReadyColor = new Color(0.8f, 0.2f, 0.2f); // Red
-        [SerializeField] private Color waitingColor = new Color(0.5f, 0.5f, 0.5f); // Gray
+        [SerializeField] private Color notReadyColor = UIUtils.ColorNotReady; // Red
+        [SerializeField] private Color waitingColor = UIUtils.ColorWaiting;
 
         // UI Elements (created dynamically)
         private GameObject _canvasObj;
@@ -32,6 +30,7 @@ namespace UI
         private GameObject _waitingPanel;
         private Transform _playerListContent;
         private Text _roomCodeText;
+        // _lobbyCodeText removed
         private Text _playerCountText;
         private Text _phaseText;
         
@@ -54,7 +53,7 @@ namespace UI
         private GameObject _testModeContainer;
         private Text _testModeStatusText;
         
-        // Validation UI
+        // ValidValidation UI
         private Text _validationErrorText;
         private LobbyValidator _validator;
 
@@ -140,12 +139,7 @@ namespace UI
             _validator = new LobbyValidator();
 
             // Ensure EventSystem exists
-            if (FindFirstObjectByType<UnityEngine.EventSystems.EventSystem>() == null)
-            {
-                GameObject eventSystem = new GameObject("EventSystem");
-                eventSystem.AddComponent<UnityEngine.EventSystems.EventSystem>();
-                eventSystem.AddComponent<UnityEngine.InputSystem.UI.InputSystemUIInputModule>();
-            }
+            UIUtils.EnsureEventSystem();
 
             // Create Canvas
             _canvasObj = new GameObject("LobbyCanvas");
@@ -153,7 +147,10 @@ namespace UI
             Canvas canvas = _canvasObj.AddComponent<Canvas>();
             canvas.renderMode = RenderMode.ScreenSpaceOverlay;
             canvas.sortingOrder = 50;
-            _canvasObj.AddComponent<CanvasScaler>();
+            CanvasScaler scaler = _canvasObj.AddComponent<CanvasScaler>();
+            scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+            scaler.referenceResolution = new Vector2(1920, 1080);
+            scaler.matchWidthOrHeight = 0.5f;
             _canvasObj.AddComponent<GraphicRaycaster>();
 
             // Create main lobby panel
@@ -173,23 +170,27 @@ namespace UI
             lobbyRect.offsetMax = Vector2.zero;
 
             // Title - top left
-            var titleObj = CreateText(_lobbyPanel.transform, "Title", "LOBBY", 28, FontStyle.Bold, 
-                new Vector2(0, 1f), new Vector2(0, 1f), new Vector2(80, -25));
-            titleObj.GetComponent<RectTransform>().sizeDelta = new Vector2(150, 40);
+            var titleObj = CreateText(_lobbyPanel.transform, "Title", "LOBBY", 40, FontStyle.Bold, 
+                Vector2.zero, Vector2.zero, Vector2.zero);
+            titleObj.GetComponent<RectTransform>().anchorMin = new Vector2(0.02f, 0.92f); // Changed from 0.04f to match player list (0.02f)
+            titleObj.GetComponent<RectTransform>().anchorMax = new Vector2(0.2f, 0.98f);
+            titleObj.GetComponent<RectTransform>().offsetMin = Vector2.zero;
+            titleObj.GetComponent<RectTransform>().offsetMax = Vector2.zero;
+            titleObj.GetComponent<Text>().alignment = TextAnchor.MiddleLeft;
 
-            // Room Code - top right with padding from edge
-            _roomCodeText = CreateText(_lobbyPanel.transform, "RoomCode", "Code: ----", 18, FontStyle.Bold,
-                new Vector2(1f, 1f), new Vector2(1f, 1f), new Vector2(-130, -25)).GetComponent<Text>();
-            _roomCodeText.GetComponent<RectTransform>().sizeDelta = new Vector2(200, 35);
+            // Room Code - top right
+            _roomCodeText = CreateText(_lobbyPanel.transform, "RoomCode", "Code: ----", 30, FontStyle.Bold, 
+                 Vector2.zero, Vector2.zero, Vector2.zero).GetComponent<Text>();
+            RectTransform codeRect = _roomCodeText.GetComponent<RectTransform>();
+            codeRect.anchorMin = new Vector2(0.75f, 0.92f);
+            codeRect.anchorMax = new Vector2(0.96f, 0.98f);
+            codeRect.offsetMin = Vector2.zero;
+            codeRect.offsetMax = Vector2.zero;
             _roomCodeText.color = Color.yellow;
             _roomCodeText.alignment = TextAnchor.MiddleRight;
 
-            // Phase indicator - below title, small
-            _phaseText = CreateText(_lobbyPanel.transform, "Phase", "Lobby Open", 12, FontStyle.Italic,
-                new Vector2(0, 1f), new Vector2(0, 1f), new Vector2(80, -55)).GetComponent<Text>();
-            _phaseText.GetComponent<RectTransform>().sizeDelta = new Vector2(150, 20);
-            _phaseText.color = Color.cyan;
-
+            // Phase indicator removed as requested ("Lobby Open" text)
+            
             // Left side: Player List
             CreatePlayerListPanel();
 
@@ -202,11 +203,19 @@ namespace UI
             // Update room code display
             UpdateRoomCode();
             
-            // Validation Error Text - Bottom center of lobby, above buttons
-            _validationErrorText = CreateText(_lobbyPanel.transform, "ValidationError", "", 16, FontStyle.Bold, 
-                new Vector2(0.2f, 0.12f), new Vector2(0.8f, 0.18f), Vector2.zero).GetComponent<Text>();
-            _validationErrorText.color = new Color(1f, 0.4f, 0.4f); // Red
-            _validationErrorText.alignment = TextAnchor.MiddleCenter;
+            // ValidValidation Error Text - Left aligned, under Lobby Title
+            _validationErrorText = CreateText(_lobbyPanel.transform, "ValidationError", "", 18, FontStyle.Bold, 
+                 Vector2.zero, Vector2.zero, Vector2.zero).GetComponent<Text>();
+            
+            // Override constraints to place it under title
+            RectTransform errorRect = _validationErrorText.GetComponent<RectTransform>();
+            errorRect.anchorMin = new Vector2(0.02f, 0.87f); // Start under title (0.92)
+            errorRect.anchorMax = new Vector2(0.5f, 0.92f);  // End before title starts
+            errorRect.offsetMin = Vector2.zero;
+            errorRect.offsetMax = Vector2.zero;
+            
+            _validationErrorText.color = notReadyColor;
+            _validationErrorText.alignment = TextAnchor.MiddleLeft; // Left aligned under title
         }
 
         private void CreatePlayerListPanel()
@@ -217,28 +226,47 @@ namespace UI
             listRect.anchorMax = new Vector2(0.48f, 0.85f);
             listRect.offsetMin = Vector2.zero;
             listRect.offsetMax = Vector2.zero;
+            
+            // Add Vertical Layout Group to the main panel container itself if we want header + content list to stack
+            VerticalLayoutGroup mainLayout = listPanel.AddComponent<VerticalLayoutGroup>();
+            mainLayout.padding = new RectOffset(20, 20, 20, 20); // Match settings panel padding
+            mainLayout.spacing = 15; // Match settings panel spacing
+            mainLayout.childAlignment = TextAnchor.UpperCenter;
+            mainLayout.childControlWidth = true;
+            mainLayout.childControlHeight = true; // Control height so LayoutElements work
+            mainLayout.childForceExpandWidth = true;
+            mainLayout.childForceExpandHeight = false; // Don't stretch vertically
 
-            // Header
-            _playerCountText = CreateText(listPanel.transform, "Header", "Players (0/10)", 20, FontStyle.Bold,
-                new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0, -20)).GetComponent<Text>();
+            // Header - Match Settings Panel Header Style
+            GameObject headerObj = CreateText(listPanel.transform, "Header", "Players (0/10)", 32, FontStyle.Bold, Vector2.zero, Vector2.zero, Vector2.zero);
+            _playerCountText = headerObj.GetComponent<Text>();
+            // Add layout element to header
+            LayoutElement headerLayout = headerObj.AddComponent<LayoutElement>();
+            headerLayout.minHeight = 40;
+            headerLayout.preferredHeight = 40;
+            headerLayout.flexibleHeight = 0; // Header doesn't stretch
+            _playerCountText.alignment = TextAnchor.MiddleCenter;
 
-            // Simple content container with vertical layout (no scroll view - simpler)
+            // Content container for the list (since we might want it to scroll or just be a sub-container)
+            // But for simplicity, we can just add items directly to this panel if we want all to share the layout.
+            // However, your original design had a separate "Content" object. Let's keep that structure but make it play nice with layout.
+            
             GameObject content = new GameObject("PlayerListContent");
             content.transform.SetParent(listPanel.transform, false);
-            RectTransform contentRect = content.AddComponent<RectTransform>();
-            contentRect.anchorMin = new Vector2(0.03f, 0.02f);
-            contentRect.anchorMax = new Vector2(0.97f, 0.88f);
-            contentRect.offsetMin = Vector2.zero;
-            contentRect.offsetMax = Vector2.zero;
             
-            VerticalLayoutGroup layout = content.AddComponent<VerticalLayoutGroup>();
-            layout.spacing = 4;
-            layout.padding = new RectOffset(2, 2, 2, 2);
-            layout.childForceExpandWidth = true;
-            layout.childForceExpandHeight = false;
-            layout.childControlHeight = false;
-            layout.childControlWidth = true;
-            layout.childAlignment = TextAnchor.UpperCenter;
+            // Layout Element for the content container so it takes remaining space
+            LayoutElement contentLayoutElement = content.AddComponent<LayoutElement>();
+            contentLayoutElement.flexibleHeight = 1; // Take all remaining height
+            contentLayoutElement.flexibleWidth = 1;
+
+            VerticalLayoutGroup contentLayout = content.AddComponent<VerticalLayoutGroup>();
+            contentLayout.spacing = 4;
+            contentLayout.padding = new RectOffset(2, 2, 2, 2);
+            contentLayout.childForceExpandWidth = true;
+            contentLayout.childForceExpandHeight = false; // Don't stretch items to fill height, let them stack
+            contentLayout.childControlHeight = true; // Control height of children
+            contentLayout.childControlWidth = true;
+            contentLayout.childAlignment = TextAnchor.UpperCenter;
             
             _playerListContent = content.transform;
         }
@@ -252,70 +280,70 @@ namespace UI
             settingsRect.offsetMin = Vector2.zero;
             settingsRect.offsetMax = Vector2.zero;
 
-            // Header
-            CreateText(settingsPanel.transform, "Header", "Settings", 20, FontStyle.Bold,
-                new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0, -15));
+            // Add Vertical Layout Group to the main panel
+            VerticalLayoutGroup layout = settingsPanel.AddComponent<VerticalLayoutGroup>();
+            layout.padding = new RectOffset(20, 20, 20, 20); // Increased padding
+            layout.spacing = 15; // Increased spacing
+            layout.childAlignment = TextAnchor.UpperCenter;
+            layout.childControlWidth = true;
+            layout.childControlHeight = true; // IMPORTANT: Control height so LayoutElements work
+            layout.childForceExpandWidth = true;
+            layout.childForceExpandHeight = false; // Don't stretch settings vertically, pack them
 
-            float yOffset = -40;
-            float yStep = -43;  // Compact spacing for 6 settings
+            // Header
+            GameObject headerObj = CreateText(settingsPanel.transform, "Header", "Settings", 32, FontStyle.Bold, Vector2.zero, Vector2.zero, Vector2.zero);
+            // Add layout element to header
+            LayoutElement headerLayout = headerObj.AddComponent<LayoutElement>();
+            headerLayout.minHeight = 40;
+            headerLayout.preferredHeight = 40;
+            headerLayout.flexibleHeight = 0;
+            // Removed the Reset RectTransform code that was checking for problems but causing them by setting sizeDelta to zero
 
             // Max Players
-            (_maxPlayersSlider, _maxPlayersValue) = CreateSettingSlider(settingsPanel.transform, "Max Players", 
-                4, 10, 10, yOffset);
+            (_maxPlayersSlider, _maxPlayersValue) = CreateSettingSlider(settingsPanel.transform, "Max Players", 4, 10, 10);
             _maxPlayersSlider.wholeNumbers = true;
             _maxPlayersSlider.onValueChanged.AddListener(v => OnSettingChanged());
-            yOffset += yStep;
 
             // Kavkazi Count
-            (_kavkaziCountSlider, _kavkaziCountValue) = CreateSettingSlider(settingsPanel.transform, "Kavkazi Count", 
-                1, 3, 2, yOffset);
+            (_kavkaziCountSlider, _kavkaziCountValue) = CreateSettingSlider(settingsPanel.transform, "Kavkazi Count", 1, 3, 2);
             _kavkaziCountSlider.wholeNumbers = true;
             _kavkaziCountSlider.onValueChanged.AddListener(v => OnSettingChanged());
-            yOffset += yStep;
 
             // Voting Time
-            (_votingTimeSlider, _votingTimeValue) = CreateSettingSlider(settingsPanel.transform, "Voting Time (s)", 
-                30, 180, 60, yOffset);
+            (_votingTimeSlider, _votingTimeValue) = CreateSettingSlider(settingsPanel.transform, "Voting Time (s)", 30, 180, 60);
             _votingTimeSlider.wholeNumbers = true;
             _votingTimeSlider.onValueChanged.AddListener(v => OnSettingChanged());
-            yOffset += yStep;
 
             // Move Speed
-            (_moveSpeedSlider, _moveSpeedValue) = CreateSettingSlider(settingsPanel.transform, "Move Speed", 
-                0.5f, 5f, 3.5f, yOffset);
+            (_moveSpeedSlider, _moveSpeedValue) = CreateSettingSlider(settingsPanel.transform, "Move Speed", 0.5f, 5f, 3.5f);
             _moveSpeedSlider.onValueChanged.AddListener(v => OnSettingChanged());
-            yOffset += yStep;
 
             // Kill Cooldown
-            (_killCooldownSlider, _killCooldownValue) = CreateSettingSlider(settingsPanel.transform, "Kill Cooldown (s)", 
-                5, 60, 15, yOffset);
+            (_killCooldownSlider, _killCooldownValue) = CreateSettingSlider(settingsPanel.transform, "Kill Cooldown (s)", 5, 60, 15);
             _killCooldownSlider.wholeNumbers = true;
             _killCooldownSlider.onValueChanged.AddListener(v => OnSettingChanged());
-            yOffset += yStep;
 
             // Missions Count
-            (_missionsSlider, _missionsValue) = CreateSettingSlider(settingsPanel.transform, "Missions Count", 
-                1, 10, 3, yOffset);
+            (_missionsSlider, _missionsValue) = CreateSettingSlider(settingsPanel.transform, "Missions Count", 1, 10, 3);
             _missionsSlider.wholeNumbers = true;
             _missionsSlider.onValueChanged.AddListener(v => OnSettingChanged());
             
-            // Test Mode Toggle (Editor/Development builds only)
+            // Test Mode Toggle
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
-            yOffset += yStep;
-            CreateTestModeToggle(settingsPanel.transform, yOffset);
+            CreateTestModeToggle(settingsPanel.transform);
 #endif
         }
-        
-        private void CreateTestModeToggle(Transform parent, float yPos)
+
+        private void CreateTestModeToggle(Transform parent)
         {
             _testModeContainer = new GameObject("TestModeContainer");
             _testModeContainer.transform.SetParent(parent, false);
-            RectTransform containerRect = _testModeContainer.AddComponent<RectTransform>();
-            containerRect.anchorMin = new Vector2(0.05f, 1);
-            containerRect.anchorMax = new Vector2(0.95f, 1);
-            containerRect.pivot = new Vector2(0.5f, 1);
-            containerRect.anchoredPosition = new Vector2(0, yPos);
-            containerRect.sizeDelta = new Vector2(0, 50);
+            
+            LayoutElement layout = _testModeContainer.AddComponent<LayoutElement>();
+            layout.minHeight = 40;
+            layout.preferredHeight = 40;
+            layout.flexibleHeight = 0;
+            layout.flexibleWidth = 1;
 
             // Label - left side
             GameObject labelObj = new GameObject("Label");
@@ -328,7 +356,7 @@ namespace UI
             
             Text labelText = labelObj.AddComponent<Text>();
             labelText.text = "TEST MODE";
-            labelText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            labelText.font = UIUtils.GetDefaultFont();
             labelText.fontSize = 16;
             labelText.fontStyle = FontStyle.Bold;
             labelText.color = new Color(1f, 0.6f, 0.2f); // Orange to indicate dev feature
@@ -381,7 +409,7 @@ namespace UI
             
             _testModeStatusText = statusObj.AddComponent<Text>();
             _testModeStatusText.text = "OFF";
-            _testModeStatusText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            _testModeStatusText.font = UIUtils.GetDefaultFont();
             _testModeStatusText.fontSize = 14;
             _testModeStatusText.fontStyle = FontStyle.Bold;
             _testModeStatusText.color = new Color(0.6f, 0.6f, 0.6f);
@@ -406,27 +434,28 @@ namespace UI
             OnSettingChanged();
         }
 
-        private (Slider, Text) CreateSettingSlider(Transform parent, string label, float min, float max, float defaultVal, float yPos)
+        private (Slider, Text) CreateSettingSlider(Transform parent, string label, float min, float max, float defaultVal)
         {
             GameObject container = new GameObject(label + "Container");
             container.transform.SetParent(parent, false);
-            RectTransform containerRect = container.AddComponent<RectTransform>();
-            containerRect.anchorMin = new Vector2(0.05f, 1);
-            containerRect.anchorMax = new Vector2(0.95f, 1);
-            containerRect.pivot = new Vector2(0.5f, 1);
-            containerRect.anchoredPosition = new Vector2(0, yPos);
-            containerRect.sizeDelta = new Vector2(0, 50);
+            
+            // Add automatic layout element
+            LayoutElement layout = container.AddComponent<LayoutElement>();
+            layout.minHeight = 40;
+            layout.preferredHeight = 40;
+            layout.flexibleHeight = 0;
+            layout.flexibleWidth = 1;
 
             // Label
-            CreateText(container.transform, "Label", label, 16, FontStyle.Normal,
-                new Vector2(0, 0.5f), new Vector2(0.4f, 0.5f), Vector2.zero);
+            CreateText(container.transform, "Label", label, 20, FontStyle.Normal,
+                new Vector2(0, 0), new Vector2(0.4f, 1), Vector2.zero);
 
             // Slider
             GameObject sliderObj = new GameObject("Slider");
             sliderObj.transform.SetParent(container.transform, false);
             RectTransform sliderRect = sliderObj.AddComponent<RectTransform>();
-            sliderRect.anchorMin = new Vector2(0.40f, 0.3f);
-            sliderRect.anchorMax = new Vector2(0.84f, 0.7f);
+            sliderRect.anchorMin = new Vector2(0.42f, 0.2f);
+            sliderRect.anchorMax = new Vector2(0.84f, 0.8f);
             sliderRect.offsetMin = Vector2.zero;
             sliderRect.offsetMax = Vector2.zero;
 
@@ -482,8 +511,8 @@ namespace UI
             slider.handleRect = handleRect;
 
             // Value text - positioned inside the panel
-            Text valueText = CreateText(container.transform, "Value", defaultVal.ToString("F1"), 14, FontStyle.Bold,
-                new Vector2(0.86f, 0.5f), new Vector2(0.98f, 0.5f), Vector2.zero).GetComponent<Text>();
+            Text valueText = CreateText(container.transform, "Value", defaultVal.ToString("F1"), 20, FontStyle.Bold,
+                new Vector2(0.86f, 0), new Vector2(0.98f, 1), Vector2.zero).GetComponent<Text>();
             valueText.alignment = TextAnchor.MiddleCenter;
 
             // Update value text on slider change
@@ -498,7 +527,7 @@ namespace UI
         {
             // Start Game button (Host only)
             _startGameButton = CreateButton(_lobbyPanel.transform, "StartGame", "START GAME", 
-                new Color(0.2f, 0.7f, 0.2f), new Vector2(0.15f, 0.02f), new Vector2(0.35f, 0.1f));
+                UIUtils.ColorReady, new Vector2(0.15f, 0.02f), new Vector2(0.35f, 0.1f));
             _startGameButton.onClick.AddListener(OnStartGameClicked);
 
             // Ready button (Clients)
@@ -509,7 +538,7 @@ namespace UI
 
             // Leave button
             _leaveButton = CreateButton(_lobbyPanel.transform, "Leave", "LEAVE", 
-                new Color(0.7f, 0.2f, 0.2f), new Vector2(0.65f, 0.02f), new Vector2(0.85f, 0.1f));
+                UIUtils.ColorNotReady, new Vector2(0.65f, 0.02f), new Vector2(0.85f, 0.1f));
             _leaveButton.onClick.AddListener(OnLeaveClicked);
         }
 
@@ -581,13 +610,11 @@ namespace UI
             GameObject item = new GameObject($"Player_{player.ClientId}");
             item.transform.SetParent(_playerListContent, false);
             
-            // RectTransform with fixed height
-            RectTransform itemRect = item.AddComponent<RectTransform>();
-            itemRect.sizeDelta = new Vector2(0, 35);
-            
             // Layout element for VerticalLayoutGroup
             LayoutElement layout = item.AddComponent<LayoutElement>();
-            layout.preferredHeight = 35;
+            layout.minHeight = 65; // Fixed height ~ 1/10th of typical panel space
+            layout.preferredHeight = 65;
+            layout.flexibleHeight = 0; // Don't stretch
             layout.flexibleWidth = 1;
 
             // Background
@@ -610,8 +637,8 @@ namespace UI
             
             Text nameTxt = nameObj.AddComponent<Text>();
             nameTxt.text = nameText;
-            nameTxt.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-            nameTxt.fontSize = 14;
+            nameTxt.font = UIUtils.GetDefaultFont();
+            nameTxt.fontSize = 24; // Increased from 14
             nameTxt.color = Color.white;
             nameTxt.alignment = TextAnchor.MiddleLeft;
             nameTxt.supportRichText = true;
@@ -630,8 +657,8 @@ namespace UI
             
             Text statusTxt = statusObj.AddComponent<Text>();
             statusTxt.text = $"<color={statusColor}><b>{statusText}</b></color>";
-            statusTxt.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-            statusTxt.fontSize = 13;
+            statusTxt.font = UIUtils.GetDefaultFont();
+            statusTxt.fontSize = 22; // Increased from 13
             statusTxt.color = Color.white;
             statusTxt.alignment = TextAnchor.MiddleRight;
             statusTxt.supportRichText = true;
@@ -660,21 +687,6 @@ namespace UI
             _moveSpeedValue.text = settings.MoveSpeed.ToString("F1");
             _killCooldownValue.text = settings.KillCooldown.ToString("F0");
             _missionsValue.text = settings.MissionsPerInnocent.ToString();
-            
-            // Update test mode toggle without triggering callback
-#if UNITY_EDITOR || DEVELOPMENT_BUILD
-            if (_testModeToggle != null)
-            {
-                _testModeToggle.SetIsOnWithoutNotify(settings.TestMode);
-                
-                // Update status text
-                if (_testModeStatusText != null)
-                {
-                    _testModeStatusText.text = settings.TestMode ? "ON" : "OFF";
-                    _testModeStatusText.color = settings.TestMode ? new Color(1f, 0.6f, 0.2f) : new Color(0.6f, 0.6f, 0.6f);
-                }
-            }
-#endif
             
             // Update player list header because MaxPlayers might have changed
             RefreshPlayerList();
@@ -771,10 +783,6 @@ namespace UI
             if (_killCooldownSlider != null) _killCooldownSlider.interactable = canEdit;
             if (_missionsSlider != null) _missionsSlider.interactable = canEdit;
             
-#if UNITY_EDITOR || DEVELOPMENT_BUILD
-            if (_testModeToggle != null) _testModeToggle.interactable = canEdit;
-#endif
-            
             CheckValidation();
         }
         
@@ -792,7 +800,7 @@ namespace UI
             {
                 if (_validationErrorText != null)
                 {
-                     _validationErrorText.text = "Error: " + result.Errors[0].Message;
+                     _validationErrorText.text = result.Errors[0].Message;
                 }
                 if (_startGameButton != null && _isHost)
                 {
@@ -840,9 +848,9 @@ namespace UI
             if (!_isHost || GameSessionManager.Instance == null) return;
             if (GameSessionManager.Instance.CurrentPhase.Value != MatchPhase.LobbyOpen) return;
 
-            bool testModeEnabled = false;
-#if UNITY_EDITOR || DEVELOPMENT_BUILD
-            testModeEnabled = _testModeToggle != null && _testModeToggle.isOn;
+            bool testModeEnabled = _testModeToggle != null && _testModeToggle.isOn;
+#if !UNITY_EDITOR && !DEVELOPMENT_BUILD
+            testModeEnabled = false; // Force false in production builds
 #endif
 
             var settings = new LobbySettings
@@ -932,7 +940,7 @@ namespace UI
             textObj.transform.SetParent(parent, false);
             Text txt = textObj.AddComponent<Text>();
             txt.text = text;
-            txt.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            txt.font = UIUtils.GetDefaultFont();
             txt.fontSize = fontSize;
             txt.fontStyle = style;
             txt.color = Color.white;
@@ -976,7 +984,7 @@ namespace UI
             textObj.transform.SetParent(btnObj.transform, false);
             Text txt = textObj.AddComponent<Text>();
             txt.text = text;
-            txt.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            txt.font = UIUtils.GetDefaultFont();
             txt.fontSize = 20;
             txt.fontStyle = FontStyle.Bold;
             txt.color = Color.white;

@@ -13,15 +13,20 @@ namespace Kavkazim.Netcode.Reporting
     [RequireComponent(typeof(NetworkObject))]
     public class DeadBody : NetworkBehaviour, IReportable
     {
+        /// <summary>
+        /// Global list of all active DeadBody components.
+        /// </summary>
+        public static readonly System.Collections.Generic.List<DeadBody> ActiveBodies = new System.Collections.Generic.List<DeadBody>();
+
         [Header("Visual Settings")]
         [SerializeField] private SpriteRenderer spriteRenderer;
-        [SerializeField] private Color bodyColor = new Color(0.2f, 0.2f, 0.2f, 1f);
+        [SerializeField] private Color bodyColor = new(0.2f, 0.2f, 0.2f, 1f);
         
         // Networked properties
-        private NetworkVariable<ulong> _victimPlayerId = new NetworkVariable<ulong>();
-        private NetworkVariable<FixedString32Bytes> _victimName = new NetworkVariable<FixedString32Bytes>();
-        private NetworkVariable<float> _timeOfDeath = new NetworkVariable<float>();
-        private NetworkVariable<bool> _hasBeenReported = new NetworkVariable<bool>(false);
+        private readonly NetworkVariable<ulong> _victimPlayerId = new();
+        private readonly NetworkVariable<FixedString32Bytes> _victimName = new();
+        private readonly NetworkVariable<float> _timeOfDeath = new();
+        private readonly NetworkVariable<bool> _hasBeenReported = new();
         
         // Report range (set from config)
         private static float _reportRange = 2.5f;
@@ -34,16 +39,6 @@ namespace Kavkazim.Netcode.Reporting
         public string VictimName => _victimName.Value.ToString();
         public Vector3 Position => transform.position;
         public bool IsReportable => !_hasBeenReported.Value;
-        
-        /// <summary>
-        /// Time.time when this body was created.
-        /// </summary>
-        public float TimeOfDeath => _timeOfDeath.Value;
-        
-        /// <summary>
-        /// Whether this body has already been reported.
-        /// </summary>
-        public bool HasBeenReported => _hasBeenReported.Value;
 
         private void Awake()
         {
@@ -78,6 +73,9 @@ namespace Kavkazim.Netcode.Reporting
 
         public override void OnNetworkSpawn()
         {
+            if (!ActiveBodies.Contains(this))
+                ActiveBodies.Add(this);
+                
             base.OnNetworkSpawn();
             
             // Apply visual appearance
@@ -195,7 +193,7 @@ namespace Kavkazim.Netcode.Reporting
         /// </summary>
         private PlayerState FindPlayerByClientId(ulong clientId)
         {
-            PlayerState[] allPlayers = FindObjectsByType<PlayerState>(FindObjectsSortMode.None);
+            var allPlayers = PlayerState.ActivePlayers;
             foreach (var player in allPlayers)
             {
                 if (player.OwnerClientId == clientId)
@@ -252,5 +250,12 @@ namespace Kavkazim.Netcode.Reporting
             Gizmos.DrawWireSphere(transform.position, 0.5f);
         }
 #endif
+
+        public override void OnNetworkDespawn()
+        {
+            if (ActiveBodies.Contains(this))
+                ActiveBodies.Remove(this);
+            base.OnNetworkDespawn();
+        }
     }
 }

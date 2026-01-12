@@ -1,5 +1,4 @@
 ﻿using System.Threading.Tasks;
-using Kavkazim.Netcode;
 using Kavkazim.Services;
 using Netcode;
 using Services;
@@ -8,6 +7,7 @@ using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
+using Kavkazim.Utils;
 
 namespace UI
 {
@@ -96,7 +96,7 @@ namespace UI
             GameObject errorObj = new GameObject("ErrorText");
             errorObj.transform.SetParent(canvas.transform, false);
             _errorText = errorObj.AddComponent<Text>();
-            _errorText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            _errorText.font = UIUtils.GetDefaultFont();
             _errorText.fontSize = 22;
             _errorText.color = Color.red;
             _errorText.alignment = TextAnchor.MiddleCenter;
@@ -164,7 +164,7 @@ namespace UI
             titleObj.transform.SetParent(panel.transform, false);
             Text titleText = titleObj.AddComponent<Text>();
             titleText.text = "Enter Room Code";
-            titleText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            titleText.font = UIUtils.GetDefaultFont();
             titleText.fontSize = 24;
             titleText.alignment = TextAnchor.MiddleCenter;
             titleText.color = Color.white;
@@ -228,7 +228,7 @@ namespace UI
             txtObj.transform.SetParent(btnObj.transform, false);
             Text txt = txtObj.AddComponent<Text>();
             txt.text = text;
-            txt.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            txt.font = UIUtils.GetDefaultFont();
             txt.fontSize = 18;
             txt.alignment = TextAnchor.MiddleCenter;
             txt.color = Color.white;
