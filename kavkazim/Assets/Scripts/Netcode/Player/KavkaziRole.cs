@@ -19,8 +19,8 @@ namespace Kavkazim.Netcode
 
         public override void SetupVisuals()
         {
-            // Kavkazi: Keep original sprite colors, only Red name to indicate role
-            _avatar.SetBodyColor(Color.white); // No tint - preserve original sprite
+            // Kavkazi: Slightly darker sprite to subtly indicate role, Red name for clarity
+            _avatar.SetBodyColor(new Color(0.75f, 0.75f, 0.75f)); // Subtle dark tint
             _avatar.SetNameColor(Color.red);
         }
 

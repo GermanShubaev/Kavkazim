@@ -194,14 +194,6 @@ namespace Kavkazim.Netcode
             UpdateVisuals(perceivedRole);
         }
 
-        /// <summary>
-        /// Get the perceived role for a player from our local cache.
-        /// </summary>
-        public PlayerRoleType GetPerceivedRoleFor(ulong networkObjectId)
-        {
-            return _perceivedRoles.TryGetValue(networkObjectId, out var role) ? role : PlayerRoleType.Innocent;
-        }
-
         public void SetBodyColor(Color c)
         {
             // Block visual role color updates if we are dead (Ghost)
@@ -283,7 +275,7 @@ namespace Kavkazim.Netcode
         }
         
         /// <summary>
-        /// Gets a unique suffix for ParrelSync clones to prevent PlayerPrefs sharing.
+        /// Gets a unique suffix for ParrelSync clones to prevent PlayerPrefs sharing. - TESTING 
         /// </summary>
         private static string GetParrelSyncSuffix()
         {
