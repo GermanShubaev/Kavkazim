@@ -18,14 +18,13 @@ GameObject:
   - component: {fileID: 4613746906251050355}
   - component: {fileID: 7553111882227554343}
   - component: {fileID: 2363073354470318395}
-  - component: {fileID: 6762606234800706794}
   - component: {fileID: -2638491744535586950}
   - component: {fileID: 8959800121656972371}
   - component: {fileID: 7536937082566640545}
-  - component: {fileID: 4152613538345482205}
-  m_Layer: 0
+  - component: {fileID: 2860931980092493909}
+  m_Layer: 8
   m_Name: Player
-  m_TagString: Untagged
+  m_TagString: Player
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -136,7 +135,7 @@ Rigidbody2D:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 64683924485901163}
-  m_BodyType: 1
+  m_BodyType: 0
   m_Simulated: 1
   m_UseFullKinematicContacts: 0
   m_UseAutoMass: 0
@@ -150,7 +149,7 @@ Rigidbody2D:
     m_Bits: 4294967295
   m_ExcludeLayers:
     serializedVersion: 2
-    m_Bits: 0
+    m_Bits: 256
   m_Interpolate: 1
   m_SleepingMode: 1
   m_CollisionDetection: 1
@@ -222,10 +221,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Kavkazim.Netcode.PlayerMotorServer
   ShowTopMostFoldoutHeaderGroup: 1
   config: {fileID: 11400000, guid: a94b20bc75f374d4ea12b1b6d000b419, type: 2}
-  skinWidth: 0.02
-  collisionMask:
-    serializedVersion: 2
-    m_Bits: 4294967295
 --- !u!114 &8588229111260279699
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -254,7 +249,7 @@ MonoBehaviour:
   gameplaySpawnCenter: {x: 12.4, y: 30.3, z: 0}
   gameplaySpawnRadius: 1.5
   lobbySpawnCenter: {x: 0, y: -50, z: 0}
-  playerPrefab: {fileID: 0}
+  playerPrefab: {fileID: 64683924485901163}
 --- !u!114 &7553111882227554343
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -331,52 +326,6 @@ MonoBehaviour:
   SwitchTransformSpaceWhenParented: 0
   Interpolate: 1
   SlerpPosition: 0
---- !u!61 &6762606234800706794
-BoxCollider2D:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 64683924485901163}
-  m_Enabled: 1
-  serializedVersion: 3
-  m_Density: 1
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
-  m_ForceSendLayers:
-    serializedVersion: 2
-    m_Bits: 4294967295
-  m_ForceReceiveLayers:
-    serializedVersion: 2
-    m_Bits: 4294967295
-  m_ContactCaptureLayers:
-    serializedVersion: 2
-    m_Bits: 4294967295
-  m_CallbackLayers:
-    serializedVersion: 2
-    m_Bits: 4294967295
-  m_IsTrigger: 0
-  m_UsedByEffector: 0
-  m_CompositeOperation: 0
-  m_CompositeOrder: 0
-  m_Offset: {x: 0, y: 0}
-  m_SpriteTilingProperty:
-    border: {x: 0, y: 0, z: 0, w: 0}
-    pivot: {x: 0.5, y: 0.5}
-    oldSize: {x: 1, y: 1}
-    newSize: {x: 1, y: 1}
-    adaptiveTilingThreshold: 0.5
-    drawMode: 0
-    adaptiveTiling: 0
-  m_AutoTiling: 0
-  m_Size: {x: 1, y: 1}
-  m_EdgeRadius: 0
 --- !u!114 &-2638491744535586950
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -394,7 +343,7 @@ MonoBehaviour:
   ghostLayerName: Ghost
   ghostAlpha: 0.5
   spriteRenderer: {fileID: 0}
-  playerCollider: {fileID: 0}
+  playerCollider: {fileID: 2860931980092493909}
   IsAlive:
     m_InternalValue: 1
 --- !u!114 &8959800121656972371
@@ -410,7 +359,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Kavkazim.Netcode.KillerAbility
   ShowTopMostFoldoutHeaderGroup: 1
-  config: {fileID: 0}
+  config: {fileID: 11400000, guid: a94b20bc75f374d4ea12b1b6d000b419, type: 2}
   defaultKillRange: 2
   defaultKillCooldown: 15
   avatar: {fileID: 0}
@@ -431,7 +380,7 @@ MonoBehaviour:
   ShowTopMostFoldoutHeaderGroup: 1
   renderersToHide: []
   objectsToHide: []
---- !u!70 &4152613538345482205
+--- !u!70 &2860931980092493909
 CapsuleCollider2D:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
