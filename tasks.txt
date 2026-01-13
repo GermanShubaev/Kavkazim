@@ -2,10 +2,8 @@ features :
 1.minimap
 2.cams
 3.sabotage
-
-
+4.music and sound effects
+5.different sprites to ghost/inoccent
 
 bugs :
-1.add colliders and fix irregularity
-2.add fixed trigger points
-3.clean project
+1.clean project
