@@ -1,0 +1,724 @@
+fileFormatVersion: 2
+guid: a83abe05401001a489387fa504180d5e
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: -4565928981312325218
+    second: Kavkazi_Sprite_0
+  - first:
+      213: 4899552342699125422
+    second: Kavkazi_Sprite_1
+  - first:
+      213: 3022481677526535927
+    second: Kavkazi_Sprite_2
+  - first:
+      213: 9182501514031537876
+    second: Kavkazi_Sprite_3
+  - first:
+      213: -8878787383188958028
+    second: Kavkazi_Sprite_4
+  - first:
+      213: 38750390400511685
+    second: Kavkazi_Sprite_5
+  - first:
+      213: -6561043784842973276
+    second: Kavkazi_Sprite_6
+  - first:
+      213: -541675976282274236
+    second: Kavkazi_Sprite_7
+  - first:
+      213: 2286544126150622008
+    second: Kavkazi_Sprite_8
+  - first:
+      213: -1198366325656305603
+    second: Kavkazi_Sprite_9
+  - first:
+      213: 1984164092735919222
+    second: Kavkazi_Sprite_10
+  - first:
+      213: -7951763982068422905
+    second: Kavkazi_Sprite_11
+  - first:
+      213: -9050049323851194410
+    second: Kavkazi_Sprite_12
+  - first:
+      213: -1505226335836425238
+    second: Kavkazi_Sprite_13
+  - first:
+      213: -3069833960179073992
+    second: Kavkazi_Sprite_14
+  - first:
+      213: -5225556721723281526
+    second: Kavkazi_Sprite_15
+  - first:
+      213: -2577980081697153847
+    second: Kavkazi_Sprite_16
+  - first:
+      213: -8996612702805853110
+    second: Kavkazi_Sprite_17
+  - first:
+      213: 3010389757790875311
+    second: Kavkazi_Sprite_18
+  - first:
+      213: -3498747016483306854
+    second: Kavkazi_Sprite_19
+  - first:
+      213: 1906496629939411372
+    second: Kavkazi_Sprite_20
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 0
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 100
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: WebGL
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: Kavkazi_Sprite_0
+      rect:
+        serializedVersion: 2
+        x: 292
+        y: 799
+        width: 160
+        height: 225
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e99b73768cf82a0c0800000000000000
+      internalID: -4565928981312325218
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Kavkazi_Sprite_1
+      rect:
+        serializedVersion: 2
+        x: 520
+        y: 799
+        width: 160
+        height: 225
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: eaaa30195e4bef340800000000000000
+      internalID: 4899552342699125422
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Kavkazi_Sprite_2
+      rect:
+        serializedVersion: 2
+        x: 758
+        y: 799
+        width: 160
+        height: 225
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7fe8819621302f920800000000000000
+      internalID: 3022481677526535927
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Kavkazi_Sprite_3
+      rect:
+        serializedVersion: 2
+        x: 982
+        y: 799
+        width: 160
+        height: 225
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4de165dd97cce6f70800000000000000
+      internalID: 9182501514031537876
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Kavkazi_Sprite_4
+      rect:
+        serializedVersion: 2
+        x: 1132
+        y: 858
+        width: 4
+        height: 5
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4b45dc4bae538c480800000000000000
+      internalID: -8878787383188958028
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Kavkazi_Sprite_5
+      rect:
+        serializedVersion: 2
+        x: 1200
+        y: 799
+        width: 160
+        height: 225
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 1, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5ceeab6564ba98000800000000000000
+      internalID: 38750390400511685
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Kavkazi_Sprite_6
+      rect:
+        serializedVersion: 2
+        x: 289
+        y: 568
+        width: 160
+        height: 225
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4af66a8807d72f4a0800000000000000
+      internalID: -6561043784842973276
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Kavkazi_Sprite_7
+      rect:
+        serializedVersion: 2
+        x: 509
+        y: 570
+        width: 160
+        height: 225
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 446055ac1949b78f0800000000000000
+      internalID: -541675976282274236
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Kavkazi_Sprite_8
+      rect:
+        serializedVersion: 2
+        x: 753
+        y: 568
+        width: 160
+        height: 225
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 83bb672a4cf6bbf10800000000000000
+      internalID: 2286544126150622008
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Kavkazi_Sprite_9
+      rect:
+        serializedVersion: 2
+        x: 971
+        y: 568
+        width: 160
+        height: 225
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d3047701d2c8e5fe0800000000000000
+      internalID: -1198366325656305603
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Kavkazi_Sprite_10
+      rect:
+        serializedVersion: 2
+        x: 1191
+        y: 568
+        width: 160
+        height: 225
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6741c93daba298b10800000000000000
+      internalID: 1984164092735919222
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Kavkazi_Sprite_11
+      rect:
+        serializedVersion: 2
+        x: 304
+        y: 341
+        width: 160
+        height: 216
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 707e01fd9c8a5a190800000000000000
+      internalID: -7951763982068422905
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Kavkazi_Sprite_12
+      rect:
+        serializedVersion: 2
+        x: 531
+        y: 340
+        width: 160
+        height: 225
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6dfd514d614c76280800000000000000
+      internalID: -9050049323851194410
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Kavkazi_Sprite_13
+      rect:
+        serializedVersion: 2
+        x: 768
+        y: 340
+        width: 160
+        height: 225
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ae338e16f9c5c1be0800000000000000
+      internalID: -1505226335836425238
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Kavkazi_Sprite_14
+      rect:
+        serializedVersion: 2
+        x: 994
+        y: 340
+        width: 160
+        height: 225
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 83c78142742c565d0800000000000000
+      internalID: -3069833960179073992
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Kavkazi_Sprite_15
+      rect:
+        serializedVersion: 2
+        x: 1216
+        y: 340
+        width: 160
+        height: 225
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a8f670809d71b77b0800000000000000
+      internalID: -5225556721723281526
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Kavkazi_Sprite_16
+      rect:
+        serializedVersion: 2
+        x: 1287
+        y: 556
+        width: 10
+        height: 4
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9cc986046cc293cd0800000000000000
+      internalID: -2577980081697153847
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Kavkazi_Sprite_17
+      rect:
+        serializedVersion: 2
+        x: 300
+        y: 109
+        width: 160
+        height: 225
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a4c7d73b96c952380800000000000000
+      internalID: -8996612702805853110
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Kavkazi_Sprite_18
+      rect:
+        serializedVersion: 2
+        x: 524
+        y: 109
+        width: 160
+        height: 225
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: fae6994f88d07c920800000000000000
+      internalID: 3010389757790875311
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Kavkazi_Sprite_19
+      rect:
+        serializedVersion: 2
+        x: 764
+        y: 109
+        width: 160
+        height: 225
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a920e8b2024f17fc0800000000000000
+      internalID: -3498747016483306854
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Kavkazi_Sprite_20
+      rect:
+        serializedVersion: 2
+        x: 776
+        y: 188
+        width: 4
+        height: 4
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 4106fb2c315959b4992392505979d0c9
+      internalID: 1906496629939411372
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Kavkazi_Sprite_21
+      rect:
+        serializedVersion: 2
+        x: 982
+        y: 109
+        width: 160
+        height: 225
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: a380ff295b0c82a419ff3c5ceeb62c45
+      internalID: -1071095316
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Kavkazi_Sprite_22
+      rect:
+        serializedVersion: 2
+        x: 1204
+        y: 109
+        width: 160
+        height: 225
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 7241c05143157cf44b6bc80a2c9fd99b
+      internalID: 1860516745
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 52aad1f2619f27648be12fbbae1779b3
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries:
+      - key: SpriteEditor.SliceSettings
+        value: '{"sliceOnImport":false,"gridCellCount":{"x":5.0,"y":4.0},"gridSpriteSize":{"x":307.0,"y":256.0},"gridSpriteOffset":{"x":0.0,"y":0.0},"gridSpritePadding":{"x":0.0,"y":0.0},"pivot":{"x":0.5,"y":0.5},"pivotPixels":{"x":0.0,"y":0.0},"autoSlicingMethod":0,"spriteAlignment":0,"pivotUnitMode":0,"slicingType":0,"keepEmptyRects":false,"isAlternate":false}'
+    nameFileIdTable:
+      Kavkazi_Sprite_0: -4565928981312325218
+      Kavkazi_Sprite_1: 4899552342699125422
+      Kavkazi_Sprite_10: 1984164092735919222
+      Kavkazi_Sprite_11: -7951763982068422905
+      Kavkazi_Sprite_12: -9050049323851194410
+      Kavkazi_Sprite_13: -1505226335836425238
+      Kavkazi_Sprite_14: -3069833960179073992
+      Kavkazi_Sprite_15: -5225556721723281526
+      Kavkazi_Sprite_16: -2577980081697153847
+      Kavkazi_Sprite_17: -8996612702805853110
+      Kavkazi_Sprite_18: 3010389757790875311
+      Kavkazi_Sprite_19: -3498747016483306854
+      Kavkazi_Sprite_2: 3022481677526535927
+      Kavkazi_Sprite_20: 1906496629939411372
+      Kavkazi_Sprite_21: -1071095316
+      Kavkazi_Sprite_22: 1860516745
+      Kavkazi_Sprite_3: 9182501514031537876
+      Kavkazi_Sprite_4: -8878787383188958028
+      Kavkazi_Sprite_5: 38750390400511685
+      Kavkazi_Sprite_6: -6561043784842973276
+      Kavkazi_Sprite_7: -541675976282274236
+      Kavkazi_Sprite_8: 2286544126150622008
+      Kavkazi_Sprite_9: -1198366325656305603
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

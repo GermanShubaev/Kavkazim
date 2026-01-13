@@ -25,13 +25,5 @@ namespace Kavkazim.Netcode
             // Kavkazi see non-Kavkazi as Innocent
             return PlayerRoleType.Innocent;
         }
-
-        /// <summary>
-        /// Check if the observer can see the target's true role.
-        /// </summary>
-        public static bool CanSeeTrue(PlayerRoleType observerTrueRole, PlayerRoleType targetTrueRole)
-        {
-            return GetPerceivedRole(observerTrueRole, targetTrueRole) == targetTrueRole;
-        }
     }
 }

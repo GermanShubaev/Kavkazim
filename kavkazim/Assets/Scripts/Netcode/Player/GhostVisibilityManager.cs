@@ -227,17 +227,5 @@ namespace Netcode.Player
                 return true;
             }
         }
-
-#if UNITY_EDITOR
-        [ContextMenu("Debug: Log Visibility State")]
-        private void DebugLogState()
-        {
-            Debug.Log($"[GhostVisibility] Player {OwnerClientId}:");
-            Debug.Log($"  - IsOwner: {IsOwner}");
-            Debug.Log($"  - IsAlive: {_playerState?.IsAlive.Value}");
-            Debug.Log($"  - IsVisible: {IsVisible}");
-            Debug.Log($"  - Local player alive: {_localPlayerVisibility?._playerState?.IsAlive.Value}");
-        }
-#endif
     }
 }

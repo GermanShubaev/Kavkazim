@@ -21,11 +21,6 @@ namespace Kavkazim.Netcode
             _avatar = avatar;
         }
 
-        public abstract PlayerRoleType RoleType { get; }
-
-        public virtual void OnStart() { }
-        public virtual void OnUpdate() { }
-        
         /// <summary>
         /// Called when this role is assigned to the player.
         /// Use this to set up visuals.

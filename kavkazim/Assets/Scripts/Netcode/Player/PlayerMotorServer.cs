@@ -14,19 +14,14 @@ namespace Netcode.Player
     {
         [SerializeField] private NetworkGameplayConfig config;
 
-        // Old manual collision fields removed:
-        // skinWidth, collisionMask
-
         private Rigidbody2D _rb;
-        private CapsuleCollider2D _collider;
         private Vector2 _serverVelocity;
-        private PlayerState _playerState;
+        private PlayerAnimator _animator;
 
         private void Awake()
         {
             _rb = GetComponent<Rigidbody2D>();
-            _collider = GetComponent<CapsuleCollider2D>();
-            _playerState = GetComponent<PlayerState>();
+            _animator = GetComponent<PlayerAnimator>();
         }
 
         public override void OnNetworkSpawn()
@@ -34,7 +29,6 @@ namespace Netcode.Player
             if (IsServer)
             {
                 _rb.interpolation = RigidbodyInterpolation2D.Interpolate;
-                //_rb.bodyType = RigidbodyType2D.Dynamic; // Ensure it's dynamic for collisions
                 _rb.collisionDetectionMode = CollisionDetectionMode2D.Continuous; // Better for wall sliding
                 _rb.freezeRotation = true;
                 _rb.gravityScale = 0f;
@@ -56,6 +50,12 @@ namespace Netcode.Player
                 moveSpeed = Kavkazim.Netcode.GameSessionManager.Instance.Settings.Value.MoveSpeed;
             
             _serverVelocity = clamped * moveSpeed;
+            
+            // Update animation based on movement direction
+            if (_animator != null)
+            {
+                _animator.SetMoveDirection(clamped);
+            }
         }
 
         private void FixedUpdate()

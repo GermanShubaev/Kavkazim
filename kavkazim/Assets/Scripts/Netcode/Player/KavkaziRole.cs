@@ -8,7 +8,6 @@ namespace Kavkazim.Netcode
     /// </summary>
     public class KavkaziRole : PlayerRole
     {
-        public override PlayerRoleType RoleType => PlayerRoleType.Kavkazi;
 
         private KillerAbility _killerAbility;
 
@@ -20,8 +19,8 @@ namespace Kavkazim.Netcode
 
         public override void SetupVisuals()
         {
-            // Kavkazi: Red body, Red name
-            _avatar.SetBodyColor(Color.red);
+            // Kavkazi: Keep original sprite colors, only Red name to indicate role
+            _avatar.SetBodyColor(Color.white); // No tint - preserve original sprite
             _avatar.SetNameColor(Color.red);
         }
 
@@ -33,21 +32,10 @@ namespace Kavkazim.Netcode
         {
             if (_killerAbility == null)
             {
-                Debug.LogWarning("[KavkaziRole] No KillerAbility component found on player.");
                 return;
             }
 
             _killerAbility.TryKill();
         }
-
-        /// <summary>
-        /// Check if kill ability is ready (off cooldown).
-        /// </summary>
-        public bool IsKillReady => _killerAbility != null && _killerAbility.IsKillReady;
-
-        /// <summary>
-        /// Get remaining cooldown time for UI display.
-        /// </summary>
-        public float RemainingCooldown => _killerAbility?.RemainingCooldown ?? 0f;
     }
 }
