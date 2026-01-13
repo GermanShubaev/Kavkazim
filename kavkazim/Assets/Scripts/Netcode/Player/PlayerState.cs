@@ -43,9 +43,7 @@ namespace Netcode.Player
         /// Only the server can modify this value.
         /// </summary>
         public NetworkVariable<bool> IsAlive = new NetworkVariable<bool>(
-            true,
-            NetworkVariableReadPermission.Everyone,
-            NetworkVariableWritePermission.Server
+            true
         );
 
         private int _aliveLayer;
@@ -222,27 +220,6 @@ namespace Netcode.Player
         }
 
         /// <summary>
-        /// SERVER ONLY: Revives this player back to alive state.
-        /// </summary>
-        public void Revive()
-        {
-            if (!IsServer)
-            {
-                Debug.LogWarning("[PlayerState] Revive() called on client - ignored.");
-                return;
-            }
-            
-            if (IsAlive.Value)
-            {
-                Debug.LogWarning($"[PlayerState] Player {OwnerClientId} is already alive.");
-                return;
-            }
-            
-            IsAlive.Value = true;
-            Debug.Log($"[PlayerState] SERVER: Player {OwnerClientId} has been revived.");
-        }
-
-        /// <summary>
         /// SERVER ONLY: Force sets the alive state, bypassing normal checks.
         /// Used for restoring player state after meeting respawn.
         /// </summary>
@@ -271,38 +248,6 @@ namespace Netcode.Player
                 SetLayerRecursively(child.gameObject, layer);
             }
         }
-
-        /// <summary>
-        /// Check if this player can interact with alive-only systems (tasks, buttons, meetings).
-        /// </summary>
-        public bool CanInteractAsAlive()
-        {
-            return IsAlive.Value;
-        }
-
-        /// <summary>
-        /// Check if this player can see ghost-only UI elements.
-        /// </summary>
-        public bool CanSeeGhostUI()
-        {
-            return !IsAlive.Value;
-        }
-
-#if UNITY_EDITOR
-        /// <summary>
-        /// Editor helper to test ghost mode.
-        /// </summary>
-        [ContextMenu("Debug: Toggle Ghost Mode")]
-        private void DebugToggleGhostMode()
-        {
-            if (Application.isPlaying && IsServer)
-            {
-                if (IsAlive.Value)
-                    Kill();
-                else
-                    Revive();
-            }
-        }
-#endif
+        
     }
 }

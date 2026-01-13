@@ -33,10 +33,6 @@ namespace Netcode.Player
         [Tooltip("Radius of the gameplay spawn circle")]
         [SerializeField] private float gameplaySpawnRadius = 1.5f;
 
-        [Header("Lobby Area Configuration")]
-        [Tooltip("Center of the lobby waiting area")]
-        [SerializeField] private Vector3 lobbySpawnCenter = new Vector3(0f, -50f, 0f);
-
         [Header("References")]
         [Tooltip("Player prefab to spawn (must have PlayerAvatar component)")]
         [SerializeField] private GameObject playerPrefab;
@@ -359,24 +355,5 @@ namespace Netcode.Player
             
             Debug.Log($"[PlayerSpawnHandler] Distributed roles to {_spawnedPlayers.Count} players");
         }
-
-        /// <summary>
-        /// Reset spawn counter and player tracking (useful when returning to lobby)
-        /// </summary>
-        public void ResetSpawnCounter()
-        {
-            _spawnedPlayerCount = 0;
-            _spawnedPlayers.Clear();
-        }
-
-        /// <summary>
-        /// Get the lobby spawn position (for UI/camera positioning)
-        /// </summary>
-        public Vector3 GetLobbySpawnCenter() => lobbySpawnCenter;
-
-        /// <summary>
-        /// Get the gameplay spawn position (for UI/camera positioning)
-        /// </summary>
-        public Vector3 GetGameplaySpawnCenter() => gameplaySpawnCenter;
     }
 }

@@ -25,16 +25,13 @@ namespace Kavkazim.Netcode
         private Camera _mainCamera;
         
         // Networked name variable
-        public NetworkVariable<Unity.Collections.FixedString32Bytes> PlayerName = 
-            new NetworkVariable<Unity.Collections.FixedString32Bytes>();
+        public NetworkVariable<Unity.Collections.FixedString32Bytes> PlayerName = new();
 
         // Networked Role variable - OWNER ONLY read permission for security
         // Only the server and the owning client can read the true role
-        public NetworkVariable<PlayerRoleType> Role = 
-            new NetworkVariable<PlayerRoleType>(
+        public NetworkVariable<PlayerRoleType> Role = new(
                 PlayerRoleType.Innocent,
-                NetworkVariableReadPermission.Owner,
-                NetworkVariableWritePermission.Server
+                NetworkVariableReadPermission.Owner
             );
 
         // Local cache of perceived roles for each player (what THIS client sees)
@@ -197,14 +194,6 @@ namespace Kavkazim.Netcode
             UpdateVisuals(perceivedRole);
         }
 
-        /// <summary>
-        /// Get the perceived role for a player from our local cache.
-        /// </summary>
-        public PlayerRoleType GetPerceivedRoleFor(ulong networkObjectId)
-        {
-            return _perceivedRoles.TryGetValue(networkObjectId, out var role) ? role : PlayerRoleType.Innocent;
-        }
-
         public void SetBodyColor(Color c)
         {
             // Block visual role color updates if we are dead (Ghost)
@@ -224,7 +213,7 @@ namespace Kavkazim.Netcode
             StartCoroutine(SlashRoutine());
         }
 
-        private System.Collections.IEnumerator SlashRoutine()
+        private IEnumerator SlashRoutine()
         {
             // Simple slash: rotate back and forth
             float duration = 0.2f;
@@ -241,17 +230,12 @@ namespace Kavkazim.Netcode
             transform.rotation = startRot;
         }
 
-        // NOTE: Kill functionality has been moved to KillerAbility and PlayerState components.
-        // - KillerAbility.RequestKillServerRpc() handles the kill request
-        // - PlayerState manages the alive/ghost state
-        // PerformSlashAnimation() is kept here for visual feedback
-
         private void SetupNameLabel()
         {
             // Create a child object for the text
             GameObject textObj = new GameObject("NameLabel");
             textObj.transform.SetParent(transform);
-            textObj.transform.localPosition = new Vector3(0, 1.2f, 0); // Above player
+            textObj.transform.localPosition = new Vector3(0, 1.4f, 0); // Above player (higher position)
             
             _nameLabel = textObj.AddComponent<TextMeshPro>();
             _nameLabel.alignment = TextAlignmentOptions.Center;
@@ -291,7 +275,7 @@ namespace Kavkazim.Netcode
         }
         
         /// <summary>
-        /// Gets a unique suffix for ParrelSync clones to prevent PlayerPrefs sharing.
+        /// Gets a unique suffix for ParrelSync clones to prevent PlayerPrefs sharing. - TESTING 
         /// </summary>
         private static string GetParrelSyncSuffix()
         {

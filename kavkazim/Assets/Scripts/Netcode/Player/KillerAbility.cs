@@ -229,19 +229,6 @@ namespace Kavkazim.Netcode
             {
                 avatar.PerformSlashAnimation();
             }
-            
-            // Get victim for additional effects
-            if (NetworkManager.Singleton.SpawnManager.SpawnedObjects.TryGetValue(
-                victimNetworkObjectId, out NetworkObject victimNetObj))
-            {
-                // You can add death particle effects, sounds, etc. here
-                // Example: Instantiate a death effect at victim's position
-                // ParticleSystem deathFx = Instantiate(deathEffectPrefab, victimNetObj.transform.position, Quaternion.identity);
-                // Destroy(deathFx.gameObject, 2f);
-                
-                // Play death sound
-                // AudioSource.PlayClipAtPoint(deathSound, victimNetObj.transform.position);
-            }
         }
 
         /// <summary>
@@ -284,18 +271,6 @@ namespace Kavkazim.Netcode
             }
 
             return closest;
-        }
-
-        /// <summary>
-        /// Get a formatted string showing remaining cooldown for UI.
-        /// Returns empty string if ready.
-        /// </summary>
-        public string GetCooldownDisplayText()
-        {
-            if (IsKillReady)
-                return "";
-            
-            return $"{RemainingCooldown:F1}s";
         }
 
 #if UNITY_EDITOR

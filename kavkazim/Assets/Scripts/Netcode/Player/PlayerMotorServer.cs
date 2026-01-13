@@ -6,37 +6,42 @@ namespace Netcode.Player
 {
     /// <summary>
     /// Server-only motor: applies validated velocity to Rigidbody2D.
-    /// Ghosts bypass wall collision detection.
+    /// Collision is now handled by Unity's physics engine (CapsuleCollider2D + Rigidbody2D).
     /// </summary>
     [RequireComponent(typeof(Rigidbody2D))]
-    [RequireComponent(typeof(BoxCollider2D))]
+    [RequireComponent(typeof(CapsuleCollider2D))]
     public class PlayerMotorServer : NetworkBehaviour
     {
         [SerializeField] private NetworkGameplayConfig config;
-        [SerializeField] private float skinWidth = 0.02f;
-        [SerializeField] private LayerMask collisionMask = ~0; // All layers by default
-        
+
         private Rigidbody2D _rb;
-        private BoxCollider2D _collider;
         private Vector2 _serverVelocity;
-        private PlayerState _playerState;
+        private PlayerAnimator _animator;
 
         private void Awake()
         {
             _rb = GetComponent<Rigidbody2D>();
-            _collider = GetComponent<BoxCollider2D>();
-            _playerState = GetComponent<PlayerState>();
+            _animator = GetComponent<PlayerAnimator>();
         }
 
         public override void OnNetworkSpawn()
         {
-            if (IsServer) _rb.interpolation = RigidbodyInterpolation2D.Interpolate;
-            else enabled = false; // server authority only
+            if (IsServer)
+            {
+                _rb.interpolation = RigidbodyInterpolation2D.Interpolate;
+                _rb.collisionDetectionMode = CollisionDetectionMode2D.Continuous; // Better for wall sliding
+                _rb.freezeRotation = true;
+                _rb.gravityScale = 0f;
+            }
+            else
+            {
+                enabled = false; // server authority only
+            }
         }
 
         public void ApplyInput(Vector2 moveInput)
         {
-            // Sanitize input length and compute velocity
+            // Sanitize input length
             var clamped = Vector2.ClampMagnitude(moveInput, 1f);
             
             // Get move speed from lobby settings, fallback to config, then default
@@ -45,70 +50,23 @@ namespace Netcode.Player
                 moveSpeed = Kavkazim.Netcode.GameSessionManager.Instance.Settings.Value.MoveSpeed;
             
             _serverVelocity = clamped * moveSpeed;
+            
+            // Update animation based on movement direction
+            if (_animator != null)
+            {
+                _animator.SetMoveDirection(clamped);
+            }
         }
 
         private void FixedUpdate()
         {
             if (!IsServer) return;
-            
-            Vector2 moveDirection = _serverVelocity.normalized;
-            float moveDistance = _serverVelocity.magnitude * Time.fixedDeltaTime;
-            
-            if (moveDistance < 0.0001f) return; // No significant movement
-            
-            // If player is a ghost, skip wall collision detection entirely
-            bool isGhost = _playerState != null && !_playerState.IsAlive.Value;
-            
-            if (isGhost)
-            {
-                // Ghosts move freely without collision checks
-                Vector2 targetPosition = _rb.position + _serverVelocity * Time.fixedDeltaTime;
-                _rb.MovePosition(targetPosition);
-                return;
-            }
-            
-            // Alive players use BoxCast for wall collision
-            Vector2 castOrigin = _rb.position + _collider.offset;
-            RaycastHit2D[] hits = Physics2D.BoxCastAll(
-                castOrigin,
-                _collider.size * 0.9f,
-                0f,
-                moveDirection,
-                moveDistance + skinWidth,
-                collisionMask
-            );
-            
-            // Sort by distance to ensure we handle the closest valid obstacle first
-            System.Array.Sort(hits, (a, b) => a.distance.CompareTo(b.distance));
-            
-            Vector2 targetPos;
-            
-            // Find the first valid collision that is NOT another player
-            RaycastHit2D? validHit = null;
-            foreach (var hit in hits)
-            {
-                if (hit.collider.gameObject == gameObject) continue; // Skip self
-                if (hit.collider.isTrigger) continue; // Skip triggers
-                if (hit.distance < 0.001f) continue; // Skip initial overlaps
-                
-                // Skip collision with other players
-                if (hit.collider.GetComponent<PlayerMotorServer>() != null) continue;
 
-                validHit = hit;
-                break; // Found the closest valid obstacle
-            }
-            
-            if (validHit.HasValue)
-            {
-                float safeDistance = Mathf.Max(0f, validHit.Value.distance - skinWidth);
-                targetPos = _rb.position + moveDirection * safeDistance;
-            }
-            else
-            {
-                targetPos = _rb.position + _serverVelocity * Time.fixedDeltaTime;
-            }
-            
-            _rb.MovePosition(targetPos);
+            // Apply velocity directly to the Rigidbody.
+            // Unity's physics engine handles wall sliding and collisions automatically.
+            // - Alive players (Collider not trigger): Will collide and slide against walls.
+            // - Ghosts (Collider is trigger): Will pass through walls (as set by PlayerState).
+            _rb.linearVelocity = _serverVelocity;
         }
     }
 }

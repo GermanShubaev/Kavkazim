@@ -43,11 +43,20 @@ namespace Netcode.Player
                 return;
             }
 
-            // Handle Move
-            if (_move != null)
+            // Block movement while in an active minigame (task)
+            bool isInMinigame = _currentMinigame != null && _currentMinigame.IsActive;
+
+            // Handle Move - only if not in a minigame
+            if (_move != null && !isInMinigame)
             {
                 Vector2 v = _move.ReadValue<Vector2>();
                 SubmitInputToServerRpc(v); 
+            }
+            
+            // Stop movement immediately when minigame starts
+            if (isInMinigame)
+            {
+                SubmitInputToServerRpc(Vector2.zero);
             }
 
             // Handle Kill (K key)
