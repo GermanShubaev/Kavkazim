@@ -81,6 +81,7 @@ namespace UI
             if (GameSessionManager.Instance != null)
             {
                 GameSessionManager.Instance.TasksLeft.OnValueChanged += OnTasksLeftChanged;
+                GameSessionManager.Instance.OnPhaseChanged += OnPhaseChanged;
             }
         }
 
@@ -92,6 +93,7 @@ namespace UI
             if (GameSessionManager.Instance != null)
             {
                 GameSessionManager.Instance.TasksLeft.OnValueChanged -= OnTasksLeftChanged;
+                GameSessionManager.Instance.OnPhaseChanged -= OnPhaseChanged;
             }
             
             // Clear singleton reference if this is the instance
@@ -1024,6 +1026,40 @@ namespace UI
         private void OnTasksLeftChanged(int previousValue, int newValue)
         {
             UpdateTaskProgressBar();
+        }
+
+        private void OnPhaseChanged(MatchPhase phase)
+        {
+            if (phase == MatchPhase.LobbyOpen)
+            {
+                ResetGameplayUI();
+            }
+        }
+
+        private void ResetGameplayUI()
+        {
+            // Hide Gameplay Containers
+            if (_taskListContainer) _taskListContainer.SetActive(false);
+            if (_progressBarContainer) _progressBarContainer.SetActive(false);
+            if (_cooldownContainer) _cooldownContainer.SetActive(false);
+            
+            // Clear Data
+            _taskAssignments = null;
+            _completedTasks.Clear();
+            _totalTasks = 0;
+            
+            // Clear UI Objects
+            foreach (var taskObj in _taskTextObjects)
+            {
+                if (taskObj != null) Destroy(taskObj);
+            }
+            _taskTextObjects.Clear();
+
+            foreach (var stripe in _progressBarStripes)
+            {
+                if (stripe != null) Destroy(stripe.gameObject);
+            }
+            _progressBarStripes.Clear();
         }
     }
 }
