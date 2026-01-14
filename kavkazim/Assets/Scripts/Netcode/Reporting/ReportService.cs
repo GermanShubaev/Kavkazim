@@ -180,30 +180,6 @@ namespace Kavkazim.Netcode.Reporting
         }
 
         /// <summary>
-        /// Legacy method - checks for body only.
-        /// </summary>
-        public static bool HasReportableBodyInRange(Vector3 position)
-        {
-            return FindNearestReportableBody(position) != null;
-        }
-
-        /// <summary>
-        /// Get what type of report is available at position.
-        /// </summary>
-        public static ReportType? GetAvailableReportType(Vector3 position)
-        {
-            if (FindNearestReportableBody(position) != null)
-                return ReportType.DeadBody;
-            
-            if (EmergencyButton.Instance != null && 
-                EmergencyButton.Instance.IsPlayerInRange(position) &&
-                !EmergencyButton.Instance.IsOnCooldown)
-                return ReportType.EmergencyMeeting;
-            
-            return null;
-        }
-
-        /// <summary>
         /// Called by DeadBody when a report is validated on server.
         /// Triggers meeting scene load.
         /// </summary>
