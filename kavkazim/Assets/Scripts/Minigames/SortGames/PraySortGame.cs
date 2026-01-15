@@ -99,7 +99,6 @@ namespace Minigames.SortGames
             if (upperSection == null) return;
 
             Cells.Clear();
-            // Use cellSize for cell dimensions (3x original = 300)
             float totalWidth = (numberOfElements * cellSize) + ((numberOfElements - 1) * cellSpacing);
             float startX = -totalWidth / 2f + cellSize / 2f;
 
@@ -336,7 +335,6 @@ namespace Minigames.SortGames
 
         protected override void CleanupGameUI()
         {
-            // Clean up elements
             foreach (var element in _wordElements)
             {
                 if (element != null)
@@ -390,7 +388,6 @@ namespace Minigames.SortGames
             titleRect.sizeDelta = Vector2.zero;
             titleRect.anchoredPosition = Vector2.zero;
 
-            // Create result text
             GameObject resultTextObj = new GameObject("ResultText");
             resultTextObj.transform.SetParent(_contentPanel.transform, false);
             _resultText = resultTextObj.AddComponent<Text>();
@@ -456,15 +453,15 @@ namespace Minigames.SortGames
             string lowerName = spriteName.ToLower();
             
             if (lowerName.Contains("shalom") && !lowerName.Contains("hashalom"))
-                return "shalom"; // pray_shalom
+                return "shalom";
             if (lowerName.Contains("alechem"))
-                return "alechem"; // pray_alechem
+                return "alechem";
             if (lowerName.Contains("malachei"))
-                return "malachei"; // pray_malachei_1
+                return "malachei";
             if (lowerName.Contains("hashalom"))
-                return "hashalom"; // pray_hashalom
+                return "hashalom";
             if (lowerName.Contains("elion"))
-                return "elion"; // pray_elion
+                return "elion";
                 
             Debug.LogWarning($"[PrayWordElement] Unknown sprite name: {spriteName}, defaulting to unknown");
             return "unknown";

@@ -70,8 +70,6 @@ namespace Minigames.SortGames
 
         protected virtual void Start()
         {
-            // InitializeGame is now called from InitializeGameUI
-            // This Start method is kept for backward compatibility
         }
 
         protected virtual void InitializeGame()

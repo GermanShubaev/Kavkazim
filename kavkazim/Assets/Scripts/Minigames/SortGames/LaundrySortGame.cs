@@ -118,6 +118,17 @@ namespace Minigames.SortGames
             Debug.Log($"[LaundrySortGame] Loaded {_basketSprites.Length} basket sprites, {_allClothesSprites.Count} total clothes");
         }
 
+        protected override void Start()
+        {
+            if (IsActive)
+            {
+                Debug.LogWarning($"{GetType().Name} is already active!");
+                return;
+            }
+
+            StartGame();
+        }
+        
         protected override void InitializeGameUI()
         {
             RectTransform contentRect = _contentPanel.GetComponent<RectTransform>();
@@ -128,20 +139,10 @@ namespace Minigames.SortGames
                 contentRect.sizeDelta = Vector2.zero;
                 contentRect.anchoredPosition = Vector2.zero;
             }
-
-            // Initialize clothing inventory
             InitializeInventory();
-
-            // Create result text
             CreateResultText();
-
-            // Create main basket in center
             CreateMainBasket();
-
-            // Create left basket (for colored clothes)
             CreateLeftBasket();
-
-            // Create right basket (for white clothes)
             CreateRightBasket();
         }
 
@@ -238,7 +239,7 @@ namespace Minigames.SortGames
             leftBasketObj.transform.SetParent(_contentPanel.transform, false);
 
             _leftBasketImage = leftBasketObj.AddComponent<Image>();
-            _leftBasketImage.sprite = _basketSprites[0]; // basket_1.png
+            _leftBasketImage.sprite = _basketSprites[0];
             _leftBasketImage.preserveAspect = true;
 
             _leftBasketRect = leftBasketObj.GetComponent<RectTransform>();
@@ -276,7 +277,7 @@ namespace Minigames.SortGames
             rightBasketObj.transform.SetParent(_contentPanel.transform, false);
 
             _rightBasketImage = rightBasketObj.AddComponent<Image>();
-            _rightBasketImage.sprite = _basketSprites[0]; // basket_1.png
+            _rightBasketImage.sprite = _basketSprites[0];
             _rightBasketImage.preserveAspect = true;
 
             _rightBasketRect = rightBasketObj.GetComponent<RectTransform>();

@@ -409,7 +409,6 @@ namespace Minigames.SortGames
             titleRect.sizeDelta = Vector2.zero;
             titleRect.anchoredPosition = Vector2.zero;
 
-            // Create result text
             GameObject resultTextObj = new GameObject("ResultText");
             resultTextObj.transform.SetParent(_contentPanel.transform, false);
             _resultText = resultTextObj.AddComponent<Text>();
