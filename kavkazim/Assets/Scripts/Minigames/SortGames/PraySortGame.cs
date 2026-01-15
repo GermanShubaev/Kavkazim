@@ -59,7 +59,7 @@ namespace Minigames.SortGames
                 }
                 // Sort by name to ensure consistent order
                 System.Array.Sort(_targetOrder, (a, b) => string.Compare(a.name, b.name));
-                Debug.Log($"[PraySortGame] Loaded {_targetOrder.Length} images from Assets/Art/Images/pray (Editor mode)");
+                Debug.Log($"[PraySort] Loaded {_targetOrder.Length} images from Assets/Art/Images/pray (Editor mode)");
             }
             #endif
             
@@ -76,14 +76,14 @@ namespace Minigames.SortGames
             
             if (_targetOrder == null || _targetOrder.Length == 0)
             {
-                Debug.LogError("[PraySortGame] Failed to load images. Make sure the images are either:");
+                Debug.LogError("[PraySort] Failed to load images. Make sure the images are either:");
                 Debug.LogError("  1. In a Resources folder: Assets/Resources/Art/Images/pray/");
                 Debug.LogError("  2. Or in Assets/Art/Images/pray/ (editor only)");
                 _targetOrder = new Sprite[0];
             }
             else
             {
-                Debug.Log($"[PraySortGame] Loaded {_targetOrder.Length} images successfully");
+                Debug.Log($"[PraySort] Loaded {_targetOrder.Length} images successfully");
             }
         }
 
@@ -93,7 +93,7 @@ namespace Minigames.SortGames
             // Initialize game settings
             if (_targetOrder == null || _targetOrder.Length == 0)
             {
-                Debug.LogError("[PraySortGame] No images loaded! Cannot initialize game.");
+                Debug.LogError("[PraySort] No images loaded! Cannot initialize game.");
                 return;
             }
 
@@ -263,7 +263,7 @@ namespace Minigames.SortGames
         {
             if (Cells == null || Cells.Count != 6)
             {
-                Debug.Log($"[PraySortGame] Win check skipped: cells.Count = {Cells?.Count ?? 0}, expected 6");
+                Debug.Log($"[PraySort] Win check skipped: cells.Count = {Cells?.Count ?? 0}, expected 6");
                 return;
             }
 
@@ -316,7 +316,7 @@ namespace Minigames.SortGames
                 if (wordElement == null)
                 {
                     allCorrect = false;
-                    Debug.LogWarning($"[PraySortGame] Cell {i} element is not a PrayWordElement");
+                    Debug.LogWarning($"[PraySort] Cell {i} element is not a PrayWordElement");
                     break;
                 }
 
@@ -326,7 +326,7 @@ namespace Minigames.SortGames
                 if (actualType != expectedType)
                 {
                     allCorrect = false;
-                    Debug.Log($"[PraySortGame] Cell {i} incorrect: expected '{expectedType}', got '{actualType}'");
+                    Debug.Log($"[PraySort] Cell {i} incorrect: expected '{expectedType}', got '{actualType}'");
                     break;
                 }
             }
@@ -338,7 +338,7 @@ namespace Minigames.SortGames
                     _resultText.text = "Correct! All prayer words in order!";
                     _resultText.color = Color.green;
                 }
-                Debug.Log("[PraySortGame] All images correctly ordered! Game complete.");
+                Debug.Log("[PraySort] All images correctly ordered! Game complete.");
                 OnGameComplete();
                 StartCoroutine(CloseAfterDelay(2f));
             }

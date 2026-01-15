@@ -261,7 +261,7 @@ namespace Minigames.Progress
             return minigameType switch
             {
                 MinigameType.LezginkaSort => "Dance Lezginka",
-                MinigameType.PraySortGame => "Shabbat prayer",
+                MinigameType.PraySort => "Shabbat prayer",
                 MinigameType.PapakhaClick => "Clean Papakha",
                 MinigameType.DishClick => "Wash dishes",
                 MinigameType.WolfClick => "Blame Amir and Solomon",

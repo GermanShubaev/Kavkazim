@@ -64,9 +64,9 @@ namespace Minigames.Base
                 var obj = new GameObject($"{MinigameType.LezginkaSort}Instance");
                 return obj.AddComponent<LezginkaSortGame>();
             });
-            registry.Register(MinigameType.PraySortGame, () => 
+            registry.Register(MinigameType.PraySort, () => 
             {
-                var obj = new GameObject($"{MinigameType.PraySortGame}Instance");
+                var obj = new GameObject($"{MinigameType.PraySort}Instance");
                 return obj.AddComponent<PraySortGame>();
             });
             registry.Register(MinigameType.PapakhaClick, () => 

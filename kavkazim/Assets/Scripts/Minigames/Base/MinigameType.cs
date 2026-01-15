@@ -4,7 +4,7 @@ namespace Minigames.Base
     {
         LezginkaSort,
         EmptyPopup,
-        PraySortGame,
+        PraySort,
         PapakhaClick,
         DishClick,
         WolfClick,
