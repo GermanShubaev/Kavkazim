@@ -192,13 +192,13 @@ namespace Minigames.Progress
                 MinigameType.PraySort => "Shabbat prayer",
                 MinigameType.PapakhaClick => "Clean Papakha",
                 MinigameType.DishClick => "Wash dishes",
-                MinigameType.WolfClick => "Blame Amir and Solomon",
-                MinigameType.TakedownClick => "Send him 2-3 years Dagestan and forget",
+                MinigameType.Wolf => "Blame Amir and Solomon",
+                MinigameType.Takedown => "Send him 2-3 years Dagestan and forget",
                 MinigameType.ShashlikSort => "Make Shashliks",
-                MinigameType.RemoteCommonClick => "Its cold",
+                MinigameType.Remote => "Its cold",
                 MinigameType.LaundrySort => "Sort the laundry",
-                MinigameType.TapachkiClick => "Take off shoes",
-                MinigameType.EmptyPopup => "",
+                MinigameType.Tapachki => "Take off shoes",
+                MinigameType.DefaultType => "",
                 _ => ""
             };
         }

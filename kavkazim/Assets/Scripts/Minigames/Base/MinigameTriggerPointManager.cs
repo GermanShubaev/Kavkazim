@@ -44,19 +44,19 @@ namespace Minigames
         private readonly TriggerPointData[] _triggerPoints = new TriggerPointData[]
         {
             new TriggerPointData { position = new Vector2(28.39f, -0.72f), radius = 1.2f, gameType = MinigameType.PapakhaClick },
-            new TriggerPointData { position = new Vector2(16.17f, -2.32f), radius = 1.2f, gameType = MinigameType.RemoteCommonClick },
+            new TriggerPointData { position = new Vector2(16.17f, -2.32f), radius = 1.2f, gameType = MinigameType.Remote },
             new TriggerPointData { position = new Vector2(40.62f, 14.82f), radius = 1.8f, gameType = MinigameType.LaundrySort },
-            new TriggerPointData { position = new Vector2(44.56f, 20.26f), radius = 1.2f, gameType = MinigameType.TapachkiClick },
+            new TriggerPointData { position = new Vector2(44.56f, 20.26f), radius = 1.2f, gameType = MinigameType.Tapachki },
             new TriggerPointData { position = new Vector2(-6.58f, 31.78f), radius = 3f, gameType = MinigameType.ShashlikSort },
-            new TriggerPointData { position = new Vector2(-27.27f, 2.76f), radius = 1.2f, gameType = MinigameType.TapachkiClick },
-            new TriggerPointData { position = new Vector2(-36.37f, 13.26f), radius = 1.2f, gameType = MinigameType.RemoteCommonClick },
+            new TriggerPointData { position = new Vector2(-27.27f, 2.76f), radius = 1.2f, gameType = MinigameType.Tapachki },
+            new TriggerPointData { position = new Vector2(-36.37f, 13.26f), radius = 1.2f, gameType = MinigameType.Remote },
             new TriggerPointData { position = new Vector2(-49.52f, -4.98f), radius = 3f, gameType = MinigameType.LezginkaSort },
-            new TriggerPointData { position = new Vector2(-49.42f, -10.08f), radius = 1.2f, gameType = MinigameType.TapachkiClick },
-            new TriggerPointData { position = new Vector2(-30.21f, -25.30f), radius = 3f, gameType = MinigameType.TakedownClick },
+            new TriggerPointData { position = new Vector2(-49.42f, -10.08f), radius = 1.2f, gameType = MinigameType.Tapachki },
+            new TriggerPointData { position = new Vector2(-30.21f, -25.30f), radius = 3f, gameType = MinigameType.Takedown },
             new TriggerPointData { position = new Vector2(-12.79f, -10.33f), radius = 2.2f, gameType = MinigameType.PraySort },
             new TriggerPointData { position = new Vector2(50.92f, -13.91f), radius = 3f, gameType = MinigameType.DishClick },
-            new TriggerPointData { position = new Vector2(47.83f, -6.41f), radius = 3f, gameType = MinigameType.WolfClick },
-            new TriggerPointData { position = new Vector2(40.94f, 1.87f), radius = 1.2f, gameType = MinigameType.RemoteCommonClick }
+            new TriggerPointData { position = new Vector2(47.83f, -6.41f), radius = 3f, gameType = MinigameType.Wolf },
+            new TriggerPointData { position = new Vector2(40.94f, 1.87f), radius = 1.2f, gameType = MinigameType.Remote }
         };
 
         private void Awake()

@@ -6,7 +6,7 @@ using UnityEngine.UI;
 
 namespace Minigames.GeneralGames
 {
-    public class TakedownClickGame : BaseMinigame
+    public class TakedownGame : BaseMinigame
     {
         private const string NoSubPath = "Assets/Art/Images/ufc/ufc_no_sub.png";
         private const string SubPath = "Assets/Art/Images/ufc/ufc_sub.png";
@@ -56,9 +56,9 @@ namespace Minigames.GeneralGames
             }
 
             if (_noSubSprite != null)
-                Debug.Log("[TakedownClickGame] Loaded ufc_no_sub.png (Editor mode)");
+                Debug.Log("[TakedownGame] Loaded ufc_no_sub.png (Editor mode)");
             if (_subSprite != null)
-                Debug.Log("[TakedownClickGame] Loaded ufc_sub.png (Editor mode)");
+                Debug.Log("[TakedownGame] Loaded ufc_sub.png (Editor mode)");
             #endif
 
             if (_noSubSprite == null)
@@ -76,9 +76,9 @@ namespace Minigames.GeneralGames
             }
 
             if (_noSubSprite == null)
-                Debug.LogError("[TakedownClickGame] Failed to load ufc_no_sub.png");
+                Debug.LogError("[TakedownGame] Failed to load ufc_no_sub.png");
             if (_subSprite == null)
-                Debug.LogError("[TakedownClickGame] Failed to load ufc_sub.png");
+                Debug.LogError("[TakedownGame] Failed to load ufc_sub.png");
         }
 
         protected override void CreatePopupWindow()
@@ -279,7 +279,7 @@ namespace Minigames.GeneralGames
         private void OnGameWon()
         {
             _gameWon = true;
-            Debug.Log("[TakedownClickGame] Player achieved takedown! Game won!");
+            Debug.Log("[TakedownGame] Player achieved takedown! Game won!");
 
             if (_mainImage != null && _subSprite != null)
             {

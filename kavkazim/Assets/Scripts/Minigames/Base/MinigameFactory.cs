@@ -63,24 +63,24 @@ namespace Minigames.Base
                 var obj = new GameObject($"{MinigameType.DishClick}Instance");
                 return obj.AddComponent<DishClickGame>();
             });
-            registry.Register(MinigameType.WolfClick, () => 
+            registry.Register(MinigameType.Wolf, () => 
             {
-                var obj = new GameObject($"{MinigameType.WolfClick}Instance");
-                return obj.AddComponent<WolfClickGame>();
+                var obj = new GameObject($"{MinigameType.Wolf}Instance");
+                return obj.AddComponent<WolfGame>();
             });
-            registry.Register(MinigameType.TakedownClick, () => 
+            registry.Register(MinigameType.Takedown, () => 
             {
-                var obj = new GameObject($"{MinigameType.TakedownClick}Instance");
-                return obj.AddComponent<TakedownClickGame>();
+                var obj = new GameObject($"{MinigameType.Takedown}Instance");
+                return obj.AddComponent<TakedownGame>();
             });
             registry.Register(MinigameType.ShashlikSort, () => 
             {
                 var obj = new GameObject($"{MinigameType.ShashlikSort}Instance");
                 return obj.AddComponent<ShashlikSortGame>();
             });
-            registry.Register(MinigameType.RemoteCommonClick, () => 
+            registry.Register(MinigameType.Remote, () => 
             {
-                var obj = new GameObject($"{MinigameType.RemoteCommonClick}Instance");
+                var obj = new GameObject($"{MinigameType.Remote}Instance");
                 return obj.AddComponent<RemoteCommonClickGame>();
             });
             registry.Register(MinigameType.LaundrySort, () => 
@@ -88,9 +88,9 @@ namespace Minigames.Base
                 var obj = new GameObject($"{MinigameType.LaundrySort}Instance");
                 return obj.AddComponent<LaundrySortGame>();
             });
-            registry.Register(MinigameType.TapachkiClick, () => 
+            registry.Register(MinigameType.Tapachki, () => 
             {
-                var obj = new GameObject($"{MinigameType.TapachkiClick}Instance");
+                var obj = new GameObject($"{MinigameType.Tapachki}Instance");
                 return obj.AddComponent<TapachkiGame>();
             });
         }

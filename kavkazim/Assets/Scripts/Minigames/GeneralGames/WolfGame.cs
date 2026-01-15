@@ -6,7 +6,7 @@ using UnityEngine.UI;
 
 namespace Minigames.GeneralGames
 {
-    public class WolfClickGame : BaseMinigame
+    public class WolfGame : BaseMinigame
     {
         private readonly string AnonymousPath = "Assets/Art/Images/wolf/anonymous.png";
         
@@ -50,7 +50,7 @@ namespace Minigames.GeneralGames
             }
 
             if (_anonymousSprite != null)
-                Debug.Log("[WolfClickGame] Loaded anonymous.png (Editor mode)");
+                Debug.Log("[WolfGame] Loaded anonymous.png (Editor mode)");
             #endif
 
             if (_anonymousSprite == null)
@@ -62,7 +62,7 @@ namespace Minigames.GeneralGames
 
             if (_anonymousSprite == null)
             {
-                Debug.LogError("[WolfClickGame] Failed to load anonymous.png");
+                Debug.LogError("[WolfGame] Failed to load anonymous.png");
             }
         }
 
@@ -258,7 +258,7 @@ namespace Minigames.GeneralGames
             {
                 RevealedTargets.Add(name);
                 card.HighlightAsTarget();
-                Debug.Log($"[WolfClickGame] Found {name}! {RevealedTargets.Count}/{TargetNames.Length} targets found.");
+                Debug.Log($"[WolfGame] Found {name}! {RevealedTargets.Count}/{TargetNames.Length} targets found.");
 
                 if (RevealedTargets.Count >= TargetNames.Length)
                 {
@@ -270,7 +270,7 @@ namespace Minigames.GeneralGames
         private void OnGameComplete()
         {
             base.OnGameComplete();
-            Debug.Log("[WolfClickGame] Both amir and solomon found! Game complete.");
+            Debug.Log("[WolfGame] Both amir and solomon found! Game complete.");
             
             Transform titleTransform = _contentPanel.transform.Find("Title");
             if (titleTransform != null)
@@ -304,7 +304,7 @@ namespace Minigames.GeneralGames
     {
         private int _index;
         private string _personName;
-        private WolfClickGame _game;
+        private WolfGame _game;
         private Text _nameText;
         private Button _button;
         private bool _isRevealed = false;
@@ -312,7 +312,7 @@ namespace Minigames.GeneralGames
         public string PersonName => _personName;
         public bool IsRevealed => _isRevealed;
 
-        public void Initialize(int index, string name, WolfClickGame game, Text nameText, Button button)
+        public void Initialize(int index, string name, WolfGame game, Text nameText, Button button)
         {
             _index = index;
             _personName = name;

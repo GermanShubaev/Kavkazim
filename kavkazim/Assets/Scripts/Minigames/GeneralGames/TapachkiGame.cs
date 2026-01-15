@@ -200,7 +200,7 @@ namespace Minigames.GeneralGames
         private void OnGameComplete()
         {
             base.OnGameComplete();
-            Debug.Log("[WolfClickGame] Both amir and solomon found! Game complete.");
+            Debug.Log("[WolfGame] Both amir and solomon found! Game complete.");
 
             StartCoroutine(CloseAfterDelay(2f));
         }

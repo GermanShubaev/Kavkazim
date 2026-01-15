@@ -1,4 +1,3 @@
-using Minigames.Base.Interaction;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;

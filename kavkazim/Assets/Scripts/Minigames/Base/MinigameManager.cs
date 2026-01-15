@@ -32,7 +32,7 @@ namespace Minigames
         [SerializeField] private bool autoCreateDefaultTrigger = true;
         [SerializeField] private Vector2 defaultTriggerPosition = new Vector2(16, 26);
         [SerializeField] private float defaultTriggerRadius = 4f;
-        [SerializeField] private MinigameType defaultTriggerGameType = MinigameType.EmptyPopup;
+        [SerializeField] private MinigameType defaultTriggerGameType = MinigameType.DefaultType;
 
         [Header("Additional Auto Triggers")]
         [SerializeField] private bool createAdditionalTriggers = true;
@@ -42,8 +42,8 @@ namespace Minigames
             new AdditionalTriggerData { position = new Vector2(-25, 13), radius = 2f, gameType = MinigameType.LezginkaSort },
             new AdditionalTriggerData { position = new Vector2(37, 18), radius = 2f, gameType = MinigameType.PapakhaClick },
             new AdditionalTriggerData { position = new Vector2(53, 5), radius = 2f, gameType = MinigameType.DishClick },
-            new AdditionalTriggerData { position = new Vector2(51, 12), radius = 2f, gameType = MinigameType.WolfClick },
-            new AdditionalTriggerData { position = new Vector2(-10, -2), radius = 8f, gameType = MinigameType.TakedownClick },
+            new AdditionalTriggerData { position = new Vector2(51, 12), radius = 2f, gameType = MinigameType.Wolf },
+            new AdditionalTriggerData { position = new Vector2(-10, -2), radius = 8f, gameType = MinigameType.Takedown },
             new AdditionalTriggerData { position = new Vector2(7, 45), radius = 2f, gameType = MinigameType.ShashlikSort }
         };
 
