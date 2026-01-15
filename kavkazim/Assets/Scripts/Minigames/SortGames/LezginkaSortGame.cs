@@ -20,15 +20,12 @@ namespace Minigames.SortGames
         [SerializeField] private int numberOfRows = 2;
         [SerializeField] private float rowSpacing = 20f;
 
-        // Note: _popupWindow, _canvas, _backgroundPanel, _contentPanel, _closeButton are inherited from BaseMinigame
         private Text _resultText;
         private Sprite[] _loadedImages;
         private List<LezginkaElement> _elements = new List<LezginkaElement>();
         private float cellSize = 150f;
         private RectTransform _cellSection;
         private RectTransform _elementSection;
-
-        // IsActive and PopupWindow properties are inherited from BaseMinigame
 
         protected override void Awake()
         {
@@ -336,7 +333,7 @@ namespace Minigames.SortGames
 
         public override void OnGameComplete()
         {
-            base.OnGameComplete(); // Mark as completed successfully - this triggers progress bar update and task removal
+            base.OnGameComplete();
         }
 
         private System.Collections.IEnumerator CloseAfterDelay(float delay)
@@ -352,7 +349,6 @@ namespace Minigames.SortGames
                 return;
             }
 
-            // Cleanup is handled by CleanupGameUI() and base.CloseGame()
             base.CloseGame();
         }
 
@@ -375,7 +371,6 @@ namespace Minigames.SortGames
 
         protected override void InitializeGameUI()
         {
-            // Adjust content panel layout (matching LaundrySortGame implementation)
             RectTransform contentRect = _contentPanel.GetComponent<RectTransform>();
             if (contentRect != null)
             {
@@ -390,7 +385,6 @@ namespace Minigames.SortGames
                 }
             }
 
-            // Set popup window reference for SortGame
             if (_popupWindow != null)
             {
                 popupWindow = _contentPanel.GetComponent<RectTransform>();
@@ -400,7 +394,6 @@ namespace Minigames.SortGames
                 popupCanvas = _canvas;
             }
 
-            // Create title text
             GameObject titleObj = new GameObject("TitleText");
             titleObj.transform.SetParent(_contentPanel.transform, false);
             Text titleText = titleObj.AddComponent<Text>();
@@ -432,7 +425,6 @@ namespace Minigames.SortGames
             resultRect.sizeDelta = Vector2.zero;
             resultRect.anchoredPosition = Vector2.zero;
 
-            // Ensure sections exist (SortGameUIBuilder should create them, but create if missing)
             if (upperSection == null)
             {
                 GameObject upperSectionObj = new GameObject("UpperSection");
@@ -457,7 +449,6 @@ namespace Minigames.SortGames
             }
             _elementSection = lowerSection;
 
-            // Initialize game logic
             InitializeGame();
         }
 

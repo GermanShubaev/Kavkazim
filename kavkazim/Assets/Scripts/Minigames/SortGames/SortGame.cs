@@ -19,19 +19,15 @@ namespace Minigames.SortGames
 
         [Header("Game Settings")]
         [SerializeField] protected int numberOfElements;
-        // All sizes are relative to reference resolution 2560x1440 and will scale automatically via CanvasScaler
         [SerializeField] protected float cellSpacing = 50f;
         [SerializeField] protected float elementSize = 1000f;
-        [SerializeField] protected float minDistanceBetweenElements = 120f; 
+        [SerializeField] protected float minDistanceBetweenElements = 120f;
         [SerializeField] protected float snapProximityDistance = 120f; 
 
         protected readonly List<DraggableElement> Elements = new List<DraggableElement>();
         protected readonly List<Cell> Cells = new List<Cell>();
         protected DraggableElement CurrentlyDragging;
 
-        /// <summary>
-        /// Exposes Cells list for win condition strategy.
-        /// </summary>
         public IReadOnlyList<Cell> GetCells() => Cells;
 
         protected virtual void Awake()
@@ -42,20 +38,17 @@ namespace Minigames.SortGames
             if (popupWindow == null)
                 popupWindow = GetComponent<RectTransform>();
             
-            // Initialize default win condition strategy if not set
             if (_winConditionStrategy == null)
             {
                 _winConditionStrategy = new SortGameWinConditionStrategy();
             }
             
-            // Initialize default UI builder if not set
             if (_uiBuilder == null)
             {
                 _uiBuilder = new Base.UI.SortGameUIBuilder();
             }
         }
         
-        // Helper methods for UI builder
         public void SetUpperSection(RectTransform section)
         {
             upperSection = section;
@@ -313,45 +306,11 @@ namespace Minigames.SortGames
 
         public override void OnGameComplete()
         {
-            base.OnGameComplete(); // Mark as completed successfully
-            HidePopup();
-        }
-
-        protected virtual void ReturnToLowerSection(DraggableElement element)
-        {
-            foreach (var cell in Cells)
-            {
-                if (cell.GetElement() == element)
-                {
-                    cell.SetElement(null);
-                    break;
-                }
-            }
-
-            var elementRect = element.GetRectTransform();
-            elementRect.SetParent(lowerSection);
-            elementRect.anchorMin = new Vector2(0.5f, 0f);
-            elementRect.anchorMax = new Vector2(0.5f, 0f);
-            var newPos = GenerateRandomPositions(1)[0];
-            elementRect.anchoredPosition = newPos;
-        }
-
-        public virtual void ShowPopup()
-        {
-            if (popupCanvas != null)
-                popupCanvas.gameObject.SetActive(true);
-        }
-
-        protected virtual void HidePopup()
-        {
-            if (popupCanvas != null)
-                popupCanvas.gameObject.SetActive(false);
+            base.OnGameComplete();
         }
 
         protected override void InitializeGameUI()
         {
-            // Initialize the game after UI is set up
-            // Derived classes can override this and call base.InitializeGameUI() if they need custom UI
             InitializeGame();
         }
     }
