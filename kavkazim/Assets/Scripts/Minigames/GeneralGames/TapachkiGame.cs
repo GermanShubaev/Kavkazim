@@ -1,16 +1,17 @@
+using Minigames.Base;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
-namespace Minigames.ClickGames
+namespace Minigames.GeneralGames
 {
-    public class TapachkiGame : ClickGame
+    public class TapachkiGame : BaseMinigame
     {
         [Header("Tapachki Settings")]
-        [SerializeField] private Vector2 imageSize = new Vector2(900, 900);
-        [SerializeField] private float imageSpacing = 50f;
-        [SerializeField] private float outlineWidth = 10f;
+        [SerializeField] private Vector2 imageSize = new Vector2(400, 400);
+        [SerializeField] private float imageSpacing = 25f;
+        [SerializeField] private float outlineWidth = 8f;
 
         private Sprite _bootsSprite;
         private Sprite _slippersSprite;
@@ -22,15 +23,12 @@ namespace Minigames.ClickGames
         private Outline _bootsOutline;
         private Outline _slippersOutline;
         
-        private bool _bootsClicked = false;
-        private bool _slippersClicked = false;
-        private bool _gameComplete = false;
+        private bool _bootsClicked;
+        private bool _slippersClicked;
+        private bool _gameComplete;
 
         private void Awake()
         {
-            useScreenPercentage = true;
-            screenPercentage = 0.75f;
-            
             LoadImages();
         }
 
@@ -96,11 +94,6 @@ namespace Minigames.ClickGames
 
         protected override void InitializeGameUI()
         {
-            if (useScreenPercentage)
-            {
-                ResizeContentPanelToScreenPercentage();
-            }
-
             _bootsClicked = false;
             _slippersClicked = false;
             _gameComplete = false;
@@ -204,12 +197,14 @@ namespace Minigames.ClickGames
             OnGameComplete();
         }
 
-        public override void OnGameComplete()
+        private void OnGameComplete()
         {
-            Debug.Log("[TapachkiGame] Congratulations! Game complete.");
             base.OnGameComplete();
-        }
+            Debug.Log("[WolfClickGame] Both amir and solomon found! Game complete.");
 
+            StartCoroutine(CloseAfterDelay(2f));
+        }
+        
         protected override void CleanupGameUI()
         {
             base.CleanupGameUI();
@@ -221,14 +216,6 @@ namespace Minigames.ClickGames
             _slippersImage = null;
             _bootsOutline = null;
             _slippersOutline = null;
-        }
-
-        protected override void CreateMainImage()
-        {
-        }
-
-        protected override void CreateStains()
-        {
         }
     }
 }

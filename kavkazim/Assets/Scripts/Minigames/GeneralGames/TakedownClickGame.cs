@@ -1,11 +1,12 @@
 using System.Collections.Generic;
+using Minigames.Base;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace Minigames.ClickGames
+namespace Minigames.GeneralGames
 {
-    public class TakedownClickGame : ClickGame
+    public class TakedownClickGame : BaseMinigame
     {
         private const string NoSubPath = "Assets/Art/Images/ufc/ufc_no_sub.png";
         private const string SubPath = "Assets/Art/Images/ufc/ufc_sub.png";

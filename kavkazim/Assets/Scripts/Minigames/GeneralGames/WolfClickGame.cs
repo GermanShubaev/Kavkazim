@@ -1,20 +1,21 @@
 using System.Collections.Generic;
+using Minigames.Base;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace Minigames.ClickGames
+namespace Minigames.GeneralGames
 {
-    public class WolfClickGame : ClickGame
+    public class WolfClickGame : BaseMinigame
     {
         private readonly string AnonymousPath = "Assets/Art/Images/wolf/anonymous.png";
         
         [Header("Wolf Game Settings")]
         [SerializeField] private int numberOfPeople = 9;
-        [SerializeField] private Vector2 personSize = new Vector2(300, 360);
+        [SerializeField] private Vector2 personSize = new Vector2(150, 200);
         [SerializeField] private int gridColumns = 3;
-        [SerializeField] private float gridSpacing = 40f;
-        private const float NameLabelHeight = 80f; 
+        [SerializeField] private float gridSpacing = 30f;
+        private const float NameLabelHeight = 40f; 
 
         private static readonly string[] AllNames = new string[]
         {

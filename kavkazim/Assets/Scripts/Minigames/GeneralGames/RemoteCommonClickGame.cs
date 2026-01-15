@@ -1,10 +1,11 @@
+using Minigames.Base;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace Minigames.ClickGames
+namespace Minigames.GeneralGames
 {
-    public class RemoteCommonClickGame : ClickGame
+    public class RemoteCommonClickGame : BaseMinigame
     {
         private const string RemotePath = "Assets/Art/Images/temperature/common_remote.png";
 
@@ -24,7 +25,6 @@ namespace Minigames.ClickGames
         [SerializeField] private Vector2 tempDownButtonPos = new Vector2(0.25f, 0.30f);
         [SerializeField] private Vector2 fanUpButtonPos = new Vector2(0.75f, 0.45f);
         [SerializeField] private Vector2 fanDownButtonPos = new Vector2(0.75f, 0.30f);
-        [SerializeField] private Vector2 buttonSize = new Vector2(80, 50);
 
         [Header("Display Positions (normalized 0-1)")]
         [SerializeField] private Vector2 tempDisplayPos = new Vector2(0.5f, 0.68f);
@@ -40,7 +40,7 @@ namespace Minigames.ClickGames
 
         private int _currentTemperature;
         private int _currentFanSpeed;
-        private bool _gameWon = false;
+        private bool _gameWon;
 
         private void Awake()
         {
