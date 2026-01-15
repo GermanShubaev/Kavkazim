@@ -148,7 +148,7 @@ namespace Minigames.ClickGames
 
         public override void OnGameComplete()
         {
-            base.OnGameComplete(); // Mark as completed successfully
+            base.OnGameComplete();
             Debug.Log("[DishClickGame] Congratulations! The dish is now sparkling clean.");
             
             StartCoroutine(CloseAfterDelay(1.5f));

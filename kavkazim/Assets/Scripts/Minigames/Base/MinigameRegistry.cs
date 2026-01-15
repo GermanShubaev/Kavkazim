@@ -4,10 +4,6 @@ using UnityEngine;
 
 namespace Minigames.Base
 {
-    /// <summary>
-    /// Registry for minigame factories. Allows registration of minigame types
-    /// without modifying the factory class.
-    /// </summary>
     public class MinigameRegistry : IMinigameRegistry
     {
         private readonly Dictionary<MinigameType, Func<IMinigame>> _factories = new Dictionary<MinigameType, Func<IMinigame>>();

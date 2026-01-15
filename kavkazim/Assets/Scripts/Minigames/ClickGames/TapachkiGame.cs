@@ -225,12 +225,10 @@ namespace Minigames.ClickGames
 
         protected override void CreateMainImage()
         {
-            // Don't create main image - we're using custom UI
         }
 
         protected override void CreateStains()
         {
-            // Don't create stains - we're using custom clickable images
         }
     }
 }

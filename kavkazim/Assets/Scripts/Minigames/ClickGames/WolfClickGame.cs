@@ -268,7 +268,7 @@ namespace Minigames.ClickGames
 
         private void OnGameComplete()
         {
-            base.OnGameComplete(); // Mark as completed successfully
+            base.OnGameComplete();
             Debug.Log("[WolfClickGame] Both amir and solomon found! Game complete.");
             
             Transform titleTransform = _contentPanel.transform.Find("Title");

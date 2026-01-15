@@ -4,18 +4,11 @@ using UnityEngine;
 
 namespace Minigames.Base
 {
-    /// <summary>
-    /// Factory for creating minigame instances using a registry pattern.
-    /// New minigames can be registered without modifying this class.
-    /// </summary>
     public static class MinigameFactory
     {
         private static IMinigameRegistry _registry;
         private static readonly object _lock = new object();
 
-        /// <summary>
-        /// Gets or creates the minigame registry.
-        /// </summary>
         private static IMinigameRegistry Registry
         {
             get
@@ -35,26 +28,16 @@ namespace Minigames.Base
             }
         }
 
-        /// <summary>
-        /// Creates a minigame instance for the given type.
-        /// </summary>
         public static IMinigame CreateMinigame(MinigameType gameType)
         {
             return Registry.Create(gameType);
         }
 
-        /// <summary>
-        /// Registers a custom factory for a minigame type.
-        /// Allows extending the factory without modifying this class.
-        /// </summary>
         public static void Register(MinigameType type, System.Func<IMinigame> factory)
         {
             Registry.Register(type, factory);
         }
 
-        /// <summary>
-        /// Initializes default minigame registrations.
-        /// </summary>
         private static void InitializeDefaultRegistrations()
         {
             var registry = (MinigameRegistry)_registry;

@@ -175,7 +175,6 @@ namespace Minigames
             imageRect.anchorMax = new Vector2(0.5f, 0.5f);
             imageRect.pivot = new Vector2(0.5f, 0.5f);
 
-            // Initially hidden - will be shown in Update() if player has this task
             _indicatorCanvas.SetActive(false);
             
             Debug.Log($"[MinigameTriggerPoint] Created visual indicator at position ({triggerWorldPos.x}, {triggerWorldPos.y}, {triggerWorldPos.z})");
@@ -185,7 +184,6 @@ namespace Minigames
         {
             if (_indicatorCanvas != null && showIndicator)
             {
-                // Check if local player has this task assigned
                 bool shouldShow = ShouldShowIndicator();
                 _indicatorCanvas.SetActive(shouldShow);
                 
@@ -197,7 +195,7 @@ namespace Minigames
                     if (_mainCamera != null)
                     {
                         Vector3 directionToCamera = _mainCamera.transform.position - _indicatorCanvas.transform.position;
-                        directionToCamera.y = 0; // Keep it upright
+                        directionToCamera.y = 0;
                         if (directionToCamera != Vector3.zero)
                         {
                             _indicatorCanvas.transform.rotation = Quaternion.LookRotation(-directionToCamera);
@@ -223,12 +221,8 @@ namespace Minigames
             }
         }
 
-        /// <summary>
-        /// Checks if the local player has this task assigned to them.
-        /// </summary>
         private bool ShouldShowIndicator()
         {
-            // Find local player avatar if not cached
             if (_localPlayerAvatar == null)
             {
                 PlayerAvatar[] avatars = FindObjectsByType<PlayerAvatar>(FindObjectsSortMode.None);
@@ -242,25 +236,21 @@ namespace Minigames
                 }
             }
 
-            // If no local player found, hide indicator
             if (_localPlayerAvatar == null)
             {
                 return false;
             }
 
-            // Only show for innocent players
             if (_localPlayerAvatar.PerceivedRole != PlayerRoleType.Innocent)
             {
                 return false;
             }
 
-            // Check if GameplayUI has task assignments
             if (UI.GameplayUI.Instance == null)
             {
                 return false;
             }
 
-            // Get task assignments from GameplayUI
             ulong localClientId = _localPlayerAvatar.OwnerClientId;
             var taskAssignments = UI.GameplayUI.Instance.GetTaskAssignments();
             
@@ -269,31 +259,24 @@ namespace Minigames
                 return false;
             }
 
-            // Check if this specific task (position + game type) is assigned to the player
             var playerTasks = taskAssignments[localClientId];
             foreach (var task in playerTasks)
             {
-                // Match by position (with small tolerance for floating point precision) and game type
                 float positionTolerance = 0.1f;
                 if (Vector2.Distance(task.Location, position) < positionTolerance && 
                     task.MinigameType == gameType)
                 {
-                    // Check if this task has been completed by the local player
-                    // If completed, don't show the indicator (task is no longer available for this player)
                     if (UI.GameplayUI.Instance.IsTaskCompleted(task))
                     {
-                        return false; // Task completed - hide indicator
+                        return false;
                     }
-                    return true; // Task assigned and not completed - show indicator
+                    return true;
                 }
             }
 
             return false;
         }
 
-        /// <summary>
-        /// Checks if the local player has this task assigned (for interaction checks).
-        /// </summary>
         public bool IsAssignedToLocalPlayer()
         {
             return ShouldShowIndicator();

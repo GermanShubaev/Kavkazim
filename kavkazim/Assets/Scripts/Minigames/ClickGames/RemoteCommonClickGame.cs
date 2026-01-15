@@ -65,7 +65,6 @@ namespace Minigames.ClickGames
                 Debug.Log("[RemoteCommonClickGame] Loaded common_remote.png (Editor mode)");
             #endif
 
-            // Fallback to Resources for runtime
             if (_remoteSprite == null)
             {
                 _remoteSprite = Resources.Load<Sprite>("Art/Images/temperature/common_remote");
@@ -81,8 +80,6 @@ namespace Minigames.ClickGames
         {
             base.CreatePopupWindow();
             
-            // Resize content panel relative to reference resolution (2560x1440)
-            // CanvasScaler will handle scaling to different screen sizes
             RectTransform contentRect = _contentPanel.GetComponent<RectTransform>();
             const float referenceWidth = 2560f;
             const float referenceHeight = 1440f;
@@ -152,7 +149,6 @@ namespace Minigames.ClickGames
 
         private void CreateTemperatureDisplay()
         {
-            // Temperature text directly on top of the remote display (no background)
             GameObject textObj = new GameObject("TemperatureDisplay");
             textObj.transform.SetParent(_contentPanel.transform, false);
 
@@ -164,7 +160,6 @@ namespace Minigames.ClickGames
             _temperatureText.alignment = TextAnchor.MiddleCenter;
             _temperatureText.color = Color.black;
 
-            // Add outline for better visibility
             Outline outline = textObj.AddComponent<Outline>();
             outline.effectColor = Color.white;
             outline.effectDistance = new Vector2(1, 1);
@@ -178,7 +173,6 @@ namespace Minigames.ClickGames
 
         private void CreateFanSpeedDisplay()
         {
-            // Container for fan speed lines (no background, directly on the photo)
             _fanSpeedContainer = new GameObject("FanSpeedDisplay");
             _fanSpeedContainer.transform.SetParent(_contentPanel.transform, false);
 
@@ -188,9 +182,8 @@ namespace Minigames.ClickGames
             containerRect.offsetMin = Vector2.zero;
             containerRect.offsetMax = Vector2.zero;
 
-            // Create thin black vertical lines for fan speed
             _fanSpeedBars = new Image[maxFanSpeed];
-            float barWidth = 0.04f; // Thin lines
+            float barWidth = 0.04f;
             float spacing = 0.24f;
             float startX = 0.02f;
 
@@ -205,7 +198,6 @@ namespace Minigames.ClickGames
 
                 RectTransform barRect = barObj.GetComponent<RectTransform>();
                 float xPos = startX + i * spacing;
-                // Make bars progressively taller
                 float height = 0.4f + (i * 0.15f);
                 barRect.anchorMin = new Vector2(xPos, 0.1f);
                 barRect.anchorMax = new Vector2(xPos + barWidth, 0.1f + height);
@@ -218,16 +210,9 @@ namespace Minigames.ClickGames
 
         private void CreateControlButtons()
         {
-            // Temperature UP button
             CreateButton("TempUp", "+", tempUpButtonPos, new Color(0.9f, 0.3f, 0.3f), OnTempUp);
-            
-            // Temperature DOWN button
             CreateButton("TempDown", "-", tempDownButtonPos, new Color(0.3f, 0.5f, 0.9f), OnTempDown);
-            
-            // Fan UP button
             CreateButton("FanUp", "▲", fanUpButtonPos, new Color(0.4f, 0.8f, 0.4f), OnFanUp);
-            
-            // Fan DOWN button
             CreateButton("FanDown", "▼", fanDownButtonPos, new Color(0.8f, 0.6f, 0.2f), OnFanDown);
         }
 
@@ -255,7 +240,6 @@ namespace Minigames.ClickGames
             buttonRect.offsetMin = Vector2.zero;
             buttonRect.offsetMax = Vector2.zero;
 
-            // Button label
             GameObject textObj = new GameObject("Label");
             textObj.transform.SetParent(buttonObj.transform, false);
 
@@ -340,19 +324,16 @@ namespace Minigames.ClickGames
 
         private void UpdateDisplays()
         {
-            // Update temperature display
             if (_temperatureText != null)
             {
                 _temperatureText.text = $"{_currentTemperature}°C";
                 
-                // Color feedback - green when at target, black otherwise
                 if (_currentTemperature == targetTemperature)
                     _temperatureText.color = Color.green;
                 else
                     _temperatureText.color = Color.black;
             }
 
-            // Update fan speed display (thin black vertical lines)
             if (_fanSpeedBars != null)
             {
                 for (int i = 0; i < _fanSpeedBars.Length; i++)
@@ -361,7 +342,6 @@ namespace Minigames.ClickGames
                     {
                         if (i < _currentFanSpeed)
                         {
-                            // Active bar - black (or green when at target)
                             if (_currentFanSpeed == targetFanSpeed)
                                 _fanSpeedBars[i].color = Color.green;
                             else
@@ -369,7 +349,6 @@ namespace Minigames.ClickGames
                         }
                         else
                         {
-                            // Inactive bar - light gray
                             _fanSpeedBars[i].color = new Color(0.7f, 0.7f, 0.7f);
                         }
                     }
@@ -408,7 +387,7 @@ namespace Minigames.ClickGames
 
         public override void OnGameComplete()
         {
-            base.OnGameComplete(); // Mark as completed successfully
+            base.OnGameComplete();
         }
 
         private System.Collections.IEnumerator CloseAfterDelay(float delay)

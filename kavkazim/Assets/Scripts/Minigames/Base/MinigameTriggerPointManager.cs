@@ -4,9 +4,6 @@ using UnityEngine;
 
 namespace Minigames
 {
-    /// <summary>
-    /// Manages and spawns minigame trigger points at specified locations.
-    /// </summary>
     public class MinigameTriggerPointManager : MonoBehaviour
     {
         private static MinigameTriggerPointManager _instance;
@@ -33,9 +30,6 @@ namespace Minigames
 
         private List<MinigameTriggerPoint> _spawnedTriggerPoints = new List<MinigameTriggerPoint>();
 
-        /// <summary>
-        /// Data structure for trigger point configuration.
-        /// </summary>
         [System.Serializable]
         public class TriggerPointData
         {
@@ -67,7 +61,6 @@ namespace Minigames
 
         private void Awake()
         {
-            // Ensure singleton pattern
             if (_instance == null)
             {
                 _instance = this;
@@ -86,9 +79,6 @@ namespace Minigames
             }
         }
 
-        /// <summary>
-        /// Spawns all configured trigger points.
-        /// </summary>
         public void SpawnAllTriggerPoints()
         {
             foreach (var triggerData in _triggerPoints)
@@ -99,15 +89,11 @@ namespace Minigames
             Debug.Log($"[MinigameTriggerPointManager] Spawned {_spawnedTriggerPoints.Count} trigger points");
         }
 
-        /// <summary>
-        /// Spawns a single trigger point at the specified position with the given radius and game type.
-        /// </summary>
         public MinigameTriggerPoint SpawnTriggerPoint(Vector2 position, float radius, MinigameType gameType)
         {
             GameObject triggerObj = new GameObject($"MinigameTriggerPoint_{gameType}_{position.x}_{position.y}");
             MinigameTriggerPoint trigger = triggerObj.AddComponent<MinigameTriggerPoint>();
             
-            // Use reflection to set private serialized fields
             var positionField = typeof(MinigameTriggerPoint).GetField("position", 
                 System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
             var radiusField = typeof(MinigameTriggerPoint).GetField("radius", 
@@ -122,10 +108,8 @@ namespace Minigames
             if (gameTypeField != null)
                 gameTypeField.SetValue(trigger, gameType);
 
-            // Set transform position for visual reference
             triggerObj.transform.position = new Vector3(position.x, position.y, 0);
 
-            // Register with MinigameManager if it exists
             MinigameManager manager = FindFirstObjectByType<MinigameManager>();
             if (manager != null)
             {
@@ -139,9 +123,6 @@ namespace Minigames
             return trigger;
         }
 
-        /// <summary>
-        /// Clears all spawned trigger points.
-        /// </summary>
         public void ClearAllTriggerPoints()
         {
             foreach (var trigger in _spawnedTriggerPoints)
@@ -160,9 +141,6 @@ namespace Minigames
             Debug.Log("[MinigameTriggerPointManager] Cleared all trigger points");
         }
 
-        /// <summary>
-        /// Gets all spawned trigger points.
-        /// </summary>
         public List<MinigameTriggerPoint> GetSpawnedTriggerPoints()
         {
             return new List<MinigameTriggerPoint>(_spawnedTriggerPoints);

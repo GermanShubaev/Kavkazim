@@ -84,8 +84,6 @@ namespace Minigames.ClickGames
         {
             base.CreatePopupWindow();
             
-            // Resize content panel relative to reference resolution (2560x1440)
-            // CanvasScaler will handle scaling to different screen sizes
             RectTransform contentRect = _contentPanel.GetComponent<RectTransform>();
             const float referenceWidth = 2560f;
             const float referenceHeight = 1440f;
@@ -305,13 +303,13 @@ namespace Minigames.ClickGames
                 _clickButton.interactable = false;
             }
 
-            OnGameComplete(); // Mark as completed successfully
+            OnGameComplete();
             StartCoroutine(CloseAfterDelay(2f));
         }
 
         public override void OnGameComplete()
         {
-            base.OnGameComplete(); // Mark as completed successfully
+            base.OnGameComplete();
         }
 
         private System.Collections.IEnumerator CloseAfterDelay(float delay)
