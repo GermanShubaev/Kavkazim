@@ -1,13 +1,9 @@
-using Minigames.Base;
+using System.Linq;
 using Minigames.SortGames;
 using UnityEngine;
 
 namespace Minigames.Base.Strategies
 {
-    /// <summary>
-    /// Default win condition strategy for sort games.
-    /// Checks if all elements are placed in their correct cells.
-    /// </summary>
     public class SortGameWinConditionStrategy : IWinConditionStrategy
     {
         public bool CheckWinCondition(BaseMinigame minigame)
@@ -15,20 +11,13 @@ namespace Minigames.Base.Strategies
             if (minigame is not SortGame sortGame)
                 return false;
 
-            // Check if all cells have elements and they're in the correct positions
             var cells = sortGame.GetCells();
-            foreach (var cell in cells)
+            return cells.All(cell =>
             {
                 var element = cell.GetElement();
-                
-                if (element == null)
-                    return false;
-                
-                if (element.GetCorrectCellIndex() != cell.GetIndex())
-                    return false;
-            }
-
-            return true;
+                return element != null &&
+                       element.GetCorrectCellIndex() == cell.GetIndex();
+            });
         }
 
         public void OnWin(BaseMinigame minigame)
@@ -38,12 +27,6 @@ namespace Minigames.Base.Strategies
                 Debug.Log("SortGame: All elements correctly placed! Game complete.");
                 sortGame.OnGameComplete();
             }
-        }
-
-        public void OnLose(BaseMinigame minigame)
-        {
-            // Sort games typically don't have a lose condition
-            // Override in derived strategies if needed
         }
     }
 }

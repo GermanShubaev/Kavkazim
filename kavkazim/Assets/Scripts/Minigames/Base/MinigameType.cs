@@ -3,16 +3,16 @@ namespace Minigames.Base
     public enum MinigameType
     {
         LezginkaSort,
-        EmptyPopup,
-        PraySortGame,
+        PraySort,
         PapakhaClick,
         DishClick,
-        WolfClick,
-        TakedownClick,
+        Wolf,
+        Takedown,
         ShashlikSort,
-        RemoteCommonClick,
+        Remote,
         LaundrySort,
-        TapachkiClick
+        Tapachki,
+        DefaultType
     }
 }
 

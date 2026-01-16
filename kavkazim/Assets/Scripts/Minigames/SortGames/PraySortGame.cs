@@ -15,13 +15,10 @@ namespace Minigames.SortGames
         [SerializeField] private Color backgroundColor = new Color(0, 0, 0, 0.7f);
         [SerializeField] private bool showCloseButton = true;
 
-        // Note: _popupWindow, _canvas, _backgroundPanel, _contentPanel, _closeButton are inherited from BaseMinigame
         private Text _resultText;
-        private Sprite[] _targetOrder; 
+        private Sprite[] _targetOrder;
         private List<PrayWordElement> _wordElements = new List<PrayWordElement>();
-        private float cellSize = 250f; 
-
-        // IsActive and PopupWindow properties are inherited from BaseMinigame
+        private float cellSize = 250f;
 
         protected override void Awake()
         {
@@ -41,13 +38,7 @@ namespace Minigames.SortGames
 
         private void LoadPrayImages()
         {
-            // Load all images from the pray folder
-            // Note: For Resources.LoadAll to work, images need to be in a Resources folder
-            // Path structure should be: Assets/Resources/Art/Images/pray/
-            // If not in Resources, we'll try direct loading via UnityEditor (editor only)
-            
             #if UNITY_EDITOR
-            // Editor-only: Load directly from assets
             string[] guids = AssetDatabase.FindAssets("t:Sprite", new[] { "Assets/Art/Images/pray" });
             if (guids != null && guids.Length > 0)
             {
@@ -57,13 +48,11 @@ namespace Minigames.SortGames
                     string path = AssetDatabase.GUIDToAssetPath(guids[i]);
                     _targetOrder[i] = AssetDatabase.LoadAssetAtPath<Sprite>(path);
                 }
-                // Sort by name to ensure consistent order
                 System.Array.Sort(_targetOrder, (a, b) => string.Compare(a.name, b.name));
-                Debug.Log($"[PraySortGame] Loaded {_targetOrder.Length} images from Assets/Art/Images/pray (Editor mode)");
+                Debug.Log($"[PraySort] Loaded {_targetOrder.Length} images from Assets/Art/Images/pray (Editor mode)");
             }
             #endif
             
-            // Try Resources loading (works in both editor and build)
             if (_targetOrder == null || _targetOrder.Length == 0)
             {
                 _targetOrder = Resources.LoadAll<Sprite>("Art/Images/pray");
@@ -76,33 +65,30 @@ namespace Minigames.SortGames
             
             if (_targetOrder == null || _targetOrder.Length == 0)
             {
-                Debug.LogError("[PraySortGame] Failed to load images. Make sure the images are either:");
+                Debug.LogError("[PraySort] Failed to load images. Make sure the images are either:");
                 Debug.LogError("  1. In a Resources folder: Assets/Resources/Art/Images/pray/");
                 Debug.LogError("  2. Or in Assets/Art/Images/pray/ (editor only)");
                 _targetOrder = new Sprite[0];
             }
             else
             {
-                Debug.Log($"[PraySortGame] Loaded {_targetOrder.Length} images successfully");
+                Debug.Log($"[PraySort] Loaded {_targetOrder.Length} images successfully");
             }
         }
 
         protected override void InitializeGame()
         {
-            // This will be called after popup is created
-            // Initialize game settings
             if (_targetOrder == null || _targetOrder.Length == 0)
             {
-                Debug.LogError("[PraySortGame] No images loaded! Cannot initialize game.");
+                Debug.LogError("[PraySort] No images loaded! Cannot initialize game.");
                 return;
             }
 
-            // Force exactly 6 cells for the prayer game
             numberOfElements = 6;
-            elementSize = 300f; // 4x original (100 * 4)
-            cellSpacing = 30f; // Increased spacing for larger elements
-            minDistanceBetweenElements = 200f; // Reduced to fit elements in lower section
-            snapProximityDistance = 200f; // Increased snap distance for larger cells
+            elementSize = 300f;
+            cellSpacing = 30f;
+            minDistanceBetweenElements = 200f;
+            snapProximityDistance = 200f;
             
             SetupUpperSection();
             SetupLowerSection();
@@ -113,7 +99,6 @@ namespace Minigames.SortGames
             if (upperSection == null) return;
 
             Cells.Clear();
-            // Use cellSize for cell dimensions (3x original = 300)
             float totalWidth = (numberOfElements * cellSize) + ((numberOfElements - 1) * cellSpacing);
             float startX = -totalWidth / 2f + cellSize / 2f;
 
@@ -133,9 +118,7 @@ namespace Minigames.SortGames
                 cell.Initialize(i, this);
                 Cells.Add(cell);
 
-                // Add background image to show cell boundaries
                 Image bgImage = cellObj.AddComponent<Image>();
-                // bgImage.color = new Color(1f, 1f, 1f, 0.2f);
             }
         }
 
@@ -161,41 +144,29 @@ namespace Minigames.SortGames
                 wordRect.anchorMax = new Vector2(0.5f, 0.5f);
                 wordRect.pivot = new Vector2(0.5f, 0.5f);
 
-                // Add Image component to display the sprite
                 Image image = wordObj.AddComponent<Image>();
                 image.sprite = sprite;
                 image.preserveAspect = true;
 
-                // Add custom draggable component
                 PrayWordElement wordElement = wordObj.AddComponent<PrayWordElement>();
                 wordElement.Initialize(sprite, i, this);
                 _wordElements.Add(wordElement);
             }
         }
 
-        /// <summary>
-        /// Generate random positions within the lower section bounds.
-        /// Uses screen-based calculation since anchors define the section size.
-        /// </summary>
         private List<Vector2> GenerateRandomPositionsForPray(int count)
         {
             List<Vector2> positions = new List<Vector2>();
             
-            // Calculate bounds based on screen size and anchors
-            // Lower section is anchors (0,0) to (1, 0.5) of content panel
-            // Content panel is anchors (0.125, 0.125) to (0.875, 0.875) of screen
             float screenWidth = Screen.width;
             float screenHeight = Screen.height;
             
-            // Content panel size (75% of screen)
             float contentWidth = screenWidth * 0.75f;
             float contentHeight = screenHeight * 0.75f;
             
-            // Lower section is bottom half of content panel
             float sectionWidth = contentWidth;
             float sectionHeight = contentHeight * 0.5f;
             
-            // Calculate bounds with margin for element size
             float margin = elementSize / 2f + 20f;
             float halfWidth = sectionWidth / 2f - margin;
             float halfHeight = sectionHeight / 2f - margin;
@@ -263,28 +234,20 @@ namespace Minigames.SortGames
         {
             if (Cells == null || Cells.Count != 6)
             {
-                Debug.Log($"[PraySortGame] Win check skipped: cells.Count = {Cells?.Count ?? 0}, expected 6");
+                Debug.Log($"[PraySort] Win check skipped: cells.Count = {Cells?.Count ?? 0}, expected 6");
                 return;
             }
 
-            // Define the correct order from right to left (cell 0 is rightmost, cell 5 is leftmost)
-            // 1st cell (cell 0): pray_shalom.png
-            // 2nd cell (cell 1): pray_alechem.png
-            // 3rd cell (cell 2): pray_malachei_2.png or pray_malachei_1.png
-            // 4th cell (cell 3): pray_hashalom.png
-            // 5th cell (cell 4): pray_malachei_2.png or pray_malachei_1.png
-            // 6th cell (cell 5): pray_elion.png
             string[] expectedTypes = new string[]
             {
-                "elion",        // Cell 5: 6th cell (leftmost)
-                "malachei",    // Cell 4: 5th cell (malachei_1 or malachei_2)
-                "hashalom",    // Cell 3: 4th cell
-                "malachei",    // Cell 2: 3rd cell (malachei_1 or malachei_2)
-                "alechem",     // Cell 1: 2nd cell
-                "shalom"      // Cell 0: 1st cell (rightmost)
+                "elion",
+                "malachei",
+                "hashalom",
+                "malachei",
+                "alechem",
+                "shalom"
             };
 
-            // Check if all cells have elements
             for (int i = 0; i < Cells.Count; i++)
             {
                 Cell cell = Cells[i];
@@ -292,14 +255,12 @@ namespace Minigames.SortGames
 
                 if (element == null)
                 {
-                    // Not all cells filled yet
                     if (_resultText != null)
                         _resultText.text = "";
                     return;
                 }
             }
 
-            // All cells are filled, now check if they're in correct order
             bool allCorrect = true;
             for (int i = 0; i < Cells.Count && i < expectedTypes.Length; i++)
             {
@@ -316,7 +277,7 @@ namespace Minigames.SortGames
                 if (wordElement == null)
                 {
                     allCorrect = false;
-                    Debug.LogWarning($"[PraySortGame] Cell {i} element is not a PrayWordElement");
+                    Debug.LogWarning($"[PraySort] Cell {i} element is not a PrayWordElement");
                     break;
                 }
 
@@ -326,7 +287,7 @@ namespace Minigames.SortGames
                 if (actualType != expectedType)
                 {
                     allCorrect = false;
-                    Debug.Log($"[PraySortGame] Cell {i} incorrect: expected '{expectedType}', got '{actualType}'");
+                    Debug.Log($"[PraySort] Cell {i} incorrect: expected '{expectedType}', got '{actualType}'");
                     break;
                 }
             }
@@ -338,13 +299,12 @@ namespace Minigames.SortGames
                     _resultText.text = "Correct! All prayer words in order!";
                     _resultText.color = Color.green;
                 }
-                Debug.Log("[PraySortGame] All images correctly ordered! Game complete.");
+                Debug.Log("[PraySort] All images correctly ordered! Game complete.");
                 OnGameComplete();
                 StartCoroutine(CloseAfterDelay(2f));
             }
             else
             {
-                // Clear result text if not all correct
                 if (_resultText != null)
                 {
                     _resultText.text = "";
@@ -354,7 +314,7 @@ namespace Minigames.SortGames
 
         public override void OnGameComplete()
         {
-            base.OnGameComplete(); // Mark as completed successfully - this triggers progress bar update and task removal
+            base.OnGameComplete();
         }
 
         private System.Collections.IEnumerator CloseAfterDelay(float delay)
@@ -370,13 +330,11 @@ namespace Minigames.SortGames
                 return;
             }
 
-            // Cleanup is handled by CleanupGameUI() and base.CloseGame()
             base.CloseGame();
         }
 
         protected override void CleanupGameUI()
         {
-            // Clean up elements
             foreach (var element in _wordElements)
             {
                 if (element != null)
@@ -392,7 +350,6 @@ namespace Minigames.SortGames
 
         protected override void InitializeGameUI()
         {
-            // Adjust content panel layout (matching LaundrySortGame implementation)
             RectTransform contentRect = _contentPanel.GetComponent<RectTransform>();
             if (contentRect != null)
             {
@@ -407,7 +364,6 @@ namespace Minigames.SortGames
                 }
             }
 
-            // Set popup window reference for SortGame
             if (_popupWindow != null)
             {
                 popupWindow = _contentPanel.GetComponent<RectTransform>();
@@ -417,7 +373,6 @@ namespace Minigames.SortGames
                 popupCanvas = _canvas;
             }
 
-            // Create title text
             GameObject titleObj = new GameObject("TitleText");
             titleObj.transform.SetParent(_contentPanel.transform, false);
             Text titleText = titleObj.AddComponent<Text>();
@@ -433,7 +388,6 @@ namespace Minigames.SortGames
             titleRect.sizeDelta = Vector2.zero;
             titleRect.anchoredPosition = Vector2.zero;
 
-            // Create result text
             GameObject resultTextObj = new GameObject("ResultText");
             resultTextObj.transform.SetParent(_contentPanel.transform, false);
             _resultText = resultTextObj.AddComponent<Text>();
@@ -449,7 +403,6 @@ namespace Minigames.SortGames
             resultRect.sizeDelta = Vector2.zero;
             resultRect.anchoredPosition = Vector2.zero;
 
-            // Ensure sections exist (SortGameUIBuilder should create them, but create if missing)
             if (upperSection == null)
             {
                 GameObject upperSectionObj = new GameObject("UpperSection");
@@ -472,7 +425,6 @@ namespace Minigames.SortGames
                 lowerSection.anchoredPosition = Vector2.zero;
             }
 
-            // Initialize game logic
             InitializeGame();
         }
 
@@ -493,8 +445,6 @@ namespace Minigames.SortGames
         {
             _praySprite = sprite;
             base.Initialize(index, game, sprite);
-            
-            // Cache the canvas from the popup window (element is a child of the popup)
             _canvas = GetComponentInParent<Canvas>();
         }
 
@@ -503,15 +453,15 @@ namespace Minigames.SortGames
             string lowerName = spriteName.ToLower();
             
             if (lowerName.Contains("shalom") && !lowerName.Contains("hashalom"))
-                return "shalom"; // pray_shalom
+                return "shalom";
             if (lowerName.Contains("alechem"))
-                return "alechem"; // pray_alechem
+                return "alechem";
             if (lowerName.Contains("malachei"))
-                return "malachei"; // pray_malachei_1
+                return "malachei";
             if (lowerName.Contains("hashalom"))
-                return "hashalom"; // pray_hashalom
+                return "hashalom";
             if (lowerName.Contains("elion"))
-                return "elion"; // pray_elion
+                return "elion";
                 
             Debug.LogWarning($"[PrayWordElement] Unknown sprite name: {spriteName}, defaulting to unknown");
             return "unknown";
@@ -537,8 +487,6 @@ namespace Minigames.SortGames
             if (Game != null && RectTransform != null && _canvas != null)
             {
                 RectTransform parentRect = RectTransform.parent as RectTransform;
-                
-                // Use the cached canvas instead of trying to get it from game component
                 Camera cam = _canvas.renderMode != RenderMode.ScreenSpaceOverlay ? _canvas.worldCamera : null;
                 
                 RectTransformUtility.ScreenPointToLocalPointInRectangle(

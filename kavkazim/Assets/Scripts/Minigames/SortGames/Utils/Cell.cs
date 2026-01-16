@@ -1,13 +1,8 @@
-using Minigames.Base.Interaction;
 using UnityEngine;
 using UnityEngine.UI;
 
 namespace Minigames.SortGames
 {
-    /// <summary>
-    /// Cell component for sort games that can accept draggable elements.
-    /// Extracted from SortGame.cs to separate concerns.
-    /// </summary>
     public class Cell : MonoBehaviour, IDropTarget, IHighlightable
     {
         private int _index;
@@ -48,10 +43,9 @@ namespace Minigames.SortGames
             }
         }
 
-        // IDropTarget implementation
         public bool CanAcceptDrop(Vector2 position)
         {
-            return true; // Cells can always accept drops
+            return true;
         }
 
         public bool OnDrop(IDraggable draggable, Vector2 position)

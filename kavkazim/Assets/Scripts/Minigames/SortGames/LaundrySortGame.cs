@@ -118,6 +118,17 @@ namespace Minigames.SortGames
             Debug.Log($"[LaundrySortGame] Loaded {_basketSprites.Length} basket sprites, {_allClothesSprites.Count} total clothes");
         }
 
+        protected override void Start()
+        {
+            if (IsActive)
+            {
+                Debug.LogWarning($"{GetType().Name} is already active!");
+                return;
+            }
+
+            StartGame();
+        }
+        
         protected override void InitializeGameUI()
         {
             RectTransform contentRect = _contentPanel.GetComponent<RectTransform>();
@@ -128,20 +139,10 @@ namespace Minigames.SortGames
                 contentRect.sizeDelta = Vector2.zero;
                 contentRect.anchoredPosition = Vector2.zero;
             }
-
-            // Initialize clothing inventory
             InitializeInventory();
-
-            // Create result text
             CreateResultText();
-
-            // Create main basket in center
             CreateMainBasket();
-
-            // Create left basket (for colored clothes)
             CreateLeftBasket();
-
-            // Create right basket (for white clothes)
             CreateRightBasket();
         }
 
@@ -152,7 +153,6 @@ namespace Minigames.SortGames
             _rightBasketItems.Clear();
             _activeClothes.Clear();
 
-            // Create list of all clothes with their type determined by filename
             List<ClothingItem> allClothes = new List<ClothingItem>();
 
             foreach (Sprite sprite in _allClothesSprites)
@@ -160,7 +160,6 @@ namespace Minigames.SortGames
                 if (sprite == null) continue;
 
                 string fileName = sprite.name.ToLower();
-                // Determine type: if filename contains "white" it's white, otherwise it's colored
                 bool isWhite = fileName.Contains("white");
 
                 allClothes.Add(new ClothingItem
@@ -171,17 +170,14 @@ namespace Minigames.SortGames
                 });
             }
 
-            // Shuffle
             Shuffle(allClothes);
 
-            // Take the required number of clothes
             int clothesToTake = Mathf.Min(totalClothes, allClothes.Count);
             for (int i = 0; i < clothesToTake; i++)
             {
                 _clothingInventory.Add(allClothes[i]);
             }
 
-            // Update basket image based on unsorted count
             UpdateMainBasketImage();
 
             Debug.Log($"[LaundrySortGame] Initialized inventory with {_clothingInventory.Count} clothes");
@@ -224,7 +220,7 @@ namespace Minigames.SortGames
             mainBasketObj.transform.SetParent(_contentPanel.transform, false);
 
             _mainBasketImage = mainBasketObj.AddComponent<Image>();
-            _mainBasketImage.sprite = _basketSprites[4]; // basket_5.png (starts with 10 items)
+            _mainBasketImage.sprite = _basketSprites[4];
             _mainBasketImage.preserveAspect = true;
 
             _mainBasketRect = mainBasketObj.GetComponent<RectTransform>();
@@ -233,7 +229,6 @@ namespace Minigames.SortGames
             _mainBasketRect.anchorMax = new Vector2(0.5f, 0.5f);
             _mainBasketRect.anchoredPosition = Vector2.zero;
 
-            // Make it clickable
             _mainBasketButton = mainBasketObj.AddComponent<Button>();
             _mainBasketButton.onClick.AddListener(OnMainBasketClicked);
         }
@@ -244,7 +239,7 @@ namespace Minigames.SortGames
             leftBasketObj.transform.SetParent(_contentPanel.transform, false);
 
             _leftBasketImage = leftBasketObj.AddComponent<Image>();
-            _leftBasketImage.sprite = _basketSprites[0]; // basket_1.png
+            _leftBasketImage.sprite = _basketSprites[0];
             _leftBasketImage.preserveAspect = true;
 
             _leftBasketRect = leftBasketObj.GetComponent<RectTransform>();
@@ -253,10 +248,9 @@ namespace Minigames.SortGames
             _leftBasketRect.anchorMax = new Vector2(0.2f, 0.5f);
             _leftBasketRect.anchoredPosition = Vector2.zero;
 
-            // Create text label above left basket
             GameObject leftLabelObj = new GameObject("LeftBasketLabel");
             leftLabelObj.transform.SetParent(_contentPanel.transform, false);
-            leftLabelObj.transform.SetAsLastSibling(); // Ensure it's on top
+            leftLabelObj.transform.SetAsLastSibling();
 
             Text leftLabelText = leftLabelObj.AddComponent<Text>();
             leftLabelText.text = "color";
@@ -264,9 +258,8 @@ namespace Minigames.SortGames
             leftLabelText.fontSize = 36;
             leftLabelText.fontStyle = FontStyle.Bold;
             leftLabelText.alignment = TextAnchor.MiddleCenter;
-            leftLabelText.color = Color.black; // Use black for better visibility
+            leftLabelText.color = Color.black;
 
-            // Add shadow for better visibility
             Shadow leftShadow = leftLabelObj.AddComponent<Shadow>();
             leftShadow.effectColor = Color.white;
             leftShadow.effectDistance = new Vector2(2, -2);
@@ -284,7 +277,7 @@ namespace Minigames.SortGames
             rightBasketObj.transform.SetParent(_contentPanel.transform, false);
 
             _rightBasketImage = rightBasketObj.AddComponent<Image>();
-            _rightBasketImage.sprite = _basketSprites[0]; // basket_1.png
+            _rightBasketImage.sprite = _basketSprites[0];
             _rightBasketImage.preserveAspect = true;
 
             _rightBasketRect = rightBasketObj.GetComponent<RectTransform>();
@@ -293,10 +286,9 @@ namespace Minigames.SortGames
             _rightBasketRect.anchorMax = new Vector2(0.8f, 0.5f);
             _rightBasketRect.anchoredPosition = Vector2.zero;
 
-            // Create text label above right basket
             GameObject rightLabelObj = new GameObject("RightBasketLabel");
             rightLabelObj.transform.SetParent(_contentPanel.transform, false);
-            rightLabelObj.transform.SetAsLastSibling(); // Ensure it's on top
+            rightLabelObj.transform.SetAsLastSibling();
 
             Text rightLabelText = rightLabelObj.AddComponent<Text>();
             rightLabelText.text = "white";
@@ -304,9 +296,8 @@ namespace Minigames.SortGames
             rightLabelText.fontSize = 36;
             rightLabelText.fontStyle = FontStyle.Bold;
             rightLabelText.alignment = TextAnchor.MiddleCenter;
-            rightLabelText.color = Color.black; // Use black for better visibility
+            rightLabelText.color = Color.black;
 
-            // Add shadow for better visibility
             Shadow rightShadow = rightLabelObj.AddComponent<Shadow>();
             rightShadow.effectColor = Color.white;
             rightShadow.effectDistance = new Vector2(2, -2);
@@ -320,17 +311,13 @@ namespace Minigames.SortGames
 
         private void OnMainBasketClicked()
         {
-            // Spawn a random clothing item from inventory when clicked
             if (_clothingInventory.Count > 0)
             {
-                // Pick a random item from inventory
                 int randomIndex = Random.Range(0, _clothingInventory.Count);
                 ClothingItem item = _clothingInventory[randomIndex];
                 _clothingInventory.RemoveAt(randomIndex);
 
                 SpawnClothing(item);
-
-                // Update basket image based on unsorted count
                 UpdateMainBasketImage();
             }
         }
@@ -348,7 +335,6 @@ namespace Minigames.SortGames
             clothingRect.sizeDelta = clothingSize;
             clothingRect.anchorMin = new Vector2(0.5f, 0.5f);
             clothingRect.anchorMax = new Vector2(0.5f, 0.5f);
-            // Spawn in center
             clothingRect.anchoredPosition = Vector2.zero;
 
             DraggableClothing draggable = clothingObj.AddComponent<DraggableClothing>();
@@ -358,20 +344,19 @@ namespace Minigames.SortGames
 
         private void UpdateMainBasketImage()
         {
-            // Count unsorted clothes (inventory + active)
             int unsortedCount = _clothingInventory.Count + _activeClothes.Count;
-            int basketIndex = 0; // basket_1.png
+            int basketIndex = 0;
 
             if (unsortedCount >= 9)
-                basketIndex = 4; // basket_5.png (10,9)
+                basketIndex = 4;
             else if (unsortedCount >= 6)
-                basketIndex = 3; // basket_4.png (8,7,6)
+                basketIndex = 3;
             else if (unsortedCount >= 3)
-                basketIndex = 2; // basket_3.png (5,4,3)
+                basketIndex = 2;
             else if (unsortedCount >= 1)
-                basketIndex = 1; // basket_2.png (2,1)
+                basketIndex = 1;
             else
-                basketIndex = 0; // basket_1.png (0)
+                basketIndex = 0;
 
             if (_mainBasketImage != null && basketIndex >= 0 && basketIndex < _basketSprites.Length)
             {
@@ -386,7 +371,6 @@ namespace Minigames.SortGames
 
             Camera cam = _canvas != null && _canvas.renderMode != RenderMode.ScreenSpaceOverlay ? _canvas.worldCamera : null;
 
-            // Check if dropped on left basket (colored) or right basket (white) using rect bounds
             bool droppedOnLeft = _leftBasketRect != null && 
                 RectTransformUtility.RectangleContainsScreenPoint(_leftBasketRect, screenPosition, cam);
             bool droppedOnRight = _rightBasketRect != null && 
@@ -394,10 +378,8 @@ namespace Minigames.SortGames
 
             if (droppedOnLeft || droppedOnRight)
             {
-                // Get the clothing item
                 ClothingItem item = clothing.GetClothingItem();
                 
-                // Track which basket it went to
                 if (droppedOnLeft)
                 {
                     _leftBasketItems.Add(item);
@@ -407,14 +389,10 @@ namespace Minigames.SortGames
                     _rightBasketItems.Add(item);
                 }
 
-                // Remove the clothing (disappears when dropped on either basket)
                 _activeClothes.Remove(clothing);
                 Destroy(clothing.gameObject);
-
-                // Update basket image
                 UpdateMainBasketImage();
 
-                // Check win condition when all 10 elements are sorted
                 int totalSorted = _leftBasketItems.Count + _rightBasketItems.Count;
                 if (totalSorted == totalClothes)
                 {
@@ -425,15 +403,12 @@ namespace Minigames.SortGames
 
         private void CheckWinCondition()
         {
-            // Game ends when all 10 elements are sorted
             int totalSorted = _leftBasketItems.Count + _rightBasketItems.Count;
             if (totalSorted == totalClothes)
             {
-                // Check if all white clothes are in right basket and all colored clothes are in left basket
                 bool allWhiteInRight = true;
                 bool allColoredInLeft = true;
 
-                // Check all items in right basket are white
                 foreach (var item in _rightBasketItems)
                 {
                     if (!item.isWhite)
@@ -443,7 +418,6 @@ namespace Minigames.SortGames
                     }
                 }
 
-                // Check all items in left basket are colored
                 foreach (var item in _leftBasketItems)
                 {
                     if (item.isWhite)
@@ -455,7 +429,6 @@ namespace Minigames.SortGames
 
                 if (allWhiteInRight && allColoredInLeft)
                 {
-                    // Player won!
                     if (_resultText != null)
                     {
                         _resultText.text = "You won! All clothes sorted correctly!";
@@ -467,7 +440,6 @@ namespace Minigames.SortGames
                 }
                 else
                 {
-                    // Player lost
                     if (_resultText != null)
                     {
                         _resultText.text = "You lost! Some clothes were sorted incorrectly. Try again!";
@@ -483,22 +455,18 @@ namespace Minigames.SortGames
         {
             yield return new WaitForSeconds(2f);
 
-            // Reset game state
             _activeClothes.Clear();
             _leftBasketItems.Clear();
             _rightBasketItems.Clear();
 
-            // Clear any remaining clothes
             foreach (var clothing in FindObjectsOfType<DraggableClothing>())
             {
                 if (clothing != null)
                     Destroy(clothing.gameObject);
             }
 
-            // Reinitialize inventory
             InitializeInventory();
 
-            // Reset result text
             if (_resultText != null)
             {
                 _resultText.text = "Click the middle basket to get clothes!";
@@ -529,9 +497,6 @@ namespace Minigames.SortGames
         }
     }
 
-    /// <summary>
-    /// Component for draggable clothing items.
-    /// </summary>
     public class DraggableClothing : MonoBehaviour, IBeginDragHandler, UnityEngine.EventSystems.IDragHandler, IEndDragHandler
     {
         private Sprite _clothingSprite;

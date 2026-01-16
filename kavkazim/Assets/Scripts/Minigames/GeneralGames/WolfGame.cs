@@ -1,20 +1,21 @@
 using System.Collections.Generic;
+using Minigames.Base;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace Minigames.ClickGames
+namespace Minigames.GeneralGames
 {
-    public class WolfClickGame : ClickGame
+    public class WolfGame : BaseMinigame
     {
         private readonly string AnonymousPath = "Assets/Art/Images/wolf/anonymous.png";
         
         [Header("Wolf Game Settings")]
         [SerializeField] private int numberOfPeople = 9;
-        [SerializeField] private Vector2 personSize = new Vector2(300, 360);
+        [SerializeField] private Vector2 personSize = new Vector2(150, 200);
         [SerializeField] private int gridColumns = 3;
-        [SerializeField] private float gridSpacing = 40f;
-        private const float NameLabelHeight = 80f; 
+        [SerializeField] private float gridSpacing = 30f;
+        private const float NameLabelHeight = 40f; 
 
         private static readonly string[] AllNames = new string[]
         {
@@ -49,7 +50,7 @@ namespace Minigames.ClickGames
             }
 
             if (_anonymousSprite != null)
-                Debug.Log("[WolfClickGame] Loaded anonymous.png (Editor mode)");
+                Debug.Log("[WolfGame] Loaded anonymous.png (Editor mode)");
             #endif
 
             if (_anonymousSprite == null)
@@ -61,7 +62,7 @@ namespace Minigames.ClickGames
 
             if (_anonymousSprite == null)
             {
-                Debug.LogError("[WolfClickGame] Failed to load anonymous.png");
+                Debug.LogError("[WolfGame] Failed to load anonymous.png");
             }
         }
 
@@ -257,7 +258,7 @@ namespace Minigames.ClickGames
             {
                 RevealedTargets.Add(name);
                 card.HighlightAsTarget();
-                Debug.Log($"[WolfClickGame] Found {name}! {RevealedTargets.Count}/{TargetNames.Length} targets found.");
+                Debug.Log($"[WolfGame] Found {name}! {RevealedTargets.Count}/{TargetNames.Length} targets found.");
 
                 if (RevealedTargets.Count >= TargetNames.Length)
                 {
@@ -268,8 +269,8 @@ namespace Minigames.ClickGames
 
         private void OnGameComplete()
         {
-            base.OnGameComplete(); // Mark as completed successfully
-            Debug.Log("[WolfClickGame] Both amir and solomon found! Game complete.");
+            base.OnGameComplete();
+            Debug.Log("[WolfGame] Both amir and solomon found! Game complete.");
             
             Transform titleTransform = _contentPanel.transform.Find("Title");
             if (titleTransform != null)
@@ -303,7 +304,7 @@ namespace Minigames.ClickGames
     {
         private int _index;
         private string _personName;
-        private WolfClickGame _game;
+        private WolfGame _game;
         private Text _nameText;
         private Button _button;
         private bool _isRevealed = false;
@@ -311,7 +312,7 @@ namespace Minigames.ClickGames
         public string PersonName => _personName;
         public bool IsRevealed => _isRevealed;
 
-        public void Initialize(int index, string name, WolfClickGame game, Text nameText, Button button)
+        public void Initialize(int index, string name, WolfGame game, Text nameText, Button button)
         {
             _index = index;
             _personName = name;

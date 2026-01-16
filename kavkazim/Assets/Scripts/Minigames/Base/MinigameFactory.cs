@@ -1,21 +1,15 @@
 using Minigames.ClickGames;
+using Minigames.GeneralGames;
 using Minigames.SortGames;
 using UnityEngine;
 
 namespace Minigames.Base
 {
-    /// <summary>
-    /// Factory for creating minigame instances using a registry pattern.
-    /// New minigames can be registered without modifying this class.
-    /// </summary>
     public static class MinigameFactory
     {
         private static IMinigameRegistry _registry;
         private static readonly object _lock = new object();
 
-        /// <summary>
-        /// Gets or creates the minigame registry.
-        /// </summary>
         private static IMinigameRegistry Registry
         {
             get
@@ -35,26 +29,16 @@ namespace Minigames.Base
             }
         }
 
-        /// <summary>
-        /// Creates a minigame instance for the given type.
-        /// </summary>
         public static IMinigame CreateMinigame(MinigameType gameType)
         {
             return Registry.Create(gameType);
         }
 
-        /// <summary>
-        /// Registers a custom factory for a minigame type.
-        /// Allows extending the factory without modifying this class.
-        /// </summary>
         public static void Register(MinigameType type, System.Func<IMinigame> factory)
         {
             Registry.Register(type, factory);
         }
 
-        /// <summary>
-        /// Initializes default minigame registrations.
-        /// </summary>
         private static void InitializeDefaultRegistrations()
         {
             var registry = (MinigameRegistry)_registry;
@@ -64,9 +48,9 @@ namespace Minigames.Base
                 var obj = new GameObject($"{MinigameType.LezginkaSort}Instance");
                 return obj.AddComponent<LezginkaSortGame>();
             });
-            registry.Register(MinigameType.PraySortGame, () => 
+            registry.Register(MinigameType.PraySort, () => 
             {
-                var obj = new GameObject($"{MinigameType.PraySortGame}Instance");
+                var obj = new GameObject($"{MinigameType.PraySort}Instance");
                 return obj.AddComponent<PraySortGame>();
             });
             registry.Register(MinigameType.PapakhaClick, () => 
@@ -79,24 +63,24 @@ namespace Minigames.Base
                 var obj = new GameObject($"{MinigameType.DishClick}Instance");
                 return obj.AddComponent<DishClickGame>();
             });
-            registry.Register(MinigameType.WolfClick, () => 
+            registry.Register(MinigameType.Wolf, () => 
             {
-                var obj = new GameObject($"{MinigameType.WolfClick}Instance");
-                return obj.AddComponent<WolfClickGame>();
+                var obj = new GameObject($"{MinigameType.Wolf}Instance");
+                return obj.AddComponent<WolfGame>();
             });
-            registry.Register(MinigameType.TakedownClick, () => 
+            registry.Register(MinigameType.Takedown, () => 
             {
-                var obj = new GameObject($"{MinigameType.TakedownClick}Instance");
-                return obj.AddComponent<TakedownClickGame>();
+                var obj = new GameObject($"{MinigameType.Takedown}Instance");
+                return obj.AddComponent<TakedownGame>();
             });
             registry.Register(MinigameType.ShashlikSort, () => 
             {
                 var obj = new GameObject($"{MinigameType.ShashlikSort}Instance");
                 return obj.AddComponent<ShashlikSortGame>();
             });
-            registry.Register(MinigameType.RemoteCommonClick, () => 
+            registry.Register(MinigameType.Remote, () => 
             {
-                var obj = new GameObject($"{MinigameType.RemoteCommonClick}Instance");
+                var obj = new GameObject($"{MinigameType.Remote}Instance");
                 return obj.AddComponent<RemoteCommonClickGame>();
             });
             registry.Register(MinigameType.LaundrySort, () => 
@@ -104,9 +88,9 @@ namespace Minigames.Base
                 var obj = new GameObject($"{MinigameType.LaundrySort}Instance");
                 return obj.AddComponent<LaundrySortGame>();
             });
-            registry.Register(MinigameType.TapachkiClick, () => 
+            registry.Register(MinigameType.Tapachki, () => 
             {
-                var obj = new GameObject($"{MinigameType.TapachkiClick}Instance");
+                var obj = new GameObject($"{MinigameType.Tapachki}Instance");
                 return obj.AddComponent<TapachkiGame>();
             });
         }

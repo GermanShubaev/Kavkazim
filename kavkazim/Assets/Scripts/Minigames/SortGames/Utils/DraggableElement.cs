@@ -1,14 +1,9 @@
-using Minigames.Base.Interaction;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 namespace Minigames.SortGames
 {
-    /// <summary>
-    /// Draggable element for sort games.
-    /// Extracted from SortGame.cs to separate concerns.
-    /// </summary>
     public class DraggableElement : MonoBehaviour, IBeginDragHandler, UnityEngine.EventSystems.IDragHandler, IEndDragHandler, IDraggable
     {
         private int _index;
@@ -40,8 +35,6 @@ namespace Minigames.SortGames
         public RectTransform GetRectTransform() => RectTransform;
         public int GetIndex() => _index;
         public int GetCorrectCellIndex() => _correctCellIndex;
-        
-        // IDraggable implementation
         int IDraggable.GetCorrectTargetIndex() => _correctCellIndex;
 
         public void OnBeginDrag(PointerEventData eventData)

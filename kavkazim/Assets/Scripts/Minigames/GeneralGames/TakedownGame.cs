@@ -1,11 +1,12 @@
 using System.Collections.Generic;
+using Minigames.Base;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace Minigames.ClickGames
+namespace Minigames.GeneralGames
 {
-    public class TakedownClickGame : ClickGame
+    public class TakedownGame : BaseMinigame
     {
         private const string NoSubPath = "Assets/Art/Images/ufc/ufc_no_sub.png";
         private const string SubPath = "Assets/Art/Images/ufc/ufc_sub.png";
@@ -55,9 +56,9 @@ namespace Minigames.ClickGames
             }
 
             if (_noSubSprite != null)
-                Debug.Log("[TakedownClickGame] Loaded ufc_no_sub.png (Editor mode)");
+                Debug.Log("[TakedownGame] Loaded ufc_no_sub.png (Editor mode)");
             if (_subSprite != null)
-                Debug.Log("[TakedownClickGame] Loaded ufc_sub.png (Editor mode)");
+                Debug.Log("[TakedownGame] Loaded ufc_sub.png (Editor mode)");
             #endif
 
             if (_noSubSprite == null)
@@ -75,17 +76,15 @@ namespace Minigames.ClickGames
             }
 
             if (_noSubSprite == null)
-                Debug.LogError("[TakedownClickGame] Failed to load ufc_no_sub.png");
+                Debug.LogError("[TakedownGame] Failed to load ufc_no_sub.png");
             if (_subSprite == null)
-                Debug.LogError("[TakedownClickGame] Failed to load ufc_sub.png");
+                Debug.LogError("[TakedownGame] Failed to load ufc_sub.png");
         }
 
         protected override void CreatePopupWindow()
         {
             base.CreatePopupWindow();
             
-            // Resize content panel relative to reference resolution (2560x1440)
-            // CanvasScaler will handle scaling to different screen sizes
             RectTransform contentRect = _contentPanel.GetComponent<RectTransform>();
             const float referenceWidth = 2560f;
             const float referenceHeight = 1440f;
@@ -280,7 +279,7 @@ namespace Minigames.ClickGames
         private void OnGameWon()
         {
             _gameWon = true;
-            Debug.Log("[TakedownClickGame] Player achieved takedown! Game won!");
+            Debug.Log("[TakedownGame] Player achieved takedown! Game won!");
 
             if (_mainImage != null && _subSprite != null)
             {
@@ -305,13 +304,13 @@ namespace Minigames.ClickGames
                 _clickButton.interactable = false;
             }
 
-            OnGameComplete(); // Mark as completed successfully
+            OnGameComplete();
             StartCoroutine(CloseAfterDelay(2f));
         }
 
         public override void OnGameComplete()
         {
-            base.OnGameComplete(); // Mark as completed successfully
+            base.OnGameComplete();
         }
 
         private System.Collections.IEnumerator CloseAfterDelay(float delay)

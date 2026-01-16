@@ -31,7 +31,6 @@ namespace Minigames.Base
                 MinigameTriggerPoint trigger = triggerObj.GetComponent<MinigameTriggerPoint>();
                 if (trigger != null)
                 {
-                    // Use reflection to set the position field
                     var field = typeof(MinigameTriggerPoint).GetField("position", 
                         System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
                     if (field != null)
@@ -48,7 +47,6 @@ namespace Minigames.Base
             GameObject triggerObj = new GameObject("LezginkaSortGame_Trigger");
             MinigameTriggerPoint trigger = triggerObj.AddComponent<MinigameTriggerPoint>();
             
-            // Set position to (-25, 13)
             var positionField = typeof(MinigameTriggerPoint).GetField("position", 
                 System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
             if (positionField != null)
@@ -56,7 +54,6 @@ namespace Minigames.Base
                 positionField.SetValue(trigger, new Vector2(-25f, 13f));
             }
             
-            // Set radius to 2
             var radiusField = typeof(MinigameTriggerPoint).GetField("radius", 
                 System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
             if (radiusField != null)
@@ -64,7 +61,6 @@ namespace Minigames.Base
                 radiusField.SetValue(trigger, 2f);
             }
             
-            // Set game type to LezginkaSort
             var gameTypeField = typeof(MinigameTriggerPoint).GetField("gameType", 
                 System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
             if (gameTypeField != null)
@@ -72,7 +68,6 @@ namespace Minigames.Base
                 gameTypeField.SetValue(trigger, MinigameType.LezginkaSort);
             }
             
-            // Set transform position as well for visual reference
             triggerObj.transform.position = new Vector3(-25f, 13f, 0f);
             
             Selection.activeGameObject = triggerObj;
@@ -87,7 +82,6 @@ namespace Minigames.Base
             GameObject triggerObj = new GameObject("PapakhaClickGame_Trigger");
             MinigameTriggerPoint trigger = triggerObj.AddComponent<MinigameTriggerPoint>();
             
-            // Set position to (37, 18)
             var positionField = typeof(MinigameTriggerPoint).GetField("position", 
                 System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
             if (positionField != null)
@@ -95,7 +89,6 @@ namespace Minigames.Base
                 positionField.SetValue(trigger, new Vector2(37f, 18f));
             }
             
-            // Set radius to 2
             var radiusField = typeof(MinigameTriggerPoint).GetField("radius", 
                 System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
             if (radiusField != null)
@@ -103,7 +96,6 @@ namespace Minigames.Base
                 radiusField.SetValue(trigger, 2f);
             }
             
-            // Set game type to PapakhaClick
             var gameTypeField = typeof(MinigameTriggerPoint).GetField("gameType", 
                 System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
             if (gameTypeField != null)
@@ -111,7 +103,6 @@ namespace Minigames.Base
                 gameTypeField.SetValue(trigger, MinigameType.PapakhaClick);
             }
             
-            // Set transform position as well for visual reference
             triggerObj.transform.position = new Vector3(37f, 18f, 0f);
             
             Selection.activeGameObject = triggerObj;

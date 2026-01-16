@@ -28,31 +28,20 @@ namespace Minigames.ClickGames
         [System.Serializable]
         public class StainData
         {
-            [Tooltip("Optional sprite for the stain. If null, a default circular shape is used.")]
             public Sprite stainSprite;
-            
-            [Tooltip("Position relative to the main image center (normalized -0.5 to 0.5).")]
             public Vector2 normalizedPosition;
-            
-            [Tooltip("Size of the stain in pixels.")]
             public Vector2 size = new Vector2(60, 60);
-            
-            [Tooltip("Color/tint of the stain. Used if no sprite is provided.")]
             public Color stainColor = new Color(0.3f, 0.2f, 0.1f, 0.8f);
-            
-            [Tooltip("Optional rotation in degrees.")]
             public float rotation = 0f;
         }
 
         protected override void InitializeGameUI()
         {
-            // Initialize default win condition strategy if not set
             if (_winConditionStrategy == null)
             {
                 _winConditionStrategy = new ClickGameWinConditionStrategy();
             }
             
-            // Initialize default UI builder if not set
             if (_uiBuilder == null)
             {
                 _uiBuilder = new Base.UI.ClickGameUIBuilder();
@@ -75,8 +64,6 @@ namespace Minigames.ClickGames
             RectTransform contentRect = _contentPanel.GetComponent<RectTransform>();
             if (contentRect == null) return;
 
-            // Use reference resolution (2560x1440) for consistent scaling across all screen sizes
-            // CanvasScaler will handle the actual scaling to different resolutions
             const float referenceWidth = 2560f;
             const float referenceHeight = 1440f;
             
@@ -85,7 +72,6 @@ namespace Minigames.ClickGames
             
             contentRect.sizeDelta = new Vector2(targetWidth, targetHeight);
             
-            // Padding scaled for reference resolution
             const float padding = 40f;
             mainImageSize = new Vector2(targetWidth - padding, targetHeight - padding);
         }
@@ -146,7 +132,7 @@ namespace Minigames.ClickGames
             if (data.stainSprite != null)
             {
                 stainImage.sprite = data.stainSprite;
-                stainImage.color = Color.white; 
+                stainImage.color = Color.white;
             }
             else
             {
@@ -169,7 +155,7 @@ namespace Minigames.ClickGames
         protected virtual List<Vector2> GenerateRandomPositions(int count)
         {
             var positions = new List<Vector2>();
-            const float margin = 0.1f; 
+            const float margin = 0.1f;
             var halfWidth = mainImageSize.x * (0.5f - margin);
             var halfHeight = mainImageSize.y * (0.5f - margin);
             var minDistance = Mathf.Min(mainImageSize.x, mainImageSize.y) * 0.15f;
@@ -252,22 +238,19 @@ namespace Minigames.ClickGames
 
         protected virtual void OnStainRemoved(ClickableStain stain)
         {
-            // Override in derived classes for effects, sounds, etc.
         }
 
         protected virtual void OnAllStainsRemoved()
         {
-            // Check win condition using strategy
             if (_winConditionStrategy != null && _winConditionStrategy.CheckWinCondition(this))
             {
                 _winConditionStrategy.OnWin(this);
             }
         }
 
-        
         public override void OnGameComplete()
         {
-            base.OnGameComplete(); // Mark as completed successfully
+            base.OnGameComplete();
             StartCoroutine(CloseAfterDelay(1f));
         }
 
@@ -296,8 +279,6 @@ namespace Minigames.ClickGames
         }
 
         public int GetStainsRemaining() => _stainsRemaining;
-
-        public int GetTotalStains() => GetStainData()?.Count ?? 0;
     }
 
     public class ClickableStain : MonoBehaviour, IPointerClickHandler

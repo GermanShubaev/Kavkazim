@@ -4,33 +4,25 @@ using UnityEngine.UI;
 
 namespace Minigames.Base.UI
 {
-    /// <summary>
-    /// Default popup UI builder that creates a standard popup window
-    /// with background, content panel, and optional close button.
-    /// </summary>
     public class DefaultPopupUIBuilder : IPopupUIBuilder
     {
         public virtual GameObject BuildPopup(BaseMinigame minigame)
         {
-            // Create root canvas object
             GameObject popupWindow = new GameObject($"{minigame.GetType().Name}Popup");
-            popupWindow.transform.SetParent(null); // Independent of scene hierarchy
+            popupWindow.transform.SetParent(null);
 
-            // Add Canvas component
             Canvas canvas = popupWindow.AddComponent<Canvas>();
             canvas.renderMode = RenderMode.ScreenSpaceOverlay;
             canvas.sortingOrder = minigame.GetCanvasSortingOrder();
             
-            // Configure CanvasScaler for dynamic scaling relative to QHD (2560x1440)
             CanvasScaler scaler = popupWindow.AddComponent<CanvasScaler>();
             scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
             scaler.referenceResolution = new Vector2(2560f, 1440f);
             scaler.screenMatchMode = CanvasScaler.ScreenMatchMode.MatchWidthOrHeight;
-            scaler.matchWidthOrHeight = 0.5f; // Balance between width and height
+            scaler.matchWidthOrHeight = 0.5f;
             
             popupWindow.AddComponent<GraphicRaycaster>();
 
-            // Ensure EventSystem exists
             if (UnityEngine.EventSystems.EventSystem.current == null)
             {
                 GameObject eventSystem = new GameObject("EventSystem");
@@ -38,7 +30,6 @@ namespace Minigames.Base.UI
                 eventSystem.AddComponent<UnityEngine.InputSystem.UI.InputSystemUIInputModule>();
             }
 
-            // Create background overlay
             GameObject backgroundPanel = new GameObject("Background");
             backgroundPanel.transform.SetParent(popupWindow.transform, false);
             Image bgImage = backgroundPanel.AddComponent<Image>();
@@ -48,23 +39,18 @@ namespace Minigames.Base.UI
             bgRect.anchorMax = Vector2.one;
             bgRect.sizeDelta = Vector2.zero;
 
-            // Create content panel (centered)
-            // Size is relative to reference resolution 2560x1440
             GameObject contentPanel = new GameObject("ContentPanel");
             contentPanel.transform.SetParent(popupWindow.transform, false);
             Image contentImage = contentPanel.AddComponent<Image>();
             contentImage.color = new Color(0.2f, 0.2f, 0.2f, 1f);
             RectTransform contentRect = contentPanel.GetComponent<RectTransform>();
-            // Default size scaled for 2560x1440 (approximately 39% width, 49% height)
             contentRect.sizeDelta = new Vector2(1000, 700);
             contentRect.anchoredPosition = Vector2.zero;
             contentRect.anchorMin = new Vector2(0.5f, 0.5f);
             contentRect.anchorMax = new Vector2(0.5f, 0.5f);
 
-            // Store references in minigame
             minigame.SetPopupReferences(popupWindow, canvas, backgroundPanel, contentPanel);
 
-            // Create close button if enabled
             if (minigame.ShouldShowCloseButton())
             {
                 CreateCloseButton(minigame, contentPanel);
@@ -82,20 +68,16 @@ namespace Minigames.Base.UI
             btnImage.color = new Color(0.8f, 0.2f, 0.2f, 1f);
 
             RectTransform btnRect = closeBtnObj.GetComponent<RectTransform>();
-            // Button size scaled for 2560x1440 reference resolution
             btnRect.sizeDelta = new Vector2(40, 40);
             btnRect.anchorMin = new Vector2(1, 1);
             btnRect.anchorMax = new Vector2(1, 1);
-            // Position offset scaled for 2560x1440 reference resolution
             btnRect.anchoredPosition = new Vector2(-20, -20);
 
-            // Add text to button
             GameObject txtObj = new GameObject("Text");
             txtObj.transform.SetParent(closeBtnObj.transform, false);
             Text txt = txtObj.AddComponent<Text>();
             txt.text = "X";
             txt.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-            // Font size scaled for 2560x1440 reference resolution
             txt.fontSize = 24;
             txt.alignment = TextAnchor.MiddleCenter;
             txt.color = Color.white;
@@ -110,7 +92,6 @@ namespace Minigames.Base.UI
 
         public void Cleanup(GameObject popup)
         {
-            // Default implementation - popup destruction is handled by BaseMinigame
         }
     }
 }

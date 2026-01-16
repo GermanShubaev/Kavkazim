@@ -19,7 +19,6 @@ namespace Minigames.SortGames
         [SerializeField] private float ingredientSpacing = 120f;
         [SerializeField] private int totalRounds = 3;
 
-        // Note: _popupWindow, _canvas, _backgroundPanel, _contentPanel, _closeButton are inherited from BaseMinigame
         private Text _resultText;
 
         private Sprite _skewerSprite;
@@ -116,7 +115,6 @@ namespace Minigames.SortGames
         {
             if (!IsActive) return;
 
-            // Cleanup is handled by CleanupGameUI() and base.CloseGame()
             base.CloseGame();
         }
 
@@ -139,7 +137,6 @@ namespace Minigames.SortGames
 
         protected override void InitializeGameUI()
         {
-            // Adjust content panel layout (matching LaundrySortGame implementation)
             RectTransform contentRect = _contentPanel.GetComponent<RectTransform>();
             if (contentRect != null)
             {
@@ -549,14 +546,12 @@ namespace Minigames.SortGames
                 imgRect.anchorMax = new Vector2(0.9f, 0.9f);
                 imgRect.sizeDelta = Vector2.zero;
 
-                // Click handler
                 string capturedIngredient = ingredient;
                 button.onClick.AddListener(() => OnIngredientButtonClicked(capturedIngredient));
 
                 _ingredientButtons.Add(button);
             }
 
-            // Add Undo button below the ingredient buttons
             CreateUndoButton(buttonContainer);
         }
 
@@ -583,7 +578,6 @@ namespace Minigames.SortGames
             undoRect.sizeDelta = new Vector2(100, 40);
             undoRect.anchoredPosition = Vector2.zero;
 
-            // Text
             GameObject textObj = new GameObject("Text");
             textObj.transform.SetParent(undoObj.transform, false);
             Text undoText = textObj.AddComponent<Text>();
@@ -604,10 +598,8 @@ namespace Minigames.SortGames
         {
             if (_playerSequence.Count >= numberOfSlots) return;
 
-            // Add to player's sequence
             _playerSequence.Add(ingredient);
 
-            // Update visual
             int slotIndex = _playerSequence.Count - 1;
             if (slotIndex < _playerSkewerSlots.Count && _ingredientSprites.ContainsKey(ingredient))
             {
@@ -617,7 +609,6 @@ namespace Minigames.SortGames
 
             Debug.Log($"[ShashlikSortGame] Added {ingredient}, sequence: {string.Join(", ", _playerSequence)}");
 
-            // Check if complete
             if (_playerSequence.Count == numberOfSlots)
             {
                 CheckWinCondition();
@@ -628,18 +619,15 @@ namespace Minigames.SortGames
         {
             if (_playerSequence.Count == 0) return;
 
-            // Remove last ingredient
             int lastIndex = _playerSequence.Count - 1;
             _playerSequence.RemoveAt(lastIndex);
 
-            // Clear visual
             if (lastIndex < _playerSkewerSlots.Count)
             {
                 _playerSkewerSlots[lastIndex].sprite = null;
                 _playerSkewerSlots[lastIndex].color = new Color(1, 1, 1, 0);
             }
 
-            // Clear result text
             if (_resultText != null)
                 _resultText.text = "";
 
@@ -662,7 +650,6 @@ namespace Minigames.SortGames
             {
                 if (_currentRound >= totalRounds)
                 {
-                    // All rounds complete!
                     if (_resultText != null)
                     {
                         _resultText.text = "All rounds complete! Master Chef!";
@@ -673,7 +660,6 @@ namespace Minigames.SortGames
                 }
                 else
                 {
-                    // Move to next round
                     if (_resultText != null)
                     {
                         _resultText.text = $"Round {_currentRound} complete! Get ready...";
@@ -698,7 +684,6 @@ namespace Minigames.SortGames
 
             _currentRound++;
             
-            // Clear player's sequence and slots
             _playerSequence.Clear();
             foreach (var slot in _playerSkewerSlots)
             {
@@ -709,20 +694,13 @@ namespace Minigames.SortGames
                 }
             }
 
-            // Clear result text
             if (_resultText != null)
                 _resultText.text = "";
 
-            // Update round indicators
             UpdateRoundIndicators();
-
-            // Generate new target sequence
             GenerateTargetSequence();
-
-            // Rebuild the memorization panel with new skewer
             RebuildMemorizationSkewer();
 
-            // Switch back to memorization phase
             _isMemorizationPhase = true;
             _gameplayPanel.SetActive(false);
             _memorizationPanel.SetActive(true);
@@ -738,54 +716,22 @@ namespace Minigames.SortGames
 
         private void RebuildMemorizationSkewer()
         {
-            // Find and destroy the old skewer container
             Transform oldSkewer = _memorizationPanel.transform.Find("TargetSkewerContainer");
             if (oldSkewer != null)
                 Destroy(oldSkewer.gameObject);
 
-            // Create new skewer with new ingredients
             CreateTargetSkewerInPanel(_memorizationPanel, 0.35f, 0.75f);
         }
 
         public override void OnGameComplete()
         {
-            base.OnGameComplete(); // Mark as completed successfully - this triggers progress bar update and task removal
+            base.OnGameComplete();
         }
 
         private System.Collections.IEnumerator CloseAfterDelay(float delay)
         {
             yield return new WaitForSeconds(delay);
             CloseGame();
-        }
-
-        private void CreateCloseButton()
-        {
-            GameObject closeBtnObj = new GameObject("CloseButton");
-            closeBtnObj.transform.SetParent(_contentPanel.transform, false);
-            _closeButton = closeBtnObj.AddComponent<Button>();
-            Image btnImage = closeBtnObj.AddComponent<Image>();
-            btnImage.color = new Color(0.8f, 0.2f, 0.2f, 1f);
-
-            RectTransform btnRect = closeBtnObj.GetComponent<RectTransform>();
-            btnRect.sizeDelta = new Vector2(40, 40);
-            btnRect.anchorMin = new Vector2(1, 1);
-            btnRect.anchorMax = new Vector2(1, 1);
-            btnRect.anchoredPosition = new Vector2(-20, -20);
-
-            GameObject txtObj = new GameObject("Text");
-            txtObj.transform.SetParent(closeBtnObj.transform, false);
-            Text txt = txtObj.AddComponent<Text>();
-            txt.text = "X";
-            txt.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-            txt.fontSize = 24;
-            txt.alignment = TextAnchor.MiddleCenter;
-            txt.color = Color.white;
-            RectTransform txtRect = txtObj.GetComponent<RectTransform>();
-            txtRect.anchorMin = Vector2.zero;
-            txtRect.anchorMax = Vector2.one;
-            txtRect.sizeDelta = Vector2.zero;
-
-            _closeButton.onClick.AddListener(CloseGame);
         }
 
         private void OnDestroy()
