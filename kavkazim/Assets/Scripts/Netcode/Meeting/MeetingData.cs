@@ -171,18 +171,7 @@ namespace Kavkazim.Netcode.Meeting
             TotalVotes == other.TotalVotes &&
             EliminatedVoteCount == other.EliminatedVoteCount &&
             SkipVoteCount == other.SkipVoteCount;
-
-        public override bool Equals(object obj) => obj is MeetingResult other && Equals(other);
         
-        public override int GetHashCode() => HashCode.Combine(EliminatedId, IsTie, SkipWon);
-        
-        public override string ToString()
-        {
-            if (IsTie) return "Tie - No Elimination";
-            if (SkipWon) return "Skip Won - No Elimination";
-            if (EliminatedId == ulong.MaxValue) return "No Elimination";
-            return $"{EliminatedName} Eliminated ({EliminatedVoteCount} votes)";
-        }
 
         /// <summary>Creates a "no elimination" result.</summary>
         public static MeetingResult CreateNoElimination(bool isTie, int skipCount, int totalVotes) => new MeetingResult
