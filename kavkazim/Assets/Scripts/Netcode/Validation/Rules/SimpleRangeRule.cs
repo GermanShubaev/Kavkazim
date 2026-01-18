@@ -7,10 +7,6 @@ namespace Kavkazim.Netcode.Validation.Rules
     {
         public IEnumerable<ValidationError> Validate(LobbySettings s, LobbyRuntimeContext ctx)
         {
-            // We essentially trust the Clamp process for ranges, 
-            // but we can report errors if they are out of bounds (though Clamp usually fixes this immediately).
-            // We'll return errors if checking BEFORE clamping, or if somehow values are wild.
-            
             if (s.MaxPlayers < 4 || s.MaxPlayers > 15) yield return new ValidationError("MaxPlayers", "Max Players must be between 4 and 15");
             if (s.KavkaziCount < 1 || s.KavkaziCount > 3) yield return new ValidationError("KavkaziCount", "Kavkazi Count must be between 1 and 3");
             if (s.VotingTime < 30 || s.VotingTime > 180) yield return new ValidationError("VotingTime", "Voting Time must be 30-180s");

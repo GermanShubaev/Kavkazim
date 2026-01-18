@@ -7,17 +7,12 @@ using UnityEngine;
 
 namespace Kavkazim.Netcode.Meeting
 {
-    /// <summary>
-    /// Server-authoritative meeting manager.
-    /// Handles voting, timer, and meeting flow.
-    /// </summary>
     public class MeetingManager : NetworkBehaviour
     {
         public static MeetingManager Instance { get; private set; }
 
         [SerializeField] private float meetingDuration = 60f;
 
-        // Networked State
         public NetworkVariable<MeetingStartData> MeetingData = new();
         public NetworkVariable<float> TimeRemaining = new();
         public NetworkVariable<int> VotesSubmitted = new();
@@ -26,12 +21,10 @@ namespace Kavkazim.Netcode.Meeting
         public NetworkList<ulong> PlayersInMeeting;
         public NetworkList<ulong> AlivePlayersInMeeting;
 
-        // Server-only state
         private readonly Dictionary<ulong, VoteTarget> _votes = new();
         private readonly HashSet<ulong> _hasVoted = new();
         private bool _timeLowFired;
 
-        // Events
         public static event Action<MeetingResult> OnMeetingEnded;
         public static event Action<MeetingStartData> OnMeetingStarted;
         public static event Action OnTimeLow;
@@ -115,12 +108,6 @@ namespace Kavkazim.Netcode.Meeting
             }
         }
 
-        // ========== PUBLIC API (Server) ==========
-
-        /// <summary>
-        /// SERVER ONLY: Start a meeting with the given data.
-        /// Called by ReportService or GameSessionManager
-        /// </summary>
         public void StartMeeting(MeetingStartData data)
         {
             if (!IsServer) return;
@@ -244,7 +231,6 @@ namespace Kavkazim.Netcode.Meeting
             GameSessionManager.Instance?.ReturnToGameplayFromMeeting();
         }
 
-        // Client RPCs
         [Rpc(SendTo.ClientsAndHost)]
         private void FireMeetingStartedClientRpc(MeetingStartData data) => OnMeetingStarted?.Invoke(data);
 
@@ -261,7 +247,6 @@ namespace Kavkazim.Netcode.Meeting
         [Rpc(SendTo.SpecifiedInParams)]
         private void ConfirmVoteClientRpc(RpcParams rpcParams) => OnVoteSubmitted?.Invoke();
 
-        // Disconnect handling
         private void OnClientDisconnected(ulong clientId)
         {
             if (!IsServer) return;
@@ -281,7 +266,6 @@ namespace Kavkazim.Netcode.Meeting
             }
         }
 
-        // Helpers
         private string GetPlayerName(ulong clientId)
         {
             if (GameSessionManager.Instance == null) return $"Player {clientId}";

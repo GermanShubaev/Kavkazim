@@ -12,11 +12,6 @@ using UnityEngine.UI;
 
 namespace Kavkazim.UI.Meeting
 {
-    /// <summary>
-    /// Client-side UI controller for the Meeting Scene.
-    /// Displays global meeting state (Timer, Results, Header).
-    /// Delegating voting logic to <see cref="MeetingVoteUIController"/>.
-    /// </summary>
     public class MeetingUIController : MonoBehaviour
     {
         [Header("UI References")]
@@ -28,31 +23,25 @@ namespace Kavkazim.UI.Meeting
 
         private MeetingManager _meetingManager;
 
-        // Settings panel
         private GameObject _settingsPanel;
         private bool _isSettingsPanelOpen = false;
 
         private void Awake()
         {
-            // CRITICAL: Ensure EventSystem exists for UI input
             UIUtils.EnsureEventSystem();
             
-            // Ensure Canvas has GraphicRaycaster for button clicks
             Canvas canvas = FindFirstObjectByType<Canvas>();
             UIUtils.EnsureGraphicRaycaster(canvas);
             
-            // Create settings panel with its own canvas
             CreateSettingsPanel();
             
             Debug.Log($"[MeetingUIController] Awake - voteController={voteController != null}");
         }
         
-        // Canvas specifically for the settings UI (created by this controller)
         private Canvas _settingsCanvas;
 
         private void Start()
         {
-            // Find MeetingManager
             _meetingManager = MeetingManager.Instance;
             if (_meetingManager == null)
             {
@@ -60,41 +49,31 @@ namespace Kavkazim.UI.Meeting
                 return;
             }
 
-            // Get local client ID
             if (NetworkManager.Singleton != null)
             {
             }
 
-            // Subscribe to MeetingManager events
             _meetingManager.TimeRemaining.OnValueChanged += OnTimerChanged;
-
-            // Update UI immediately
             UpdateTimerDisplay(_meetingManager.TimeRemaining.Value);
         }
 
         private void OnDestroy()
         {
-            // Unsubscribe
             if (_meetingManager != null)
             {
                 _meetingManager.TimeRemaining.OnValueChanged -= OnTimerChanged;
             }
             
-            // Clean up our settings canvas
             if (_settingsCanvas != null)
             {
                 Destroy(_settingsCanvas.gameObject);
             }
         }
 
-        // ========== EVENT HANDLERS ==========
-
         private void OnTimerChanged(float previousValue, float newValue)
         {
             UpdateTimerDisplay(newValue);
         }
-
-        // ========== UI UPDATES ==========
 
         private void UpdateTimerDisplay(float timeRemaining)
         {
@@ -103,29 +82,23 @@ namespace Kavkazim.UI.Meeting
                 int seconds = Mathf.CeilToInt(timeRemaining);
                 timerText.text = $"TIME REMAINING: {seconds}s";
                 
-                // Visual urgency
                 if (seconds <= 10) timerText.color = Color.red;
                 else timerText.color = Color.white;
             }
         }
 
-        // ========== SETTINGS PANEL ==========
-
         private void CreateSettingsPanel()
         {
-            // Create our own canvas for settings UI to avoid conflicts with persistent canvases
             GameObject settingsCanvasObj = new GameObject("MeetingSettingsCanvas");
-            // Don't parent to anything - let it be a root object so positioning works correctly
             _settingsCanvas = settingsCanvasObj.AddComponent<Canvas>();
             _settingsCanvas.renderMode = RenderMode.ScreenSpaceOverlay;
-            _settingsCanvas.sortingOrder = 100; // Ensure it's above other UI
+            _settingsCanvas.sortingOrder = 100;
             CanvasScaler scaler = settingsCanvasObj.AddComponent<CanvasScaler>();
             scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
             scaler.referenceResolution = new Vector2(1920, 1080);
             scaler.matchWidthOrHeight = 0.5f;
             settingsCanvasObj.AddComponent<GraphicRaycaster>();
 
-            // Create Settings Button (Top Right)
             GameObject settingsButtonObj = new GameObject("SettingsButton");
             settingsButtonObj.transform.SetParent(settingsCanvasObj.transform, false);
             
@@ -142,7 +115,6 @@ namespace Kavkazim.UI.Meeting
             buttonRect.pivot = new Vector2(1, 1);
             buttonRect.anchoredPosition = new Vector2(-20, -20);
             
-            // Button text
             GameObject buttonTextObj = new GameObject("Text");
             buttonTextObj.transform.SetParent(settingsButtonObj.transform, false);
             TextMeshProUGUI buttonText = buttonTextObj.AddComponent<TextMeshProUGUI>();
@@ -155,7 +127,6 @@ namespace Kavkazim.UI.Meeting
             textRect.anchorMax = Vector2.one;
             textRect.sizeDelta = Vector2.zero;
 
-            // Create Settings Panel (Center)
             _settingsPanel = new GameObject("SettingsPanel");
             _settingsPanel.transform.SetParent(settingsCanvasObj.transform, false);
             
@@ -166,7 +137,6 @@ namespace Kavkazim.UI.Meeting
             panelRect.sizeDelta = new Vector2(350, 200);
             panelRect.anchoredPosition = Vector2.zero;
 
-            // Room Code Text
             GameObject codeTextObj = new GameObject("RoomCodeText");
             codeTextObj.transform.SetParent(_settingsPanel.transform, false);
             TextMeshProUGUI codeText = codeTextObj.AddComponent<TextMeshProUGUI>();
@@ -185,7 +155,6 @@ namespace Kavkazim.UI.Meeting
             codeRect.sizeDelta = new Vector2(320, 50);
             codeRect.anchoredPosition = new Vector2(0, 50);
 
-            // Leave Game Button
             GameObject leaveButtonObj = new GameObject("LeaveButton");
             leaveButtonObj.transform.SetParent(_settingsPanel.transform, false);
             
@@ -199,7 +168,6 @@ namespace Kavkazim.UI.Meeting
             leaveRect.sizeDelta = new Vector2(200, 50);
             leaveRect.anchoredPosition = new Vector2(0, -30);
 
-            // Leave button text
             GameObject leaveTextObj = new GameObject("Text");
             leaveTextObj.transform.SetParent(leaveButtonObj.transform, false);
             TextMeshProUGUI leaveText = leaveTextObj.AddComponent<TextMeshProUGUI>();
@@ -212,7 +180,6 @@ namespace Kavkazim.UI.Meeting
             leaveTextRect.anchorMax = Vector2.one;
             leaveTextRect.sizeDelta = Vector2.zero;
 
-            // Hide panel initially
             _settingsPanel.SetActive(false);
         }
 

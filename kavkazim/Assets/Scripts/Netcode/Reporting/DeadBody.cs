@@ -5,36 +5,24 @@ using Netcode.Player;
 
 namespace Kavkazim.Netcode.Reporting
 {
-    /// <summary>
-    /// Networked dead body entity that appears when a player is killed.
-    /// Implements IReportable for the report system.
-    /// Server spawns this prefab; all clients see it.
-    /// </summary>
     [RequireComponent(typeof(NetworkObject))]
     public class DeadBody : NetworkBehaviour, IReportable
     {
-        /// <summary>
-        /// Global list of all active DeadBody components.
-        /// </summary>
         public static readonly System.Collections.Generic.List<DeadBody> ActiveBodies = new System.Collections.Generic.List<DeadBody>();
 
         [Header("Visual Settings")]
         [SerializeField] private SpriteRenderer spriteRenderer;
         [SerializeField] private Color bodyColor = new(0.2f, 0.2f, 0.2f, 1f);
         
-        // Networked properties
         private readonly NetworkVariable<ulong> _victimPlayerId = new();
         private readonly NetworkVariable<FixedString32Bytes> _victimName = new();
         private readonly NetworkVariable<float> _timeOfDeath = new();
         private readonly NetworkVariable<bool> _hasBeenReported = new();
         
-        // Report range (set from config)
         private static float _reportRange = 2.5f;
 
-        // Cached sprite to avoid excessive allocations
         private static Sprite _cachedCircleSprite;
         
-        // IReportable implementation
         public ulong VictimPlayerId => _victimPlayerId.Value;
         public string VictimName => _victimName.Value.ToString();
         public Vector3 Position => transform.position;
@@ -42,18 +30,15 @@ namespace Kavkazim.Netcode.Reporting
 
         private void Awake()
         {
-            // Try to get existing SpriteRenderer
             if (!spriteRenderer)
                 spriteRenderer = GetComponent<SpriteRenderer>();
             
-            // Add SpriteRenderer if missing
             if (!spriteRenderer)
             {
                 spriteRenderer = gameObject.AddComponent<SpriteRenderer>();
                 Debug.Log("[DeadBody] Added SpriteRenderer component.");
             }
                 
-            // Create sprite if none assigned
             if (spriteRenderer.sprite == null)
             {
                 if (_cachedCircleSprite == null)
@@ -64,11 +49,9 @@ namespace Kavkazim.Netcode.Reporting
                 spriteRenderer.sprite = _cachedCircleSprite;
             }
             
-            // Set the color
             spriteRenderer.color = bodyColor;
             
-            // Make sure it's visible (sorting order)
-            spriteRenderer.sortingOrder = 5; // Above floor, visible
+            spriteRenderer.sortingOrder = 5;
         }
 
         public override void OnNetworkSpawn()
@@ -78,7 +61,6 @@ namespace Kavkazim.Netcode.Reporting
                 
             base.OnNetworkSpawn();
             
-            // Apply visual appearance
             if (spriteRenderer)
             {
                 spriteRenderer.color = bodyColor;
@@ -87,10 +69,6 @@ namespace Kavkazim.Netcode.Reporting
             Debug.Log($"[DeadBody] Spawned body for {VictimName} (ID: {VictimPlayerId}) at {Position}");
         }
 
-        /// <summary>
-        /// SERVER ONLY: Initialize this dead body with victim information.
-        /// Called by DeadBodySpawner after instantiation.
-        /// </summary>
         public void Initialize(ulong victimPlayerId, string victimName, Vector3 position)
         {
             if (!IsServer)
@@ -107,33 +85,23 @@ namespace Kavkazim.Netcode.Reporting
             Debug.Log($"[DeadBody] SERVER: Initialized body for {victimName} at {position}");
         }
 
-        /// <summary>
-        /// Set the report range for all bodies.
-        /// </summary>
         public static void SetReportRange(float range)
         {
             _reportRange = range;
         }
 
-        /// <summary>
-        /// ServerRpc to request reporting this body.
-        /// Called by client via ReportService.
-        /// Allow any client to report (Everyone permission).
-        /// </summary>
         [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Everyone)]
         public void RequestReportServerRpc(RpcParams rpcParams = default)
         {
             ulong reporterClientId = rpcParams.Receive.SenderClientId;
             Debug.Log($"[DeadBody] SERVER: Received report request from ClientID: {reporterClientId} for body of {VictimName}");
             
-            // Validate body is still reportable
             if (_hasBeenReported.Value)
             {
                 Debug.LogWarning("[DeadBody] SERVER: Report rejected - body already reported.");
                 return;
             }
             
-            // Find reporter to validate distance and get name
             PlayerState reporter = FindPlayerByClientId(reporterClientId);
             if (reporter == null)
             {
@@ -141,14 +109,12 @@ namespace Kavkazim.Netcode.Reporting
                 return;
             }
             
-            // Check if reporter is alive
             if (!reporter.IsAlive.Value)
             {
                 Debug.LogWarning("[DeadBody] SERVER: Report rejected - reporter is dead.");
                 return;
             }
             
-            // Validate distance
             float distance = Vector3.Distance(reporter.transform.position, Position);
             if (distance > _reportRange)
             {
@@ -156,7 +122,6 @@ namespace Kavkazim.Netcode.Reporting
                 return;
             }
 
-            // Resolve reporter name reliably on server
             string reporterName = $"Player {reporterClientId}";
             var avatar = reporter.GetComponent<PlayerAvatar>();
             if (avatar != null && !string.IsNullOrEmpty(avatar.PlayerName.Value.ToString()))
@@ -164,33 +129,21 @@ namespace Kavkazim.Netcode.Reporting
                 reporterName = avatar.PlayerName.Value.ToString();
             }
             
-            // Mark body as reported
             _hasBeenReported.Value = true;
             
-            // Notify all clients
             AnnounceReportClientRpc(reporterName, reporterClientId, VictimName);
             
-            // Notify the static service
             ReportService.NotifyBodyReported(reporterName, VictimName, reporterClientId, VictimPlayerId);
             
             Debug.Log($"[DeadBody] SERVER: Report validated successfully.");
         }
 
-        /// <summary>
-        /// Client RPC to announce the report.
-        /// Also syncs the "has reported" state to all clients.
-        /// </summary>
         [ClientRpc]
         private void AnnounceReportClientRpc(string reporterName, ulong reporterClientId, string victimName)
         {
             Debug.Log($"REPORT, Found Body by \"{reporterName}\"");
-            
-            // Body reports are unlimited - no need to mark player
         }
 
-        /// <summary>
-        /// Find a player by their client ID.
-        /// </summary>
         private PlayerState FindPlayerByClientId(ulong clientId)
         {
             var allPlayers = PlayerState.ActivePlayers;
@@ -202,9 +155,6 @@ namespace Kavkazim.Netcode.Reporting
             return null;
         }
 
-        /// <summary>
-        /// SERVER ONLY: Mark this body as reported.
-        /// </summary>
         public void MarkAsReported()
         {
             if (!IsServer)
@@ -216,9 +166,6 @@ namespace Kavkazim.Netcode.Reporting
             _hasBeenReported.Value = true;
         }
 
-        /// <summary>
-        /// Creates a circle sprite texture programmatically.
-        /// </summary>
         public static Sprite CreateCircleSprite(int size = 64)
         {
             Texture2D texture = new Texture2D(size, size, TextureFormat.RGBA32, false);

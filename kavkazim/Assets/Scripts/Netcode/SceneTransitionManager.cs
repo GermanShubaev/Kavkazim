@@ -6,10 +6,6 @@ using UnityEngine.SceneManagement;
 
 namespace Kavkazim.Netcode
 {
-    /// <summary>
-    /// Manages screen transitions (fades) between scenes and game states.
-    /// Persistent singleton that lives across scene loads.
-    /// </summary>
     public class SceneTransitionManager : MonoBehaviour
     {
         public static SceneTransitionManager Instance { get; private set; }
@@ -28,10 +24,6 @@ namespace Kavkazim.Netcode
         private Image _fadeImage;
         private Coroutine _activeFade;
 
-        /// <summary>
-        /// Set to true to prevent auto-fade-in on the next scene load.
-        /// Used when fade-in should be triggered manually (e.g., after respawn).
-        /// </summary>
         public bool SuppressNextAutoFadeIn { get; set; }
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
@@ -72,7 +64,6 @@ namespace Kavkazim.Netcode
 
         private void CreateTransitionUI()
         {
-            // Create Canvas
             var canvasGo = new GameObject("TransitionCanvas");
             canvasGo.transform.SetParent(transform);
             
@@ -83,7 +74,6 @@ namespace Kavkazim.Netcode
             canvasGo.AddComponent<CanvasScaler>();
             canvasGo.AddComponent<GraphicRaycaster>();
 
-            // Create Fade Image (stretched to fill screen)
             var imageGo = new GameObject("FadeImage");
             imageGo.transform.SetParent(canvasGo.transform, false);
 
@@ -110,16 +100,12 @@ namespace Kavkazim.Netcode
                 return;
             }
 
-            // Auto fade-in if screen is currently faded out
             if (_fadeOverlay != null && _fadeOverlay.alpha > NearlyOpaqueThreshold)
             {
                 FadeIn(defaultFadeDuration);
             }
         }
 
-        /// <summary>
-        /// Fades the screen to black.
-        /// </summary>
         public Coroutine FadeOut(float duration, Action onComplete = null)
         {
             StopActiveFade();
@@ -127,9 +113,6 @@ namespace Kavkazim.Netcode
             return _activeFade;
         }
 
-        /// <summary>
-        /// Fades the screen from black to transparent.
-        /// </summary>
         public Coroutine FadeIn(float duration, Action onComplete = null)
         {
             StopActiveFade();
@@ -169,7 +152,6 @@ namespace Kavkazim.Netcode
 
             _fadeOverlay.alpha = targetAlpha;
 
-            // Unblock raycasts when fully transparent
             if (targetAlpha <= NearlyTransparentThreshold)
             {
                 SetRaycastBlocking(false);

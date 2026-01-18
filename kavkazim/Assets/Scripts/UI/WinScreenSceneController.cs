@@ -8,18 +8,12 @@ using Kavkazim.Utils;
 
 namespace UI
 {
-    /// <summary>
-    /// Controller for the WinScreen scene.
-    /// Displays winning team, winner names, and handles return to lobby.
-    /// This script should be attached to a GameObject in the WinScreen scene.
-    /// </summary>
     public class WinScreenSceneController : MonoBehaviour
     {
         [Header("Animation Settings")]
         [SerializeField] private float fadeInDuration = 0.5f;
-        [SerializeField] private float autoReturnDelay = 10f; // Auto-return after 10 seconds
+        [SerializeField] private float autoReturnDelay = 10f;
 
-        // UI References (created dynamically or assigned in inspector)
         [Header("UI References")]
         [SerializeField] private GameObject _canvas;
         [SerializeField] private CanvasGroup _canvasGroup;
@@ -35,11 +29,8 @@ namespace UI
 
         private void Start()
         {
-            // Get win result from static cache (set before scene load)
-            // GameSessionManager.Instance won't exist as it was destroyed with previous scene
             _cachedWinResult = GameSessionManager.CachedWinResult;
             
-            // Validate we have valid data
             if (!_cachedWinResult.HasEnded)
             {
                 Debug.LogWarning("[WinScreenSceneController] No cached win result found, using default");
@@ -59,10 +50,8 @@ namespace UI
             DisplayWinResult(_cachedWinResult);
             StartCoroutine(FadeIn());
             
-            // Start countdown for auto-return
             _returnCountdown = autoReturnDelay;
             
-            // Wire up button listener
             if (_returnButton != null)
             {
                 _returnButton.onClick.AddListener(OnReturnClicked);
@@ -79,7 +68,6 @@ namespace UI
 
         private void Update()
         {
-            // Update countdown
             if (!_isReturning && _returnCountdown > 0)
             {
                 _returnCountdown -= Time.deltaTime;
@@ -95,23 +83,18 @@ namespace UI
             }
         }
 
-        // Methods removed: CreateUI, CreateText, CreateButton
-
         private void DisplayWinResult(WinResultData result)
         {
-            // Set title with team color
             string teamName = result.GetWinningTeamDisplay();
             Color teamColor = result.WinningTeam == 2 
-                ? UIUtils.ColorNotReady // Red for Kavkazi
-                : new Color(0.3f, 0.8f, 1f); // Cyan for Innocent
+                ? UIUtils.ColorNotReady
+                : new Color(0.3f, 0.8f, 1f);
 
             _titleText.text = $"{teamName.ToUpper()} WIN!";
             _titleText.color = teamColor;
 
-            // Set reason
             _reasonText.text = result.GetReasonDisplay();
 
-            // Set winner names
             string[] winners = result.GetWinnerNamesList();
             if (winners.Length > 0)
             {
@@ -126,7 +109,6 @@ namespace UI
         private void OnReturnClicked()
         {
             if (_isReturning) return;
-            // Only set returning flag for server or if we want to block input permanently
             
             _returnButton.interactable = false;
 
@@ -135,7 +117,6 @@ namespace UI
                 _isReturning = true;
                 _countdownText.text = "Returning to lobby...";
 
-                // Use GameSessionManager to properly reset state and return to lobby
                 if (GameSessionManager.Instance != null)
                 {
                     Debug.Log("[WinScreenSceneController] Host requesting return to lobby via GameSessionManager...");
@@ -150,7 +131,6 @@ namespace UI
             else if (NetworkManager.Singleton != null && NetworkManager.Singleton.IsClient)
             {
                 Debug.Log("[WinScreenSceneController] Client waiting for server to load lobby scene...");
-                // Client just waits - server will trigger scene sync
                 _countdownText.text = "Waiting for host...";
             }
         }

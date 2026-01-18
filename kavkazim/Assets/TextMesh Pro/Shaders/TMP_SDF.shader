@@ -143,20 +143,19 @@ SubShader {
 			UNITY_VERTEX_OUTPUT_STEREO
 			float4	position		: SV_POSITION;
 			fixed4	color			: COLOR;
-			float2	atlas			: TEXCOORD0;		// Atlas
-			float4	param			: TEXCOORD1;		// alphaClip, scale, bias, weight
-			float4	mask			: TEXCOORD2;		// Position in object space(xy), pixel Size(zw)
+			float2	atlas			: TEXCOORD0;		
+			float4	param			: TEXCOORD1;		
+			float4	mask			: TEXCOORD2;		
 			float3	viewDir			: TEXCOORD3;
 
 		    #if (UNDERLAY_ON || UNDERLAY_INNER)
-			float4	texcoord2		: TEXCOORD4;		// u,v, scale, bias
+			float4	texcoord2		: TEXCOORD4;		
 			fixed4	underlayColor	: COLOR1;
 		    #endif
 
 		    float4 textures			: TEXCOORD5;
 		};
 
-		// Used by Unity internally to handle Texture Tiling and Offset.
 		float4 _FaceTex_ST;
 		float4 _OutlineTex_ST;
 		float _UIMaskSoftnessX;

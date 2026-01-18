@@ -14,7 +14,6 @@ namespace Netcode
                 return;
             }
 
-            // If another NetworkManager already exists (e.g., from previous scene), destroy this one
             var all = FindObjectsByType<NetworkManager>(FindObjectsSortMode.None);
             if (all.Length > 1)
             {
@@ -22,7 +21,6 @@ namespace Netcode
                 return;
             }
 
-            // Persist across scene loads
             DontDestroyOnLoad(gameObject);
         }
     }

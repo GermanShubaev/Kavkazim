@@ -17,9 +17,6 @@ namespace Kavkazim.Netcode.Validation
     public class LobbyRuntimeContext
     {
         public int CurrentPlayerCount;
-        /// <summary>
-        /// Whether test mode is enabled. In test mode, minimum player requirements are bypassed.
-        /// </summary>
         public bool IsTestMode;
     }
 

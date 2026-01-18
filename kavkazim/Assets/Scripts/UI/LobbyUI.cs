@@ -9,32 +9,20 @@ using Kavkazim.Netcode.Validation;
 
 namespace UI
 {
-    /// <summary>
-    /// Lobby UI controller. Creates and manages the lobby interface.
-    /// Subscribes to GameSessionManager events for reactive updates.
-    /// 
-    /// Features:
-    /// - Player list with ready indicators
-    /// - Settings panel (host can edit, clients read-only)
-    /// - Start Game / Ready / Leave buttons
-    /// - "Match in Progress" waiting message for late joiners
-    /// </summary>
     public class LobbyUI : MonoBehaviour
     {
-        [SerializeField] private Color notReadyColor = UIUtils.ColorNotReady; // Red
+        [SerializeField] private Color notReadyColor = UIUtils.ColorNotReady;
         [SerializeField] private Color waitingColor = UIUtils.ColorWaiting;
 
-        // UI Elements (created dynamically)
         private GameObject _canvasObj;
         private GameObject _lobbyPanel;
         private GameObject _waitingPanel;
         private Transform _playerListContent;
         private Text _roomCodeText;
-        // _lobbyCodeText removed
+
         private Text _playerCountText;
         private Text _phaseText;
         
-        // Settings UI
         private Slider _maxPlayersSlider;
         private Slider _kavkaziCountSlider;
         private Slider _votingTimeSlider;
@@ -48,27 +36,22 @@ namespace UI
         private Text _killCooldownValue;
         private Text _missionsValue;
         
-        // Test Mode UI (Editor/Development builds only)
         private Toggle _testModeToggle;
         private GameObject _testModeContainer;
         private Text _testModeStatusText;
         
-        // ValidValidation UI
         private Text _validationErrorText;
         private LobbyValidator _validator;
 
-        // Buttons
         private Button _startGameButton;
         private Button _readyButton;
         private Button _leaveButton;
         private Text _readyButtonText;
         
-        // Player list items (pooled)
         private List<GameObject> _playerListItems = new List<GameObject>();
         
         private Sprite _roundedSprite;
 
-        // State
         private bool _isReady = false;
         private bool _isHost = false;
 
@@ -91,7 +74,6 @@ namespace UI
                 GameSessionManager.Instance.OnSettingsChanged += RefreshSettings;
                 GameSessionManager.Instance.OnPhaseChanged += OnPhaseChanged;
                 
-                // Initial refresh
                 RefreshPlayerList();
                 RefreshSettings();
                 OnPhaseChanged(GameSessionManager.Instance.CurrentPhase.Value);
@@ -99,7 +81,6 @@ namespace UI
             else
             {
                 Debug.LogWarning("[LobbyUI] GameSessionManager.Instance is null");
-                // Try again after a delay
                 Invoke(nameof(RetrySubscribe), 0.5f);
             }
         }
@@ -125,8 +106,6 @@ namespace UI
         private void OnPlayersListUpdated()
         {
             RefreshPlayerList();
-            // Re-evaluate phase logic because "IsWaiting" status depends on finding local player in the list
-            // This fixes the issue where late joiners initially see empty screen because their player entry wasn't in list yet
             if (GameSessionManager.Instance != null)
             {
                 OnPhaseChanged(GameSessionManager.Instance.CurrentPhase.Value);
@@ -138,10 +117,8 @@ namespace UI
             _roundedSprite = CreateRoundedRectSprite(64, 8);
             _validator = new LobbyValidator();
 
-            // Ensure EventSystem exists
             UIUtils.EnsureEventSystem();
 
-            // Create Canvas
             _canvasObj = new GameObject("LobbyCanvas");
             _canvasObj.transform.SetParent(transform, false);
             Canvas canvas = _canvasObj.AddComponent<Canvas>();
@@ -153,10 +130,8 @@ namespace UI
             scaler.matchWidthOrHeight = 0.5f;
             _canvasObj.AddComponent<GraphicRaycaster>();
 
-            // Create main lobby panel
             CreateLobbyPanel();
             
-            // Create waiting panel (for late joiners)
             CreateWaitingPanel();
         }
 
@@ -169,16 +144,14 @@ namespace UI
             lobbyRect.offsetMin = Vector2.zero;
             lobbyRect.offsetMax = Vector2.zero;
 
-            // Title - top left
             var titleObj = CreateText(_lobbyPanel.transform, "Title", "LOBBY", 40, FontStyle.Bold, 
                 Vector2.zero, Vector2.zero, Vector2.zero);
-            titleObj.GetComponent<RectTransform>().anchorMin = new Vector2(0.02f, 0.92f); // Changed from 0.04f to match player list (0.02f)
+            titleObj.GetComponent<RectTransform>().anchorMin = new Vector2(0.02f, 0.92f);
             titleObj.GetComponent<RectTransform>().anchorMax = new Vector2(0.2f, 0.98f);
             titleObj.GetComponent<RectTransform>().offsetMin = Vector2.zero;
             titleObj.GetComponent<RectTransform>().offsetMax = Vector2.zero;
             titleObj.GetComponent<Text>().alignment = TextAnchor.MiddleLeft;
 
-            // Room Code - top right
             _roomCodeText = CreateText(_lobbyPanel.transform, "RoomCode", "Code: ----", 30, FontStyle.Bold, 
                  Vector2.zero, Vector2.zero, Vector2.zero).GetComponent<Text>();
             RectTransform codeRect = _roomCodeText.GetComponent<RectTransform>();
@@ -189,82 +162,63 @@ namespace UI
             _roomCodeText.color = Color.yellow;
             _roomCodeText.alignment = TextAnchor.MiddleRight;
 
-            // Phase indicator removed as requested ("Lobby Open" text)
-            
-            // Left side: Player List
             CreatePlayerListPanel();
-
-            // Right side: Settings
             CreateSettingsPanel();
-
-            // Bottom: Buttons
             CreateButtonPanel();
-
-            // Update room code display
             UpdateRoomCode();
-            
-            // ValidValidation Error Text - Left aligned, under Lobby Title
+
             _validationErrorText = CreateText(_lobbyPanel.transform, "ValidationError", "", 18, FontStyle.Bold, 
                  Vector2.zero, Vector2.zero, Vector2.zero).GetComponent<Text>();
             
-            // Override constraints to place it under title
             RectTransform errorRect = _validationErrorText.GetComponent<RectTransform>();
-            errorRect.anchorMin = new Vector2(0.02f, 0.87f); // Start under title (0.92)
-            errorRect.anchorMax = new Vector2(0.5f, 0.92f);  // End before title starts
+            errorRect.anchorMin = new Vector2(0.02f, 0.87f);
+            errorRect.anchorMax = new Vector2(0.5f, 0.92f);
             errorRect.offsetMin = Vector2.zero;
             errorRect.offsetMax = Vector2.zero;
             
             _validationErrorText.color = notReadyColor;
-            _validationErrorText.alignment = TextAnchor.MiddleLeft; // Left aligned under title
+            _validationErrorText.alignment = TextAnchor.MiddleLeft;
         }
 
         private void CreatePlayerListPanel()
         {
             GameObject listPanel = CreatePanel(_lobbyPanel.transform, "PlayerListPanel", new Color(0.15f, 0.15f, 0.2f, 1f));
             RectTransform listRect = listPanel.GetComponent<RectTransform>();
-            listRect.anchorMin = new Vector2(0.02f, 0.10f);  // Same height as Settings panel
+            listRect.anchorMin = new Vector2(0.02f, 0.10f);
             listRect.anchorMax = new Vector2(0.48f, 0.85f);
             listRect.offsetMin = Vector2.zero;
             listRect.offsetMax = Vector2.zero;
             
-            // Add Vertical Layout Group to the main panel container itself if we want header + content list to stack
             VerticalLayoutGroup mainLayout = listPanel.AddComponent<VerticalLayoutGroup>();
-            mainLayout.padding = new RectOffset(20, 20, 20, 20); // Match settings panel padding
-            mainLayout.spacing = 15; // Match settings panel spacing
+            mainLayout.padding = new RectOffset(20, 20, 20, 20);
+            mainLayout.spacing = 15;
             mainLayout.childAlignment = TextAnchor.UpperCenter;
             mainLayout.childControlWidth = true;
-            mainLayout.childControlHeight = true; // Control height so LayoutElements work
+            mainLayout.childControlHeight = true;
             mainLayout.childForceExpandWidth = true;
-            mainLayout.childForceExpandHeight = false; // Don't stretch vertically
+            mainLayout.childForceExpandHeight = false;
 
-            // Header - Match Settings Panel Header Style
             GameObject headerObj = CreateText(listPanel.transform, "Header", "Players (0/10)", 32, FontStyle.Bold, Vector2.zero, Vector2.zero, Vector2.zero);
             _playerCountText = headerObj.GetComponent<Text>();
-            // Add layout element to header
             LayoutElement headerLayout = headerObj.AddComponent<LayoutElement>();
             headerLayout.minHeight = 40;
             headerLayout.preferredHeight = 40;
-            headerLayout.flexibleHeight = 0; // Header doesn't stretch
+            headerLayout.flexibleHeight = 0;
             _playerCountText.alignment = TextAnchor.MiddleCenter;
 
-            // Content container for the list (since we might want it to scroll or just be a sub-container)
-            // But for simplicity, we can just add items directly to this panel if we want all to share the layout.
-            // However, your original design had a separate "Content" object. Let's keep that structure but make it play nice with layout.
-            
             GameObject content = new GameObject("PlayerListContent");
             content.transform.SetParent(listPanel.transform, false);
             
-            // Layout Element for the content container so it takes remaining space
             LayoutElement contentLayoutElement = content.AddComponent<LayoutElement>();
-            contentLayoutElement.flexibleHeight = 1; // Take all remaining height
+            contentLayoutElement.flexibleHeight = 1;
             contentLayoutElement.flexibleWidth = 1;
 
             VerticalLayoutGroup contentLayout = content.AddComponent<VerticalLayoutGroup>();
             contentLayout.spacing = 4;
             contentLayout.padding = new RectOffset(2, 2, 2, 2);
             contentLayout.childForceExpandWidth = true;
-            contentLayout.childForceExpandHeight = false; // Don't stretch items to fill height, let them stack
-            contentLayout.childControlHeight = true; // Control height of children
+            contentLayout.childForceExpandHeight = false;
+            contentLayout.childControlHeight = true;
             contentLayout.childControlWidth = true;
             contentLayout.childAlignment = TextAnchor.UpperCenter;
             
@@ -275,60 +229,49 @@ namespace UI
         {
             GameObject settingsPanel = CreatePanel(_lobbyPanel.transform, "SettingsPanel", new Color(0.15f, 0.15f, 0.2f, 1f));
             RectTransform settingsRect = settingsPanel.GetComponent<RectTransform>();
-            settingsRect.anchorMin = new Vector2(0.52f, 0.10f);  // Lower bottom to fit all settings
+            settingsRect.anchorMin = new Vector2(0.52f, 0.10f);
             settingsRect.anchorMax = new Vector2(0.98f, 0.85f);
             settingsRect.offsetMin = Vector2.zero;
             settingsRect.offsetMax = Vector2.zero;
 
-            // Add Vertical Layout Group to the main panel
             VerticalLayoutGroup layout = settingsPanel.AddComponent<VerticalLayoutGroup>();
-            layout.padding = new RectOffset(20, 20, 20, 20); // Increased padding
-            layout.spacing = 15; // Increased spacing
+            layout.padding = new RectOffset(20, 20, 20, 20);
+            layout.spacing = 15;
             layout.childAlignment = TextAnchor.UpperCenter;
             layout.childControlWidth = true;
-            layout.childControlHeight = true; // IMPORTANT: Control height so LayoutElements work
+            layout.childControlHeight = true;
             layout.childForceExpandWidth = true;
-            layout.childForceExpandHeight = false; // Don't stretch settings vertically, pack them
+            layout.childForceExpandHeight = false;
 
-            // Header
             GameObject headerObj = CreateText(settingsPanel.transform, "Header", "Settings", 32, FontStyle.Bold, Vector2.zero, Vector2.zero, Vector2.zero);
-            // Add layout element to header
             LayoutElement headerLayout = headerObj.AddComponent<LayoutElement>();
             headerLayout.minHeight = 40;
             headerLayout.preferredHeight = 40;
             headerLayout.flexibleHeight = 0;
-            // Removed the Reset RectTransform code that was checking for problems but causing them by setting sizeDelta to zero
 
-            // Max Players
             (_maxPlayersSlider, _maxPlayersValue) = CreateSettingSlider(settingsPanel.transform, "Max Players", 4, 10, 10);
             _maxPlayersSlider.wholeNumbers = true;
             _maxPlayersSlider.onValueChanged.AddListener(v => OnSettingChanged());
 
-            // Kavkazi Count
             (_kavkaziCountSlider, _kavkaziCountValue) = CreateSettingSlider(settingsPanel.transform, "Kavkazi Count", 1, 3, 2);
             _kavkaziCountSlider.wholeNumbers = true;
             _kavkaziCountSlider.onValueChanged.AddListener(v => OnSettingChanged());
 
-            // Voting Time
             (_votingTimeSlider, _votingTimeValue) = CreateSettingSlider(settingsPanel.transform, "Voting Time (s)", 30, 180, 60);
             _votingTimeSlider.wholeNumbers = true;
             _votingTimeSlider.onValueChanged.AddListener(v => OnSettingChanged());
 
-            // Move Speed
             (_moveSpeedSlider, _moveSpeedValue) = CreateSettingSlider(settingsPanel.transform, "Move Speed", 0.5f, 5f, 3.5f);
             _moveSpeedSlider.onValueChanged.AddListener(v => OnSettingChanged());
 
-            // Kill Cooldown
             (_killCooldownSlider, _killCooldownValue) = CreateSettingSlider(settingsPanel.transform, "Kill Cooldown (s)", 5, 60, 15);
             _killCooldownSlider.wholeNumbers = true;
             _killCooldownSlider.onValueChanged.AddListener(v => OnSettingChanged());
 
-            // Missions Count
             (_missionsSlider, _missionsValue) = CreateSettingSlider(settingsPanel.transform, "Missions Count", 1, 10, 3);
             _missionsSlider.wholeNumbers = true;
             _missionsSlider.onValueChanged.AddListener(v => OnSettingChanged());
             
-            // Test Mode Toggle
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
             CreateTestModeToggle(settingsPanel.transform);
 #endif
@@ -345,7 +288,6 @@ namespace UI
             layout.flexibleHeight = 0;
             layout.flexibleWidth = 1;
 
-            // Label - left side
             GameObject labelObj = new GameObject("Label");
             labelObj.transform.SetParent(_testModeContainer.transform, false);
             RectTransform labelRect = labelObj.AddComponent<RectTransform>();
@@ -359,10 +301,9 @@ namespace UI
             labelText.font = UIUtils.GetDefaultFont();
             labelText.fontSize = 16;
             labelText.fontStyle = FontStyle.Bold;
-            labelText.color = new Color(1f, 0.6f, 0.2f); // Orange to indicate dev feature
+            labelText.color = new Color(1f, 0.6f, 0.2f);
             labelText.alignment = TextAnchor.MiddleLeft;
 
-            // Toggle Button - creates a clickable button that acts as toggle
             GameObject toggleBtn = new GameObject("TestModeToggleBtn");
             toggleBtn.transform.SetParent(_testModeContainer.transform, false);
             RectTransform toggleBtnRect = toggleBtn.AddComponent<RectTransform>();
@@ -376,7 +317,6 @@ namespace UI
             btnBgImg.type = Image.Type.Sliced;
             btnBgImg.color = new Color(0.25f, 0.25f, 0.3f);
 
-            // Checkmark (child of toggle button)
             GameObject checkmark = new GameObject("Checkmark");
             checkmark.transform.SetParent(toggleBtn.transform, false);
             RectTransform checkRect = checkmark.AddComponent<RectTransform>();
@@ -388,9 +328,8 @@ namespace UI
             Image checkImg = checkmark.AddComponent<Image>();
             checkImg.sprite = _roundedSprite;
             checkImg.type = Image.Type.Sliced;
-            checkImg.color = new Color(1f, 0.6f, 0.2f); // Orange checkmark
+            checkImg.color = new Color(1f, 0.6f, 0.2f);
 
-            // Add Toggle component
             _testModeToggle = toggleBtn.AddComponent<Toggle>();
             _testModeToggle.targetGraphic = btnBgImg;
             _testModeToggle.graphic = checkImg;
@@ -398,7 +337,6 @@ namespace UI
             _testModeToggle.isOn = false;
             _testModeToggle.onValueChanged.AddListener(OnTestModeToggled);
             
-            // Status text - shows ON/OFF
             GameObject statusObj = new GameObject("StatusText");
             statusObj.transform.SetParent(_testModeContainer.transform, false);
             RectTransform statusRect = statusObj.AddComponent<RectTransform>();
@@ -418,7 +356,6 @@ namespace UI
         
         private void OnTestModeToggled(bool isOn)
         {
-            // Update status text
             if (_testModeStatusText != null)
             {
                 _testModeStatusText.text = isOn ? "ON" : "OFF";
@@ -430,7 +367,6 @@ namespace UI
             
             Debug.Log($"[LobbyUI] Test Mode toggled: {isOn}");
             
-            // Send settings update with test mode flag
             OnSettingChanged();
         }
 
@@ -439,18 +375,15 @@ namespace UI
             GameObject container = new GameObject(label + "Container");
             container.transform.SetParent(parent, false);
             
-            // Add automatic layout element
             LayoutElement layout = container.AddComponent<LayoutElement>();
             layout.minHeight = 40;
             layout.preferredHeight = 40;
             layout.flexibleHeight = 0;
             layout.flexibleWidth = 1;
 
-            // Label
             CreateText(container.transform, "Label", label, 20, FontStyle.Normal,
                 new Vector2(0, 0), new Vector2(0.4f, 1), Vector2.zero);
 
-            // Slider
             GameObject sliderObj = new GameObject("Slider");
             sliderObj.transform.SetParent(container.transform, false);
             RectTransform sliderRect = sliderObj.AddComponent<RectTransform>();
@@ -469,7 +402,6 @@ namespace UI
             slider.maxValue = max;
             slider.value = defaultVal;
 
-            // Fill area
             GameObject fillArea = new GameObject("FillArea");
             fillArea.transform.SetParent(sliderObj.transform, false);
             RectTransform fillAreaRect = fillArea.AddComponent<RectTransform>();
@@ -491,7 +423,6 @@ namespace UI
             fillRect.offsetMax = Vector2.zero;
             slider.fillRect = fillRect;
 
-            // Handle
             GameObject handleArea = new GameObject("HandleArea");
             handleArea.transform.SetParent(sliderObj.transform, false);
             RectTransform handleAreaRect = handleArea.AddComponent<RectTransform>();
@@ -510,12 +441,10 @@ namespace UI
             handleRect.sizeDelta = new Vector2(15, 0);
             slider.handleRect = handleRect;
 
-            // Value text - positioned inside the panel
             Text valueText = CreateText(container.transform, "Value", defaultVal.ToString("F1"), 20, FontStyle.Bold,
                 new Vector2(0.86f, 0), new Vector2(0.98f, 1), Vector2.zero).GetComponent<Text>();
             valueText.alignment = TextAnchor.MiddleCenter;
 
-            // Update value text on slider change
             slider.onValueChanged.AddListener(v => {
                 valueText.text = slider.wholeNumbers ? v.ToString("F0") : v.ToString("F1");
             });
@@ -525,18 +454,15 @@ namespace UI
 
         private void CreateButtonPanel()
         {
-            // Start Game button (Host only)
             _startGameButton = CreateButton(_lobbyPanel.transform, "StartGame", "START GAME", 
                 UIUtils.ColorReady, new Vector2(0.15f, 0.02f), new Vector2(0.35f, 0.1f));
             _startGameButton.onClick.AddListener(OnStartGameClicked);
 
-            // Ready button (Clients)
             _readyButton = CreateButton(_lobbyPanel.transform, "Ready", "READY", 
                 new Color(0.3f, 0.5f, 0.8f), new Vector2(0.4f, 0.02f), new Vector2(0.6f, 0.1f));
             _readyButton.onClick.AddListener(OnReadyClicked);
             _readyButtonText = _readyButton.GetComponentInChildren<Text>();
 
-            // Leave button
             _leaveButton = CreateButton(_lobbyPanel.transform, "Leave", "LEAVE", 
                 UIUtils.ColorNotReady, new Vector2(0.65f, 0.02f), new Vector2(0.85f, 0.1f));
             _leaveButton.onClick.AddListener(OnLeaveClicked);
@@ -573,8 +499,6 @@ namespace UI
             }
         }
 
-        // ========== EVENT HANDLERS ==========
-
         private void RefreshPlayerList()
         {
             if (GameSessionManager.Instance == null) return;
@@ -582,26 +506,22 @@ namespace UI
             var players = GameSessionManager.Instance.Players;
             int maxPlayers = GameSessionManager.Instance.Settings.Value.MaxPlayers;
             
-            // Update player count
             if (_playerCountText != null)
             {
                 _playerCountText.text = $"Players ({players.Count}/{maxPlayers})";
             }
 
-            // Clear existing items
             foreach (var item in _playerListItems)
             {
                 if (item != null) Destroy(item);
             }
             _playerListItems.Clear();
 
-            // Create new items
             foreach (var player in players)
             {
                 CreatePlayerListItem(player);
             }
 
-            // Update button states
             UpdateButtonStates();
         }
 
@@ -610,20 +530,17 @@ namespace UI
             GameObject item = new GameObject($"Player_{player.ClientId}");
             item.transform.SetParent(_playerListContent, false);
             
-            // Layout element for VerticalLayoutGroup
             LayoutElement layout = item.AddComponent<LayoutElement>();
-            layout.minHeight = 65; // Fixed height ~ 1/10th of typical panel space
+            layout.minHeight = 65;
             layout.preferredHeight = 65;
-            layout.flexibleHeight = 0; // Don't stretch
+            layout.flexibleHeight = 0;
             layout.flexibleWidth = 1;
 
-            // Background
             Image bg = item.AddComponent<Image>();
             bg.sprite = _roundedSprite;
             bg.type = Image.Type.Sliced;
             bg.color = player.JoinedDuringMatch ? waitingColor : new Color(0.25f, 0.25f, 0.3f);
 
-            // Left side: Name + Host badge
             string nameText = player.PlayerName.ToString();
             if (player.IsHost) nameText += " <color=#FFD700>[HOST]</color>";
             
@@ -638,12 +555,11 @@ namespace UI
             Text nameTxt = nameObj.AddComponent<Text>();
             nameTxt.text = nameText;
             nameTxt.font = UIUtils.GetDefaultFont();
-            nameTxt.fontSize = 24; // Increased from 14
+            nameTxt.fontSize = 24;
             nameTxt.color = Color.white;
             nameTxt.alignment = TextAnchor.MiddleLeft;
             nameTxt.supportRichText = true;
 
-            // Right side: Status (right-aligned)
             string statusColor = player.IsReady ? "#33CC33" : "#CC3333";
             string statusText = player.JoinedDuringMatch ? "WAITING" : (player.IsReady ? "READY" : "NOT READY");
             
@@ -658,7 +574,7 @@ namespace UI
             Text statusTxt = statusObj.AddComponent<Text>();
             statusTxt.text = $"<color={statusColor}><b>{statusText}</b></color>";
             statusTxt.font = UIUtils.GetDefaultFont();
-            statusTxt.fontSize = 22; // Increased from 13
+            statusTxt.fontSize = 22;
             statusTxt.color = Color.white;
             statusTxt.alignment = TextAnchor.MiddleRight;
             statusTxt.supportRichText = true;
@@ -672,7 +588,6 @@ namespace UI
 
             var settings = GameSessionManager.Instance.Settings.Value;
 
-            // Update sliders without triggering callbacks
             SetSliderWithoutNotify(_maxPlayersSlider, settings.MaxPlayers);
             SetSliderWithoutNotify(_kavkaziCountSlider, settings.KavkaziCount);
             SetSliderWithoutNotify(_votingTimeSlider, settings.VotingTime);
@@ -680,7 +595,6 @@ namespace UI
             SetSliderWithoutNotify(_killCooldownSlider, settings.KillCooldown);
             SetSliderWithoutNotify(_missionsSlider, settings.MissionsPerInnocent);
 
-            // Update value texts
             _maxPlayersValue.text = settings.MaxPlayers.ToString();
             _kavkaziCountValue.text = settings.KavkaziCount.ToString();
             _votingTimeValue.text = settings.VotingTime.ToString("F0");
@@ -688,10 +602,7 @@ namespace UI
             _killCooldownValue.text = settings.KillCooldown.ToString("F0");
             _missionsValue.text = settings.MissionsPerInnocent.ToString();
             
-            // Update player list header because MaxPlayers might have changed
             RefreshPlayerList();
-
-            // Update slider interactability
             UpdateSliderInteractability();
         }
 
@@ -716,12 +627,10 @@ namespace UI
                     break;
 
                 case MatchPhase.MatchInProgress:
-                    // Check if we're a late joiner
                     bool isWaiting = GameSessionManager.Instance?.IsPlayerWaiting(NetworkManager.Singleton.LocalClientId) ?? false;
                     
                     if (isWaiting)
                     {
-                        // Late joiner - show waiting panel
                         _lobbyPanel.SetActive(false);
                         _waitingPanel.SetActive(true);
                         _canvasObj.SetActive(true);
@@ -729,7 +638,6 @@ namespace UI
                     }
                     else
                     {
-                        // Original player - hide lobby UI, gameplay will show
                         _lobbyPanel.SetActive(false);
                         _waitingPanel.SetActive(false);
                         _canvasObj.SetActive(false);
@@ -754,21 +662,17 @@ namespace UI
             _isHost = NetworkManager.Singleton.IsServer;
             bool isLobbyOpen = GameSessionManager.Instance.CurrentPhase.Value == MatchPhase.LobbyOpen;
 
-            // Start Game: Host only, lobby phase only
             _startGameButton.gameObject.SetActive(_isHost);
             _startGameButton.interactable = isLobbyOpen && CanStartGame();
 
-            // Ready: Clients only (host is always ready)
             _readyButton.gameObject.SetActive(!_isHost);
             _readyButton.interactable = isLobbyOpen;
             
-            // Update ready button text
             if (_readyButtonText != null)
             {
                 _readyButtonText.text = _isReady ? "UNREADY" : "READY";
             }
 
-            // Update slider interactability
             UpdateSliderInteractability();
         }
 
@@ -792,7 +696,6 @@ namespace UI
             
             var settings = GameSessionManager.Instance.Settings.Value;
             
-            // Run validation
             var ctx = new LobbyRuntimeContext { CurrentPlayerCount = GameSessionManager.Instance.GetEligiblePlayerCount(), IsTestMode = settings.TestMode };
             var result = _validator.Validate(settings, ctx);
             
@@ -810,7 +713,6 @@ namespace UI
             else
             {
                 if (_validationErrorText != null) _validationErrorText.text = "";
-                // Re-evaluate normal start conditions (ready checks, etc.)
                 if (_startGameButton != null && _isHost)
                 {
                      _startGameButton.interactable = CanStartGame();
@@ -825,11 +727,9 @@ namespace UI
             int eligibleCount = GameSessionManager.Instance.GetEligiblePlayerCount();
             bool isTestMode = GameSessionManager.Instance.Settings.Value.TestMode;
             
-            // In test mode, only need 1 player; otherwise need at least 2
             int minPlayers = isTestMode ? 1 : 2;
             if (eligibleCount < minPlayers) return false;
 
-            // Check all eligible players are ready
             foreach (var player in GameSessionManager.Instance.Players)
             {
                 if (!player.JoinedDuringMatch && !player.IsReady)
@@ -841,8 +741,6 @@ namespace UI
             return true;
         }
 
-        // ========== BUTTON CALLBACKS ==========
-
         private void OnSettingChanged()
         {
             if (!_isHost || GameSessionManager.Instance == null) return;
@@ -850,7 +748,7 @@ namespace UI
 
             bool testModeEnabled = _testModeToggle != null && _testModeToggle.isOn;
 #if !UNITY_EDITOR && !DEVELOPMENT_BUILD
-            testModeEnabled = false; // Force false in production builds
+            testModeEnabled = false;
 #endif
 
             var settings = new LobbySettings
@@ -864,26 +762,19 @@ namespace UI
                 TestMode = testModeEnabled
             };
             
-            // Sanitize locally to prevent visual desync (Server keeps old value, Client sees new invalid value)
             var ctx = new LobbyRuntimeContext { CurrentPlayerCount = GameSessionManager.Instance.GetEligiblePlayerCount(), IsTestMode = testModeEnabled };
             var sanitized = _validator.Sanitize(settings, ctx);
             
             if (!sanitized.Equals(settings))
             {
-                // Settings were clamped. Update local UI immediately to reflect this.
                 settings = sanitized;
                 
-                // Temporarily remove listeners to prevent loop (though strictly not needed if we just set value)
-                // But RefreshSettings does simply set values.
-                // We'll just manually update sliders to match clamped match.
                 SetSliderWithoutNotify(_maxPlayersSlider, settings.MaxPlayers);
                 SetSliderWithoutNotify(_kavkaziCountSlider, settings.KavkaziCount);
                 SetSliderWithoutNotify(_votingTimeSlider, settings.VotingTime);
                 SetSliderWithoutNotify(_moveSpeedSlider, settings.MoveSpeed);
                 SetSliderWithoutNotify(_killCooldownSlider, settings.KillCooldown);
                 SetSliderWithoutNotify(_missionsSlider, settings.MissionsPerInnocent);
-                
-                // Use the clamped values for display
                 RefreshSettings(); 
             }
 
@@ -919,8 +810,6 @@ namespace UI
             
             SceneManager.LoadScene("MainMenu");
         }
-
-        // ========== UI HELPERS ==========
 
         private GameObject CreatePanel(Transform parent, string name, Color color)
         {
@@ -1003,7 +892,6 @@ namespace UI
             Texture2D tex = new Texture2D(size, size, TextureFormat.RGBA32, false);
             Color[] colors = new Color[size * size];
             
-            // Init clear
             for (int i = 0; i < colors.Length; i++) colors[i] = Color.clear;
 
             float rOuter = radius;
@@ -1013,39 +901,36 @@ namespace UI
             {
                 for (int x = 0; x < size; x++)
                 {
-                    // Check corners
                     float dx = 0, dy = 0;
 
-                    if (x < radius && y < radius) // Bottom-Left
+                    if (x < radius && y < radius)
                     {
                         dx = radius - x - 0.5f;
                         dy = radius - y - 0.5f;
                     }
-                    else if (x < radius && y >= size - radius) // Top-Left
+                    else if (x < radius && y >= size - radius)
                     {
                         dx = radius - x - 0.5f;
                         dy = y - (size - radius) + 0.5f;
                     }
-                    else if (x >= size - radius && y < radius) // Bottom-Right
+                    else if (x >= size - radius && y < radius)
                     {
                         dx = x - (size - radius) + 0.5f;
                         dy = radius - y - 0.5f;
                     }
-                    else if (x >= size - radius && y >= size - radius) // Top-Right
+                    else if (x >= size - radius && y >= size - radius)
                     {
                         dx = x - (size - radius) + 0.5f;
                         dy = y - (size - radius) + 0.5f;
                     }
                     else
                     {
-                        // Not a corner
                         colors[y * size + x] = Color.white;
                         continue;
                     }
 
                     if (dx * dx + dy * dy <= rOuterSq)
                     {
-                        // Antialiasing could go here, but binary alpha is fine for now
                         colors[y * size + x] = Color.white; 
                     }
                 }
@@ -1054,7 +939,6 @@ namespace UI
             tex.SetPixels(colors);
             tex.Apply();
             
-            // Return 9-sliced sprite
             return Sprite.Create(tex, new Rect(0, 0, size, size), new Vector2(0.5f, 0.5f), 100, 0, SpriteMeshType.FullRect, new Vector4(radius, radius, radius, radius));
         }
     }

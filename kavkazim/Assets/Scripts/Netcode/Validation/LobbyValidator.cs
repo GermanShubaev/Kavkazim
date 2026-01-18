@@ -11,9 +11,9 @@ namespace Kavkazim.Netcode.Validation
         {
             _rules = new List<ILobbyRule>
             {
-                new SimpleRangeRule(),      // Basic ranges first
-                new PlayerCountRules(),     // Then player counts
-                new KavkaziStrictMinorityRule() // Then complex relations
+                new SimpleRangeRule(),
+                new PlayerCountRules(),
+                new KavkaziStrictMinorityRule()
             };
         }
 

@@ -5,10 +5,6 @@ using UnityEngine;
 
 namespace Kavkazim.Netcode
 {
-    /// <summary>
-    /// Handles kill ability for Kavkazi (impostor) players.
-    /// Server-authoritative with validated kill requests.
-    /// </summary>
     [RequireComponent(typeof(NetworkObject))]
     [RequireComponent(typeof(PlayerState))]
     public class KillerAbility : NetworkBehaviour
@@ -23,22 +19,16 @@ namespace Kavkazim.Netcode
         [Header("References")]
         [SerializeField] private PlayerAvatar avatar;
         
-        /// <summary>
-        /// Network-synced cooldown end time using ServerTime.
-        /// Value is the server time when cooldown ends.
-        /// </summary>
         public NetworkVariable<double> CooldownEndTime = new ();
 
         private PlayerState _playerState;
         
-        // Cached config values - prefer GameSessionManager settings, fallback to config
         private float KillRange => config ? config.killRange : defaultKillRange;
         
         private float KillCooldown
         {
             get
             {
-                // Use lobby settings if available
                 if (GameSessionManager.Instance != null)
                     return GameSessionManager.Instance.Settings.Value.KillCooldown;
                 
@@ -58,33 +48,18 @@ namespace Kavkazim.Netcode
         {
             base.OnNetworkSpawn();
             
-            // Set initial cooldown to 0 (ready immediately on spawn)
-            // The server will set this properly
             if (IsServer)
             {
                 CooldownEndTime.Value = 0f;
             }
         }
 
-        /// <summary>
-        /// Current server time (synchronized across all clients).
-        /// </summary>
         private double ServerTime => NetworkManager.Singleton?.ServerTime.Time ?? 0;
 
-        /// <summary>
-        /// Check if kill is off cooldown.
-        /// </summary>
         public bool IsKillReady => ServerTime >= CooldownEndTime.Value;
 
-        /// <summary>
-        /// Get remaining cooldown time in seconds.
-        /// </summary>
         public float RemainingCooldown => Mathf.Max(0f, (float)(CooldownEndTime.Value - ServerTime));
 
-        /// <summary>
-        /// Attempts to kill the nearest valid target.
-        /// Call this from the owner client (e.g., on button press).
-        /// </summary>
         public void TryKill()
         {
             if (!IsOwner)
@@ -93,7 +68,6 @@ namespace Kavkazim.Netcode
                 return;
             }
             
-            // Client-side pre-validation (avoid unnecessary RPCs)
             if (!IsKillReady)
             {
                 Debug.Log($"[KillerAbility] Kill on cooldown. {RemainingCooldown:F1}s remaining.");
@@ -106,17 +80,14 @@ namespace Kavkazim.Netcode
                 return;
             }
             
-            // Find closest valid target
             PlayerState target = FindClosestTarget();
             if (target != null)
             {
                 Debug.Log($"[KillerAbility] Requesting kill on player {target.OwnerClientId}");
                 
-                // Play local animation immediately for responsiveness
                 if (avatar)
                     avatar.PerformSlashAnimation();
                 
-                // Send request to server
                 RequestKillServerRpc(target.NetworkObjectId);
             }
             else
@@ -125,32 +96,23 @@ namespace Kavkazim.Netcode
             }
         }
 
-        /// <summary>
-        /// Server RPC to request a kill. Server validates and executes if valid.
-        /// </summary>
-        /// <param name="targetNetworkObjectId">NetworkObjectId of the target player</param>
         [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Owner)]
         public void RequestKillServerRpc(ulong targetNetworkObjectId)
         {
             Debug.Log($"[KillerAbility] SERVER: Received kill request from {OwnerClientId} targeting object {targetNetworkObjectId}");
             
-            // === VALIDATION ===
-            
-            // 1. Check if killer is alive
             if (!_playerState || !_playerState.IsAlive.Value)
             {
                 Debug.LogWarning($"[KillerAbility] SERVER: Kill rejected - killer {OwnerClientId} is dead.");
                 return;
             }
             
-            // 2. Check cooldown (server-side validation)
             if (Time.time < CooldownEndTime.Value)
             {
                 Debug.LogWarning($"[KillerAbility] SERVER: Kill rejected - cooldown not ready.");
                 return;
             }
             
-            // 3. Find target NetworkObject
             if (!NetworkManager.Singleton.SpawnManager.SpawnedObjects.TryGetValue(
                 targetNetworkObjectId, out NetworkObject targetNetObj))
             {
@@ -158,7 +120,6 @@ namespace Kavkazim.Netcode
                 return;
             }
             
-            // 4. Get target's PlayerState
             PlayerState targetState = targetNetObj.GetComponent<PlayerState>();
             if (targetState == null)
             {
@@ -166,21 +127,18 @@ namespace Kavkazim.Netcode
                 return;
             }
             
-            // 5. Check if target is alive
             if (!targetState.IsAlive.Value)
             {
                 Debug.LogWarning($"[KillerAbility] SERVER: Kill rejected - target {targetState.OwnerClientId} is already dead.");
                 return;
             }
             
-            // 6. Check if trying to kill self
             if (targetState.OwnerClientId == OwnerClientId)
             {
                 Debug.LogWarning($"[KillerAbility] SERVER: Kill rejected - cannot kill self.");
                 return;
             }
             
-            // 7. Check distance
             float distance = Vector3.Distance(transform.position, targetNetObj.transform.position);
             if (distance > KillRange)
             {
@@ -188,12 +146,10 @@ namespace Kavkazim.Netcode
                 return;
             }
             
-            // 8. Check if target is a Kavkazi teammate (SERVER-SIDE validation using true role)
             PlayerAvatar killerAvatar = GetComponent<PlayerAvatar>();
             PlayerAvatar targetAvatar = targetNetObj.GetComponent<PlayerAvatar>();
             if (killerAvatar != null && targetAvatar != null)
             {
-                // On server, GetTrueRole() works correctly
                 if (killerAvatar.GetTrueRole() == PlayerRoleType.Kavkazi && 
                     targetAvatar.GetTrueRole() == PlayerRoleType.Kavkazi)
                 {
@@ -202,41 +158,28 @@ namespace Kavkazim.Netcode
                 }
             }
             
-            // === EXECUTE KILL ===
-            
-            // Start cooldown
             CooldownEndTime.Value = ServerTime + KillCooldown;
             
-            // Kill the target
             targetState.Kill();
             
             Debug.Log($"[KillerAbility] SERVER: Player {OwnerClientId} successfully killed player {targetState.OwnerClientId}");
             
-            // Trigger visual effects on all clients
             PlayKillEffectClientRpc(targetNetworkObjectId);
         }
 
-        /// <summary>
-        /// Client RPC to play kill visual/audio effects.
-        /// </summary>
         [Rpc(SendTo.ClientsAndHost)]
         private void PlayKillEffectClientRpc(ulong victimNetworkObjectId)
         {
             Debug.Log($"[KillerAbility] CLIENT: Playing kill effect for victim {victimNetworkObjectId}");
             
-            // Play killer animation (if not already played locally)
             if (!IsOwner && avatar)
             {
                 avatar.PerformSlashAnimation();
             }
         }
 
-        /// <summary>
-        /// Find the closest alive player within kill range.
-        /// </summary>
         private PlayerState FindClosestTarget()
         {
-            // Optimization: Use cached list from registry
             var allPlayers = PlayerState.ActivePlayers;
             
             PlayerState closest = null;
@@ -244,21 +187,15 @@ namespace Kavkazim.Netcode
 
             foreach (var player in allPlayers)
             {
-                // Skip self
                 if (player.NetworkObjectId == NetworkObjectId)
                     continue;
                 
-                // Skip dead players
                 if (!player.IsAlive.Value)
                     continue;
                 
-                // Check if it's a Kavkazi teammate (use PerceivedRole since Role is OwnerOnly)
-                // On the client, we use what we PERCEIVE the target to be
-                // If we're Kavkazi, we'll see other Kavkazis as Kavkazi and skip them
                 PlayerAvatar targetAvatar = player.GetComponent<PlayerAvatar>();
                 if (targetAvatar != null && targetAvatar.PerceivedRole == PlayerRoleType.Kavkazi)
                 {
-                    // Skip fellow Kavkazi (as we perceive them)
                     continue;
                 }
 
@@ -274,9 +211,6 @@ namespace Kavkazim.Netcode
         }
 
 #if UNITY_EDITOR
-        /// <summary>
-        /// Editor visualization of kill range.
-        /// </summary>
         private void OnDrawGizmosSelected()
         {
             Gizmos.color = Color.red;

@@ -11,9 +11,6 @@ using Unity.Services.Lobbies.Models;
 
 namespace Kavkazim.Netcode
 {
-    /// <summary>
-    /// Handles presentation-only details that can run on all clients (e.g., animator).
-    /// </summary>
     [RequireComponent(typeof(NetworkObject))]
     public class PlayerAvatar : NetworkBehaviour
     {
@@ -24,21 +21,15 @@ namespace Kavkazim.Netcode
         [SerializeField] private float cameraSmoothSpeed = 5f;
         private Camera _mainCamera;
         
-        // Networked name variable
         public NetworkVariable<Unity.Collections.FixedString32Bytes> PlayerName = new();
 
-        // Networked Role variable - OWNER ONLY read permission for security
-        // Only the server and the owning client can read the true role
         public NetworkVariable<PlayerRoleType> Role = new(
                 PlayerRoleType.Innocent,
                 NetworkVariableReadPermission.Owner
             );
 
-        // Local cache of perceived roles for each player (what THIS client sees)
-        // Key: NetworkObjectId, Value: Perceived role
         private Dictionary<ulong, PlayerRoleType> _perceivedRoles = new Dictionary<ulong, PlayerRoleType>();
         
-        // The role this client perceives for THIS player (set via RPC)
         public PlayerRoleType PerceivedRole { get; private set; } = PlayerRoleType.Innocent;
 
         private TextMeshPro _nameLabel;
@@ -51,38 +42,23 @@ namespace Kavkazim.Netcode
             if (!spriteRenderer) spriteRenderer = GetComponentInChildren<SpriteRenderer>();
             _playerState = GetComponent<PlayerState>();
             
-            // Setup name label
             SetupNameLabel();
-
-            // Initialize visuals with default Innocent appearance
-            // Actual perceived role will be set via RPC from server
             UpdateVisuals(PerceivedRole);
 
 
-            // If we are the owner, set up local player specifics
             if (IsOwner)
             {
-                // PlayerAvatar is only spawned when match starts, so spawn GameplayUI
-                // Use Instance check instead of FindFirstObjectByType for better reliability
                 if (GameplayUI.Instance == null)
                 {
                     GameObject uiGo = new GameObject("GameplayUIManager");
-                    // Don't parent to player - GameplayUI handles its own persistence
                     uiGo.AddComponent<GameplayUI>();
                 }
 
-                // Role assignment is handled by PlayerSpawnHandler on the server
-                
-                // Only set name if server hasn't already set it
-                // (Server sets name from GameSessionManager PlayerSessionData)
                 if (string.IsNullOrEmpty(PlayerName.Value.ToString()))
                 {
-                    // Get name from PlayerPrefs (set during MainMenu connect)
-                    // Use unique key for ParrelSync clones
                     string prefsKey = "PlayerName" + GetParrelSyncSuffix();
                     string pName = PlayerPrefs.GetString(prefsKey, "");
                     
-                    // Fallback to Auth service if PlayerPrefs is empty
                     if (string.IsNullOrEmpty(pName))
                     {
                         try 
@@ -102,18 +78,14 @@ namespace Kavkazim.Netcode
 
                     if (string.IsNullOrEmpty(pName)) pName = $"Player {OwnerClientId}";
                     
-                    // Request the server to set our name on the avatar
                     SetPlayerNameServerRpc(pName);
                 }
 
-                // Initialize Camera
                 TryFindCamera();
             }
 
-            // Update label initially
             UpdateNameLabel(PlayerName.Value);
 
-            // Listen for changes
             PlayerName.OnValueChanged += (oldVal, newVal) => UpdateNameLabel(newVal);
         }
 
@@ -123,10 +95,6 @@ namespace Kavkazim.Netcode
             PlayerName.Value = name;
         }
 
-        /// <summary>
-        /// Updates visuals based on PERCEIVED role (not true role).
-        /// Called when we receive role perception update from server.
-        /// </summary>
         private void UpdateVisuals(PlayerRoleType perceivedRole)
         {
             switch (perceivedRole)
@@ -143,28 +111,16 @@ namespace Kavkazim.Netcode
             CurrentRole.SetupVisuals();
         }
 
-        /// <summary>
-        /// SERVER ONLY: Get the true role of this player.
-        /// Use this on the server for game logic (killing, voting, etc.)
-        /// </summary>
         public PlayerRoleType GetTrueRole()
         {
             return Role.Value;
         }
 
-        /// <summary>
-        /// Targeted ClientRpc to receive perceived role for a specific player.
-        /// Called by server to tell THIS client what role they should see for a player.
-        /// </summary>
-        /// <param name="targetNetworkObjectId">The NetworkObjectId of the player being described</param>
-        /// <param name="perceivedRole">The role this client should perceive for that player</param>
         [Rpc(SendTo.SpecifiedInParams)]
         public void ReceivePerceivedRoleClientRpc(ulong targetNetworkObjectId, PlayerRoleType perceivedRole, RpcParams rpcParams = default)
         {
-            // Store in our local perception cache
             _perceivedRoles[targetNetworkObjectId] = perceivedRole;
             
-            // If this is about ourselves, update our perceived role
             if (targetNetworkObjectId == NetworkObjectId)
             {
                 PerceivedRole = perceivedRole;
@@ -172,7 +128,6 @@ namespace Kavkazim.Netcode
             }
             else
             {
-                // Find the target player and update their visuals
                 if (NetworkManager.Singleton.SpawnManager.SpawnedObjects.TryGetValue(
                     targetNetworkObjectId, out NetworkObject targetNetObj))
                 {
@@ -185,9 +140,6 @@ namespace Kavkazim.Netcode
             }
         }
 
-        /// <summary>
-        /// Apply a perceived role to this avatar (called by other avatars receiving RPC).
-        /// </summary>
         public void ApplyPerceivedRole(PlayerRoleType perceivedRole)
         {
             PerceivedRole = perceivedRole;
@@ -196,8 +148,6 @@ namespace Kavkazim.Netcode
 
         public void SetBodyColor(Color c)
         {
-            // Block visual role color updates if we are dead (Ghost)
-            // This prevents "Innocent/Kavkazi" role assignment from overwriting the Ghost visual
             if (_playerState != null && !_playerState.IsAlive.Value) return;
 
             if (spriteRenderer) spriteRenderer.color = c;
@@ -215,7 +165,6 @@ namespace Kavkazim.Netcode
 
         private IEnumerator SlashRoutine()
         {
-            // Simple slash: rotate back and forth
             float duration = 0.2f;
             float elapsed = 0;
             Quaternion startRot = transform.rotation;
@@ -232,16 +181,15 @@ namespace Kavkazim.Netcode
 
         private void SetupNameLabel()
         {
-            // Create a child object for the text
             GameObject textObj = new GameObject("NameLabel");
             textObj.transform.SetParent(transform);
-            textObj.transform.localPosition = new Vector3(0, 1.4f, 0); // Above player (higher position)
+            textObj.transform.localPosition = new Vector3(0, 1.4f, 0);
             
             _nameLabel = textObj.AddComponent<TextMeshPro>();
             _nameLabel.alignment = TextAlignmentOptions.Center;
             _nameLabel.fontSize = 4;
             _nameLabel.color = Color.white;
-            _nameLabel.sortingOrder = 10; // Ensure it's above sprites
+            _nameLabel.sortingOrder = 10;
         }
 
         private void UpdateNameLabel(Unity.Collections.FixedString32Bytes newName)
@@ -274,9 +222,6 @@ namespace Kavkazim.Netcode
             _mainCamera.transform.position = smoothedPos;
         }
         
-        /// <summary>
-        /// Gets a unique suffix for ParrelSync clones to prevent PlayerPrefs sharing. - TESTING 
-        /// </summary>
         private static string GetParrelSyncSuffix()
         {
 #if UNITY_EDITOR
@@ -298,7 +243,7 @@ namespace Kavkazim.Netcode
             }
             catch
             {
-                // ParrelSync not available
+                // ParrelSync - not needed
             }
 #endif
             return "";

@@ -38,8 +38,6 @@ namespace Minigames.SortGames
         private Text _roundText;
         private Text _memorizationRoundText;
 
-        // IsActive and PopupWindow properties are inherited from BaseMinigame
-
         private void Awake()
         {
             LoadImages();

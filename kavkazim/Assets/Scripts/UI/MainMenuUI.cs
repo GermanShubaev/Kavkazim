@@ -20,22 +20,18 @@ namespace UI
         [SerializeField] private Button quickJoinButton;
         [SerializeField] private Button leaveLobbyButton;
 
-        // Services (simple manual DI)
         private IUnityAuthService _auth;
         private IUnityRelayService _relay;
         private IUnityLobbyService _lobby;
         private INetworkBootstrap _bootstrap;
 
-        // Popup elements
         private GameObject _codePopup;
         private TMP_InputField _codeInput;
         
-        // Error display
         private Text _errorText;
 
         private void Awake()
         {
-            // Validate refs
             if (!networkManager) networkManager = FindFirstObjectByType<NetworkManager>();
 
             if (!nameInput || !hostButton || !quickJoinButton || !leaveLobbyButton)
@@ -44,22 +40,19 @@ namespace UI
                 enabled = false; return;
             }
 
-            // Instantiate services
             _auth = new UnityAuthService();
             _relay = new UnityRelayService();
             _lobby = new UnityLobbyService();
             _bootstrap = new NetworkBootstrap(_auth, _relay, _lobby);
 
-            // Wire buttons
             hostButton.onClick.AddListener(() => _ = OnHostClicked());
             quickJoinButton.onClick.AddListener(ShowRoomCodePopup);
             leaveLobbyButton.onClick.AddListener(OnLeaveClicked);
-            leaveLobbyButton.interactable = true; // Force enable in case it's disabled in Inspector
+            leaveLobbyButton.interactable = true;
 
             CreateRoomCodePopup();
             CreateErrorDisplay();
             
-            // Subscribe to disconnect events to show rejection reason
             NetworkManager.Singleton.OnClientDisconnectCallback += OnClientDisconnect;
         }
         
@@ -73,7 +66,6 @@ namespace UI
         
         private void OnClientDisconnect(ulong clientId)
         {
-            // Only care about local client being disconnected
             if (clientId == NetworkManager.Singleton.LocalClientId && !NetworkManager.Singleton.IsServer)
             {
                 string reason = NetworkManager.Singleton.DisconnectReason;
@@ -82,14 +74,12 @@ namespace UI
                     ShowError(reason);
                 }
                 
-                // Leave Unity Lobby when disconnected so user can try again
                 _ = _bootstrap.LeaveLobbyAsync();
             }
         }
         
         private void CreateErrorDisplay()
         {
-            // Create error text at bottom of screen
             Canvas canvas = GetComponentInParent<Canvas>() ?? FindFirstObjectByType<Canvas>();
             if (canvas == null) return;
             
@@ -114,7 +104,6 @@ namespace UI
             if (_errorText != null)
             {
                 _errorText.text = message;
-                // Auto-hide after 5 seconds
                 CancelInvoke(nameof(ClearError));
                 Invoke(nameof(ClearError), 5f);
             }
@@ -128,17 +117,14 @@ namespace UI
 
         private void CreateRoomCodePopup()
         {
-            // Create a popup panel (will be shown/hidden as needed)
             _codePopup = new GameObject("RoomCodePopup");
             _codePopup.transform.SetParent(transform, false);
 
-            // Need a Canvas for this popup
             Canvas canvas = _codePopup.AddComponent<Canvas>();
             canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-            canvas.sortingOrder = 100; // On top
+            canvas.sortingOrder = 100;
             _codePopup.AddComponent<GraphicRaycaster>();
 
-            // Semi-transparent background
             GameObject bg = new GameObject("Background");
             bg.transform.SetParent(_codePopup.transform, false);
             Image bgImage = bg.AddComponent<Image>();
@@ -148,7 +134,6 @@ namespace UI
             bgRect.anchorMax = Vector2.one;
             bgRect.sizeDelta = Vector2.zero;
 
-            // Panel
             GameObject panel = new GameObject("Panel");
             panel.transform.SetParent(_codePopup.transform, false);
             Image panelImage = panel.AddComponent<Image>();
@@ -159,7 +144,6 @@ namespace UI
             panelRect.anchorMin = new Vector2(0.5f, 0.5f);
             panelRect.anchorMax = new Vector2(0.5f, 0.5f);
 
-            // Title Text
             GameObject titleObj = new GameObject("Title");
             titleObj.transform.SetParent(panel.transform, false);
             Text titleText = titleObj.AddComponent<Text>();
@@ -172,7 +156,6 @@ namespace UI
             titleRect.sizeDelta = new Vector2(700, 100);
             titleRect.anchoredPosition = new Vector2(0, 60);
 
-            // Input Field
             GameObject inputObj = new GameObject("InputField");
             inputObj.transform.SetParent(panel.transform, false);
             Image inputBg = inputObj.AddComponent<Image>();
@@ -185,11 +168,9 @@ namespace UI
             inputRect.sizeDelta = new Vector2(360, 40);
             inputRect.anchoredPosition = new Vector2(0, 10);
 
-            // Join Button
             GameObject joinBtn = CreateButton(panel.transform, "JoinButton", "Join", new Vector2(150, 40), new Vector2(-90, -50));
             joinBtn.GetComponent<Button>().onClick.AddListener(() => _ = OnJoinWithCode());
 
-            // Cancel Button
             GameObject cancelBtn = CreateButton(panel.transform, "CancelButton", "Cancel", new Vector2(150, 40), new Vector2(90, -50));
             cancelBtn.GetComponent<Button>().onClick.AddListener(HideRoomCodePopup);
 
@@ -259,8 +240,6 @@ namespace UI
                 await _auth.InitializeAsync();
                 await _auth.SignInAnonymouslyAsync(nameInput.text);
 
-                // Save player name to PlayerPrefs for lobby system
-                // Use unique key for ParrelSync clones to prevent shared names
                 string playerName = nameInput.text.Trim();
                 if (string.IsNullOrEmpty(playerName)) playerName = "Player";
                 string prefsKey = "PlayerName" + GetParrelSyncSuffix();
@@ -270,7 +249,6 @@ namespace UI
                 bool ok = await _bootstrap.HostWithRelayAsync("Kavkazim Lobby", 10);
                 if (ok)
                 {
-                    // Load GameSession scene (contains both lobby area and gameplay area)
                     NetworkManager.Singleton.SceneManager.LoadScene(
                         "GameSession",
                         LoadSceneMode.Single
@@ -295,15 +273,12 @@ namespace UI
                 await _auth.InitializeAsync();
                 await _auth.SignInAnonymouslyAsync(nameInput.text);
 
-                // Save player name to PlayerPrefs for lobby system.
-                // Use unique key for ParrelSync clones to prevent shared names
                 string playerName = nameInput.text.Trim();
                 if (string.IsNullOrEmpty(playerName)) playerName = "Player";
                 string prefsKey = "PlayerName" + GetParrelSyncSuffix();
                 PlayerPrefs.SetString(prefsKey, playerName);
                 PlayerPrefs.Save();
                 
-                // Set connection data to include player name for duplicate validation
                 NetworkManager.Singleton.NetworkConfig.ConnectionData = System.Text.Encoding.UTF8.GetBytes(playerName);
 
                 bool ok = false;
@@ -320,7 +295,6 @@ namespace UI
                     {
                         Debug.Log($"[MainMenuUI] LobbyException (will retry): {e.Reason}");
                         
-                        // If already a member, leave and try again
                         if (e.Message.Contains("already a member") || e.Message.Contains("PlayerAlreadyJoined"))
                         {
                             Debug.Log("Already in lobby, leaving and retrying...");
@@ -395,10 +369,6 @@ namespace UI
             quickJoinButton.interactable = state;
         }
         
-        /// <summary>
-        /// Gets a unique suffix for ParrelSync clones to prevent PlayerPrefs sharing.
-        /// Uses reflection to avoid compile errors when ParrelSync is not installed.
-        /// </summary>
         private static string GetParrelSyncSuffix()
         {
 #if UNITY_EDITOR
@@ -420,7 +390,7 @@ namespace UI
             }
             catch
             {
-                // ParrelSync not available - use default key
+                // ParrelSync - not needed
             }
 #endif
             return "";

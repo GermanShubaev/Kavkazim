@@ -1,5 +1,4 @@
-﻿// Assets/Scripts/Services/UnityRelayService.cs
-using System;
+﻿using System;
 using System.Threading.Tasks;
 using Unity.Services.Relay;
 using Unity.Services.Relay.Models;

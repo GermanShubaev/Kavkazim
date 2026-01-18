@@ -193,7 +193,7 @@ namespace Minigames.GeneralGames
                 barObj.transform.SetParent(_fanSpeedContainer.transform, false);
 
                 Image barImage = barObj.AddComponent<Image>();
-                barImage.color = new Color(0.7f, 0.7f, 0.7f); // Light gray when inactive
+                barImage.color = new Color(0.7f, 0.7f, 0.7f);
                 barImage.raycastTarget = false;
 
                 RectTransform barRect = barObj.GetComponent<RectTransform>();

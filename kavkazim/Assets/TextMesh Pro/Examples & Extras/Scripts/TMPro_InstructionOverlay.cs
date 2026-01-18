@@ -19,8 +19,6 @@ namespace TMPro.Examples
         private Transform m_frameCounter_transform;
         private Camera m_camera;
 
-        //private FpsCounterAnchorPositions last_AnchorPosition;
-
         void Awake()
         {
             if (!enabled)
