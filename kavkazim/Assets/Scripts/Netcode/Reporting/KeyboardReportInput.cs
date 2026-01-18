@@ -2,10 +2,6 @@ using UnityEngine;
 
 namespace Kavkazim.Netcode.Reporting
 {
-    /// <summary>
-    /// Keyboard implementation of IReportInput.
-    /// Triggers report on L key press.
-    /// </summary>
     public class KeyboardReportInput : IReportInput
     {
         private readonly KeyCode _reportKey;

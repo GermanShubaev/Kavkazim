@@ -5,18 +5,14 @@ using TMPro;
 
 namespace Kavkazim.UI.Meeting
 {
-    /// <summary>
-    /// Visual component for a single player slot in the meeting UI.
-    /// Handles hover animations, selection visuals, and input events.
-    /// </summary>
     public class MeetingPlayerSlotView : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler, IPointerClickHandler
     {
         [Header("UI References")]
         [SerializeField] private TextMeshProUGUI playerNameText;
-        [SerializeField] private Image selectionRing; // The "Glowy" ring
-        [SerializeField] private Image deadOverlay;   // Visual for dead players
-        [SerializeField] private Image voteCountShield; // Shield image for vote count
-        [SerializeField] private TextMeshProUGUI voteCountText; // Number on shield
+        [SerializeField] private Image selectionRing;
+        [SerializeField] private Image deadOverlay;
+        [SerializeField] private Image voteCountShield;
+        [SerializeField] private TextMeshProUGUI voteCountText;
 
         [Header("Settings")]
         [SerializeField] private Color localPlayerNameColor = Color.yellow;
@@ -36,14 +32,12 @@ namespace Kavkazim.UI.Meeting
         {
             _originalScale = transform.localScale;
             
-            // Force disable ring immediately to avoid visual glitches
             if (selectionRing != null) 
             {
                 selectionRing.enabled = false;
-                selectionRing.raycastTarget = false; // Ensure it never blocks
+                selectionRing.raycastTarget = false;
             }
             
-            // Hide vote count shield initially
             if (voteCountShield != null)
             {
                 voteCountShield.enabled = false;
@@ -64,44 +58,34 @@ namespace Kavkazim.UI.Meeting
             {
                 playerNameText.text = isLocalPlayer ? $"{playerName} (You)" : playerName;
                 
-                // Determine color: Dead takes priority over local color
                 Color targetColor = isDead ? deadPlayerNameColor : (isLocalPlayer ? localPlayerNameColor : normalPlayerNameColor);
                 playerNameText.color = targetColor;
                 
-                playerNameText.raycastTarget = false; // Ensure text doesn't block
+                playerNameText.raycastTarget = false;
             }
 
             if (deadOverlay != null)
             {
                 deadOverlay.enabled = isDead;
-                deadOverlay.raycastTarget = false; // Ensure overlay doesn't block
+                deadOverlay.raycastTarget = false;
             }
 
-            // Reset state
             SetSelected(false);
             
-            // Reset scale
             transform.localScale = _originalScale;
         }
 
-        /// <summary>
-        /// Enable or disable interaction (hover/click).
-        /// </summary>
         public void SetInteractive(bool interactive, System.Action<ulong> onClick = null)
         {
             _isInteractive = interactive;
             _onClickCallback = onClick;
             
-            // If not interactive, ensure scale is reset
             if (!interactive)
             {
                 transform.localScale = _originalScale;
             }
         }
 
-        /// <summary>
-        /// Show/hide the selection ring (glow).
-        /// </summary>
         public void SetSelected(bool isSelected)
         {
             _isSelected = isSelected;
@@ -111,15 +95,8 @@ namespace Kavkazim.UI.Meeting
             }
         }
 
-        /// <summary>
-        /// Returns the client ID this slot represents.
-        /// </summary>
         public ulong ClientId => _clientId;
 
-        /// <summary>
-        /// Show the vote count on the shield.
-        /// Hidden if count is 0.
-        /// </summary>
         public void SetVoteCount(int count)
         {
             bool show = count > 0;
@@ -139,7 +116,6 @@ namespace Kavkazim.UI.Meeting
         {
             if (!_isInteractive) return;
             
-            // Show glow on hover
             if (selectionRing != null) selectionRing.enabled = true;
 
             StopAllCoroutines();
@@ -150,7 +126,6 @@ namespace Kavkazim.UI.Meeting
         {
             if (!_isInteractive) return;
             
-            // Hide glow on exit ONLY if not selected
             if (selectionRing != null && !_isSelected) selectionRing.enabled = false;
 
             StopAllCoroutines();
@@ -165,7 +140,6 @@ namespace Kavkazim.UI.Meeting
                 return;
             }
 
-            // Only left clicks
             if (eventData.button != PointerEventData.InputButton.Left) return;
 
             Debug.Log($"[MeetingPlayerSlotView] CLICK REGISTERED on {_clientId}. Invoking callback...");
@@ -180,10 +154,8 @@ namespace Kavkazim.UI.Meeting
 
             while (elapsedTime < animationDuration)
             {
-                // Use unscaled time as requested
                 elapsedTime += Time.unscaledDeltaTime;
                 float t = elapsedTime / animationDuration;
-                // Smooth step for nicer ease
                 t = t * t * (3f - 2f * t);
                 
                 transform.localScale = Vector3.Lerp(startScale, targetScale, t);

@@ -5,11 +5,6 @@ using UnityEngine;
 
 namespace Kavkazim.Netcode.Reporting
 {
-    /// <summary>
-    /// Server-only service that spawns dead bodies when players are killed.
-    /// Subscribes to PlayerState.OnPlayerKilled event.
-    /// This is a regular MonoBehaviour (not NetworkBehaviour) since it only runs on server.
-    /// </summary>
     public class DeadBodySpawner : MonoBehaviour
     {
         [Header("Prefab")]
@@ -37,7 +32,6 @@ namespace Kavkazim.Netcode.Reporting
 
         private void OnEnable()
         {
-            // Subscribe to player death events (server only)
             if (NetworkManager.Singleton != null && NetworkManager.Singleton.IsServer && !_isSubscribed)
             {
                 PlayerState.OnPlayerKilled += OnPlayerKilled;
@@ -63,7 +57,6 @@ namespace Kavkazim.Netcode.Reporting
                 _instance = null;
             }
             
-            // Make sure to unsubscribe
             if (_isSubscribed)
             {
                 PlayerState.OnPlayerKilled -= OnPlayerKilled;
@@ -71,12 +64,8 @@ namespace Kavkazim.Netcode.Reporting
             }
         }
 
-        /// <summary>
-        /// Called when any player is killed. Server only.
-        /// </summary>
         private void OnPlayerKilled(PlayerState victim)
         {
-            // Double-check we're on server
             if (NetworkManager.Singleton == null || !NetworkManager.Singleton.IsServer)
             {
                 return;
@@ -91,9 +80,6 @@ namespace Kavkazim.Netcode.Reporting
             SpawnDeadBody(victim);
         }
 
-        /// <summary>
-        /// Spawns a networked dead body at the victim's position.
-        /// </summary>
         private void SpawnDeadBody(PlayerState victim)
         {
             if (deadBodyPrefab == null)
@@ -102,11 +88,9 @@ namespace Kavkazim.Netcode.Reporting
                 return;
             }
             
-            // Get victim info
             Vector3 spawnPosition = victim.transform.position + spawnOffset;
-            ulong victimPlayerId = victim.OwnerClientId; // Use OwnerClientId (Player ID) consistently
+            ulong victimPlayerId = victim.OwnerClientId;
             
-            // Get victim name from PlayerAvatar if available
             string victimName = $"Player {victim.OwnerClientId}";
             PlayerAvatar avatar = victim.GetComponent<PlayerAvatar>();
             if (avatar != null && !string.IsNullOrEmpty(avatar.PlayerName.Value.ToString()))
@@ -114,7 +98,6 @@ namespace Kavkazim.Netcode.Reporting
                 victimName = avatar.PlayerName.Value.ToString();
             }
             
-            // Spawn the prefab
             GameObject bodyObj = Instantiate(deadBodyPrefab, spawnPosition, Quaternion.identity);
             NetworkObject netObj = bodyObj.GetComponent<NetworkObject>();
             
@@ -125,10 +108,8 @@ namespace Kavkazim.Netcode.Reporting
                 return;
             }
             
-            // Spawn on network (server-owned)
             netObj.Spawn();
             
-            // Initialize the dead body component
             DeadBody deadBody = bodyObj.GetComponent<DeadBody>();
             if (deadBody != null)
             {
@@ -142,9 +123,6 @@ namespace Kavkazim.Netcode.Reporting
             Debug.Log($"[DeadBodySpawner] SERVER: Spawned dead body for {victimName} at {spawnPosition}");
         }
 
-        /// <summary>
-        /// Sets the dead body prefab at runtime.
-        /// </summary>
         public void SetDeadBodyPrefab(GameObject prefab)
         {
             deadBodyPrefab = prefab;

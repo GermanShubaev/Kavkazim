@@ -20,7 +20,6 @@ namespace Netcode
 
     public class NetworkBootstrap : INetworkBootstrap
     {
-        // Singleton access for UI to grab the code easily
         public static NetworkBootstrap Instance { get; private set; }
 
         private readonly IUnityAuthService _auth;
@@ -48,7 +47,7 @@ namespace Netcode
 
             var dt = new RelayServerData(allocation, "dtls");
             var utp = (UnityTransport)NetworkManager.Singleton.NetworkConfig.NetworkTransport;
-            utp.MaxPacketQueueSize = 512; // Increase from default 128 to prevent packet drops
+            utp.MaxPacketQueueSize = 512;
             utp.SetRelayServerData(dt);
 
             var lobbyData = new Dictionary<string, Unity.Services.Lobbies.Models.DataObject>
@@ -57,7 +56,7 @@ namespace Netcode
             };
             var lobby = await _lobby.CreateLobbyAsync(lobbyName, maxPlayers, lobbyData);
             _lobbyId = lobby.Id;
-            LobbyCode = lobby.LobbyCode; // Store the Lobby Code!
+            LobbyCode = lobby.LobbyCode;
 
             return NetworkManager.Singleton.StartHost();
         }
@@ -96,7 +95,7 @@ namespace Netcode
             JoinAllocation joinAllocation = await _relay.JoinAllocationAsync(joinCode);
             var dt = new RelayServerData(joinAllocation, "dtls");
             var utp = (UnityTransport)NetworkManager.Singleton.NetworkConfig.NetworkTransport;
-            utp.MaxPacketQueueSize = 512; // Increase from default 128 to prevent packet drops
+            utp.MaxPacketQueueSize = 512;
             utp.SetRelayServerData(dt);
 
             return NetworkManager.Singleton.StartClient();
@@ -104,7 +103,6 @@ namespace Netcode
 
         public async Task LeaveLobbyAsync()
         {
-            // First try with known lobby ID
             if (!string.IsNullOrEmpty(_lobbyId))
             {
                 try { await _lobby.LeaveLobbyAsync(_lobbyId); }
@@ -113,7 +111,6 @@ namespace Netcode
                 LobbyCode = null;
             }
             
-            // Also check for any other lobbies this player might be in
             try
             {
                 var joinedLobbies = await Unity.Services.Lobbies.LobbyService.Instance.GetJoinedLobbiesAsync();
@@ -124,7 +121,7 @@ namespace Netcode
                         await _lobby.LeaveLobbyAsync(lobbyId);
                         Debug.Log($"[NetworkBootstrap] Left lobby: {lobbyId}");
                     }
-                    catch { /* ignore individual failures */ }
+                    catch { /* ignore  */ }
                 }
             }
             catch (System.Exception e)

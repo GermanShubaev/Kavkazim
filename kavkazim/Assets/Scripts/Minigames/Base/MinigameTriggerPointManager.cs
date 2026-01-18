@@ -38,9 +38,6 @@ namespace Minigames
             public MinigameType gameType;
         }
 
-        /// <summary>
-        /// List of all trigger points to spawn.
-        /// </summary>
         private readonly TriggerPointData[] _triggerPoints = new TriggerPointData[]
         {
             new TriggerPointData { position = new Vector2(28.39f, -0.72f), radius = 1.2f, gameType = MinigameType.PapakhaClick },

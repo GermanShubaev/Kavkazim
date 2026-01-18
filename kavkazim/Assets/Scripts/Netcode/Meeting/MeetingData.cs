@@ -4,44 +4,26 @@ using Unity.Netcode;
 
 namespace Kavkazim.Netcode.Meeting
 {
-    /// <summary>
-    /// Type of meeting trigger.
-    /// </summary>
     public enum MeetingType : byte
     {
-        /// <summary>Dead body was reported.</summary>
         BodyReport = 0,
         
-        /// <summary>Emergency meeting button was pressed.</summary>
         Emergency = 1
     }
 
-    /// <summary>
-    /// Data passed when starting a meeting.
-    /// Network-serializable for RPC transmission.
-    /// </summary>
     [Serializable]
     public struct MeetingStartData : INetworkSerializable, IEquatable<MeetingStartData>
     {
-        /// <summary>Type of meeting (body report or emergency).</summary>
         public MeetingType Type;
         
-        /// <summary>ClientId of the player who called the meeting.</summary>
         public ulong CallerId;
         
-        /// <summary>Name of the player who called the meeting (for UI display).</summary>
         public FixedString64Bytes CallerName;
         
-        /// <summary>
-        /// ClientId of the victim (for body reports only).
-        /// Set to ulong.MaxValue if not applicable.
-        /// </summary>
         public ulong VictimId;
         
-        /// <summary>Name of the victim (for body reports only).</summary>
         public FixedString64Bytes VictimName;
         
-        /// <summary>Server timestamp when meeting was called.</summary>
         public float Timestamp;
 
         public void NetworkSerialize<T>(BufferSerializer<T> serializer) where T : IReaderWriter
@@ -72,19 +54,11 @@ namespace Kavkazim.Netcode.Meeting
                 : $"Emergency Meeting by {CallerName}";
     }
 
-    /// <summary>
-    /// Represents a vote target (either a player or skip).
-    /// </summary>
     [Serializable]
     public struct VoteTarget : INetworkSerializable, IEquatable<VoteTarget>
     {
-        /// <summary>
-        /// ClientId of the target player.
-        /// Set to ulong.MaxValue if voting to skip.
-        /// </summary>
         public ulong TargetClientId;
         
-        /// <summary>True if this is a skip vote.</summary>
         public bool IsSkip;
 
         public void NetworkSerialize<T>(BufferSerializer<T> serializer) where T : IReaderWriter
@@ -104,14 +78,12 @@ namespace Kavkazim.Netcode.Meeting
         public override string ToString() =>
             IsSkip ? "Skip" : $"Player {TargetClientId}";
 
-        /// <summary>Creates a skip vote.</summary>
         public static VoteTarget CreateSkip() => new VoteTarget
         {
             TargetClientId = ulong.MaxValue,
             IsSkip = true
         };
 
-        /// <summary>Creates a vote for a specific player.</summary>
         public static VoteTarget CreatePlayerVote(ulong clientId) => new VoteTarget
         {
             TargetClientId = clientId,
@@ -119,37 +91,21 @@ namespace Kavkazim.Netcode.Meeting
         };
     }
 
-    /// <summary>
-    /// Result of a meeting after voting concludes.
-    /// </summary>
     [Serializable]
     public struct MeetingResult : INetworkSerializable, IEquatable<MeetingResult>
     {
-        /// <summary>
-        /// ClientId of the eliminated player.
-        /// Set to ulong.MaxValue if no elimination (tie or skip won).
-        /// </summary>
         public ulong EliminatedId;
         
-        /// <summary>Name of the eliminated player (for UI display).</summary>
         public FixedString64Bytes EliminatedName;
         
-        /// <summary>True if the result was a tie (no elimination).</summary>
         public bool IsTie;
         
-        /// <summary>True if skip won the vote.</summary>
         public bool SkipWon;
         
-        /// <summary>
-        /// Total number of votes cast.
-        /// Can be less than total alive players if timeout occurred.
-        /// </summary>
         public int TotalVotes;
         
-        /// <summary>Number of votes the eliminated player received (for display).</summary>
         public int EliminatedVoteCount;
         
-        /// <summary>Number of skip votes.</summary>
         public int SkipVoteCount;
 
         public void NetworkSerialize<T>(BufferSerializer<T> serializer) where T : IReaderWriter
@@ -173,19 +129,17 @@ namespace Kavkazim.Netcode.Meeting
             SkipVoteCount == other.SkipVoteCount;
         
 
-        /// <summary>Creates a "no elimination" result.</summary>
         public static MeetingResult CreateNoElimination(bool isTie, int skipCount, int totalVotes) => new MeetingResult
         {
             EliminatedId = ulong.MaxValue,
             EliminatedName = "",
             IsTie = isTie,
-            SkipWon = !isTie, // If not tie, then skip won
+            SkipWon = !isTie,
             TotalVotes = totalVotes,
             EliminatedVoteCount = 0,
             SkipVoteCount = skipCount
         };
 
-        /// <summary>Creates an elimination result.</summary>
         public static MeetingResult CreateElimination(ulong clientId, string name, int voteCount, int skipCount, int totalVotes) => new MeetingResult
         {
             EliminatedId = clientId,

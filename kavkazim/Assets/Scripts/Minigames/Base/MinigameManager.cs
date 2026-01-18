@@ -94,7 +94,6 @@ namespace Minigames
             GameObject triggerObj = new GameObject($"MinigameTriggerPoint_{position.x}_{position.y}");
             MinigameTriggerPoint trigger = triggerObj.AddComponent<MinigameTriggerPoint>();
             
-            // Use reflection to set private serialized fields
             var positionField = typeof(MinigameTriggerPoint).GetField("position", 
                 System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
             var radiusField = typeof(MinigameTriggerPoint).GetField("radius", 

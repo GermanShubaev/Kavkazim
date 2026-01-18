@@ -45,15 +45,6 @@ namespace TMPro.Examples
 
             m_TextMeshPro.textWrappingMode = TextWrappingModes.NoWrap;
             m_TextMeshPro.fontSize = 24;
-            //m_TextMeshPro.FontColor = new Color32(255, 255, 255, 128);
-            //m_TextMeshPro.edgeWidth = .15f;
-            //m_TextMeshPro.isOverlay = true;
-
-            //m_TextMeshPro.FaceColor = new Color32(255, 128, 0, 0);
-            //m_TextMeshPro.EdgeColor = new Color32(0, 255, 0, 255);
-            //m_TextMeshPro.FontMaterial.renderQueue = 4000;
-
-            //m_TextMeshPro.CreateSoftShadowClone(new Vector2(1f, -1f));
 
             Set_FrameCounter_Position(AnchorPosition);
             last_AnchorPosition = AnchorPosition;

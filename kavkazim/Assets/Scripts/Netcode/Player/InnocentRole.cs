@@ -8,8 +8,7 @@ namespace Kavkazim.Netcode
 
         public override void SetupVisuals()
         {
-            // Innocent: Keep original sprite colors (no tint), White name
-            _avatar.SetBodyColor(Color.white); // No tint - preserve original sprite
+            _avatar.SetBodyColor(Color.white);
             _avatar.SetNameColor(Color.white);
         }
     }

@@ -2,9 +2,6 @@ using System.Collections.Generic;
 
 namespace Kavkazim.Netcode.WinConditions
 {
-    /// <summary>
-    /// Represents a player's state for win condition evaluation.
-    /// </summary>
     public readonly struct PlayerSnapshot
     {
         public readonly ulong ClientId;
@@ -21,27 +18,16 @@ namespace Kavkazim.Netcode.WinConditions
         }
     }
 
-    /// <summary>
-    /// Immutable snapshot of the current game state.
-    /// Used by win conditions to evaluate without side effects.
-    /// </summary>
     public class GameSnapshot
     {
-        /// <summary>All players in the game with their current state.</summary>
         public IReadOnlyList<PlayerSnapshot> AllPlayers { get; }
         
-        /// <summary>Number of alive Kavkazi players.</summary>
         public int AliveKavkaziCount { get; }
         
-        /// <summary>Number of alive Innocent players.</summary>
         public int AliveInnocentCount { get; }
         
-        /// <summary>Total number of alive players.</summary>
         public int TotalAliveCount => AliveKavkaziCount + AliveInnocentCount;
         
-        /// <summary>
-        /// Creates a new game snapshot from player data.
-        /// </summary>
         public GameSnapshot(IReadOnlyList<PlayerSnapshot> players)
         {
             AllPlayers = players;
@@ -68,9 +54,6 @@ namespace Kavkazim.Netcode.WinConditions
             AliveInnocentCount = innocentCount;
         }
         
-        /// <summary>
-        /// Gets all alive players on a specific team.
-        /// </summary>
         public List<PlayerSnapshot> GetAlivePlayersOnTeam(TeamEnum teamEnum)
         {
             var result = new List<PlayerSnapshot>();
@@ -84,9 +67,6 @@ namespace Kavkazim.Netcode.WinConditions
             return result;
         }
         
-        /// <summary>
-        /// Gets all players (alive or dead) on a specific team.
-        /// </summary>
         public List<PlayerSnapshot> GetAllPlayersOnTeam(TeamEnum teamEnum)
         {
             var result = new List<PlayerSnapshot>();

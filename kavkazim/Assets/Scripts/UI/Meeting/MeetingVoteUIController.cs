@@ -6,10 +6,6 @@ using UnityEngine;
 
 namespace Kavkazim.UI.Meeting
 {
-    /// <summary>
-    /// Controller for the voting logic and UI states.
-    /// Manages PlayerSlots and Skip button, handles selection, and submits votes.
-    /// </summary>
     public class MeetingVoteUIController : MonoBehaviour
     {
         [Header("References")]
@@ -36,12 +32,10 @@ namespace Kavkazim.UI.Meeting
                 _localClientId = NetworkManager.Singleton.LocalClientId;
             }
 
-            // Subscribe
             MeetingManager.OnVoteSubmitted += OnVoteConfirmed;
             MeetingManager.OnVoteCountsReceived += OnVoteCountsReceived;
             _meetingManager.PlayersInMeeting.OnListChanged += OnPlayersListChanged;
 
-            // Initial setup if data exists
             if (_meetingManager.PlayersInMeeting.Count > 0)
             {
                 InitializeUI();
@@ -68,14 +62,12 @@ namespace Kavkazim.UI.Meeting
             var players = _meetingManager.PlayersInMeeting;
             bool isLocalAlive = IsPlayerAlive(_localClientId);
 
-            // 1. Setup Skip Button
             if (skipView != null)
             {
                 skipView.SetInteractive(isLocalAlive && !_hasVotedLocally, OnSkipClicked);
                 skipView.SetSelected(false);
             }
 
-            // 2. Setup Player Slots
             for (int i = 0; i < slotViews.Count; i++)
             {
                 if (i < players.Count)
@@ -87,11 +79,6 @@ namespace Kavkazim.UI.Meeting
                     slotViews[i].gameObject.SetActive(true);
                     slotViews[i].Setup(playerId, name, playerId == _localClientId, isDead);
 
-                    // Interaction rules:
-                    // - Local player must be alive
-                    // - Cannot vote for self
-                    // - Cannot vote for dead players (usually, depending on game rules - standard is no)
-                    // - Cannot vote if already voted
                     bool canVoteFor = isLocalAlive && 
                                       !_hasVotedLocally && 
                                       playerId != _localClientId && 
@@ -110,13 +97,10 @@ namespace Kavkazim.UI.Meeting
         {
             if (_hasVotedLocally) return;
 
-            // Visual feedback: clear others, select this one
             ClearSelection();
             
-            // NOTE: Since "OnClick should call my existing vote method", we do that immediately.
             _meetingManager.SubmitVoteServerRpc(targetId, false);
             
-            // We'll wait for "OnVoteConfirmed" to lock UI, but we can optimistically select here.
             SetSelectionVisuals(targetId, false);
         }
 
@@ -125,7 +109,7 @@ namespace Kavkazim.UI.Meeting
             if (_hasVotedLocally) return;
 
             ClearSelection();
-            SetSelectionVisuals(0, true); // ID irrelevant if isSkip is true
+            SetSelectionVisuals(0, true);
             
             _meetingManager.SubmitVoteServerRpc(ulong.MaxValue, true);
         }
@@ -138,8 +122,6 @@ namespace Kavkazim.UI.Meeting
             }
             else
             {
-                // Find and select the slot
-                // We need to match targetId with the slot index.
                 var players = _meetingManager.PlayersInMeeting;
                  for (int i = 0; i < slotViews.Count; i++)
                 {
@@ -163,29 +145,14 @@ namespace Kavkazim.UI.Meeting
 
         private void OnVoteConfirmed()
         {
-            // Server accepted our vote (or someone else's? Event is static/global?)
-            // MeetingManager.OnVoteSubmitted seems to be fired on "ConfirmVoteClientRpc" which is targeted to Single(voter).
-            // So this event fires only on the client who voted. 
-            // Let's verify MeetingManager.cs...
-            // Yes: ConfirmVoteClientRpc -> OnVoteSubmitted?.Invoke().
-            
             _hasVotedLocally = true;
 
-
-            // Lock all interactions
             if (skipView != null) skipView.SetInteractive(false);
             foreach (var slot in slotViews)
             {
                 if (slot.gameObject.activeSelf) slot.SetInteractive(false);
             }
-            
-            // Show "Voted" checkmark on self? Or simply "You have voted".
-            // The requirements didn't specify showing "Voted" on self specifically, 
-            // but usually you want to confirm the action. 
-            // The selection ring/border should persist as confirmation.
         }
-
-        // --- Helpers ---
 
         private bool IsPlayerAlive(ulong clientId)
         {
@@ -194,12 +161,11 @@ namespace Kavkazim.UI.Meeting
             {
                 return aliveList.Contains(clientId);
             }
-            return true; // Fallback
+            return true;
         }
 
         private string GetPlayerName(ulong clientId)
         {
-            // Use GameSessionManager if available
             if (GameSessionManager.Instance != null)
             {
                 foreach (var p in GameSessionManager.Instance.Players)
@@ -210,27 +176,20 @@ namespace Kavkazim.UI.Meeting
             return $"Player {clientId}";
         }
 
-        /// <summary>
-        /// Called when vote counts are received from server at meeting end.
-        /// Updates the UI to display vote counts on shields.
-        /// </summary>
         private void OnVoteCountsReceived(ulong[] playerIds, int[] voteCounts, int skipCount)
         {
             Debug.Log($"[MeetingVoteUIController] Received vote counts: {playerIds.Length} players, skip={skipCount}");
 
-            // Update skip view
             if (skipView != null)
             {
                 skipView.SetSkipCount(skipCount);
             }
 
-            // Update player slots
             for (int i = 0; i < playerIds.Length; i++)
             {
                 ulong playerId = playerIds[i];
                 int voteCount = voteCounts[i];
 
-                // Find the slot for this player
                 foreach (var slot in slotViews)
                 {
                     if (slot.gameObject.activeSelf && slot.ClientId == playerId)

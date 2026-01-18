@@ -5,17 +5,13 @@ using TMPro;
 
 namespace Kavkazim.UI.Meeting
 {
-    /// <summary>
-    /// Visual component for the Skip Vote button.
-    /// Handles hover animations and selection border.
-    /// </summary>
     public class MeetingSkipView : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler, IPointerClickHandler
     {
         [Header("UI References")]
-        [SerializeField] private Image selectionBorder; // Yellow outline
+        [SerializeField] private Image selectionBorder;
         [SerializeField] private TextMeshProUGUI labelText;
-        [SerializeField] private Image skipCountShield; // Shield image for skip count
-        [SerializeField] private TextMeshProUGUI skipCountText; // Number on shield
+        [SerializeField] private Image skipCountShield;
+        [SerializeField] private TextMeshProUGUI skipCountText;
 
         [Header("Settings")]
         [SerializeField] private float hoverScale = 1.1f;
@@ -32,7 +28,6 @@ namespace Kavkazim.UI.Meeting
             _originalScale = transform.localScale;
             if (selectionBorder != null) selectionBorder.enabled = false;
             
-            // Hide skip count shield initially
             if (skipCountShield != null)
             {
                 skipCountShield.enabled = false;
@@ -45,9 +40,6 @@ namespace Kavkazim.UI.Meeting
             }
         }
 
-        /// <summary>
-        /// Enable or disable interaction.
-        /// </summary>
         public void SetInteractive(bool interactive, System.Action onClick = null)
         {
             _isInteractive = interactive;
@@ -59,9 +51,6 @@ namespace Kavkazim.UI.Meeting
             }
         }
 
-        /// <summary>
-        /// Show/hide the selection border (yellow outline).
-        /// </summary>
         public void SetSelected(bool isSelected)
         {
             _isSelected = isSelected;
@@ -71,10 +60,6 @@ namespace Kavkazim.UI.Meeting
             }
         }
 
-        /// <summary>
-        /// Show the skip vote count on the shield.
-        /// Hidden if count is 0.
-        /// </summary>
         public void SetSkipCount(int count)
         {
             bool show = count > 0;
@@ -94,7 +79,6 @@ namespace Kavkazim.UI.Meeting
         {
             if (!_isInteractive) return;
 
-            // Show border on hover
             if (selectionBorder != null) selectionBorder.enabled = true;
 
             StopAllCoroutines();
@@ -105,7 +89,6 @@ namespace Kavkazim.UI.Meeting
         {
             if (!_isInteractive) return;
 
-            // Hide border on exit ONLY if not selected
             if (selectionBorder != null && !_isSelected) selectionBorder.enabled = false;
 
             StopAllCoroutines();
