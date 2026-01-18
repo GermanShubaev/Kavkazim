@@ -692,7 +692,7 @@ PlayerSettings:
   qualitySettingsNames: []
   projectName: kavkazim 2025-11-03_14-12-04
   organizationId: god_gs
-  cloudEnabled: 0
+  cloudEnabled: 1
   legacyClampBlendShapeWeights: 0
   hmiLoadingImage: {fileID: 0}
   platformRequiresReadableAssets: 0
