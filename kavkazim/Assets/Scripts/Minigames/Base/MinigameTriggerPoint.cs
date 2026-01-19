@@ -85,10 +85,44 @@ namespace Minigames
 
             if (_exclamationSprite == null)
             {
-                Debug.LogError("[MinigameTriggerPoint] Failed to load exclamation_mark.png. Make sure the image is either:");
-                Debug.LogError("  1. In a Resources folder: Assets/Resources/Art/Images/icons/");
-                Debug.LogError("  2. Or in Assets/Art/Images/icons/ (editor only)");
+                Debug.LogWarning("[MinigameTriggerPoint] Failed to load exclamation_mark.png. Creating fallback sprite.");
+                _exclamationSprite = CreateFallbackExclamationSprite();
             }
+        }
+
+        private Sprite CreateFallbackExclamationSprite()
+        {
+            int size = 128;
+            Texture2D texture = new Texture2D(size, size, TextureFormat.RGBA32, false);
+            Color[] pixels = new Color[size * size];
+            
+            float centerX = size / 2f;
+            float centerY = size / 2f;
+            float radius = size / 2f - 4f;
+            
+            for (int y = 0; y < size; y++)
+            {
+                for (int x = 0; x < size; x++)
+                {
+                    float distFromCenter = Mathf.Sqrt((x - centerX) * (x - centerX) + (y - centerY) * (y - centerY));
+                    
+                    if (distFromCenter <= radius)
+                    {
+                        pixels[y * size + x] = Color.yellow;
+                    }
+                    else
+                    {
+                        pixels[y * size + x] = Color.clear;
+                    }
+                }
+            }
+            
+            texture.SetPixels(pixels);
+            texture.Apply();
+            
+            Sprite sprite = Sprite.Create(texture, new Rect(0, 0, size, size), new Vector2(0.5f, 0.5f));
+            sprite.name = "FallbackExclamationMark";
+            return sprite;
         }
 
         private void OnDestroy()
@@ -120,8 +154,13 @@ namespace Minigames
         {
             if (_exclamationSprite == null)
             {
-                Debug.LogWarning("[MinigameTriggerPoint] Cannot create visual indicator - exclamation sprite not loaded!");
-                return;
+                Debug.LogWarning("[MinigameTriggerPoint] Cannot create visual indicator - exclamation sprite not loaded! Creating fallback.");
+                _exclamationSprite = CreateFallbackExclamationSprite();
+                if (_exclamationSprite == null)
+                {
+                    Debug.LogError("[MinigameTriggerPoint] Failed to create fallback sprite. Indicator will not be shown.");
+                    return;
+                }
             }
 
             _indicatorCanvas = new GameObject("TriggerIndicator");
