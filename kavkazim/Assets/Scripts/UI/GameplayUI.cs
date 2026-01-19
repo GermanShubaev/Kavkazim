@@ -896,6 +896,7 @@ namespace UI
             _taskAssignments = null;
             _completedTasks.Clear();
             _totalTasks = 0;
+            _lastTaskUiSignature = "";
             
             foreach (var taskObj in _taskTextObjects)
             {
