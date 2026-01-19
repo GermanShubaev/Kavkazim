@@ -4,7 +4,6 @@ using Kavkazim.Services;
 using Services;
 using Unity.Netcode;
 using Unity.Netcode.Transports.UTP;
-using Unity.Networking.Transport.Relay;
 using Unity.Services.Relay.Models;
 using UnityEngine;
 
@@ -45,10 +44,14 @@ namespace Netcode
             Allocation allocation = await _relay.CreateAllocationAsync(maxPlayers - 1);
             CurrentJoinCode = await _relay.GetJoinCodeAsync(allocation.AllocationId);
 
-            var dt = new RelayServerData(allocation, "dtls");
-            var utp = (UnityTransport)NetworkManager.Singleton.NetworkConfig.NetworkTransport;
+            var utp = NetworkManager.Singleton.GetComponent<UnityTransport>();
             utp.MaxPacketQueueSize = 512;
-            utp.SetRelayServerData(dt);
+            utp.SetHostRelayData(
+                allocation.RelayServer.IpV4,
+                (ushort)allocation.RelayServer.Port,
+                allocation.AllocationIdBytes,
+                allocation.Key,
+                allocation.ConnectionData);
 
             var lobbyData = new Dictionary<string, Unity.Services.Lobbies.Models.DataObject>
             {
@@ -93,10 +96,15 @@ namespace Netcode
             if (string.IsNullOrEmpty(joinCode)) return false;
 
             JoinAllocation joinAllocation = await _relay.JoinAllocationAsync(joinCode);
-            var dt = new RelayServerData(joinAllocation, "dtls");
-            var utp = (UnityTransport)NetworkManager.Singleton.NetworkConfig.NetworkTransport;
+            var utp = NetworkManager.Singleton.GetComponent<UnityTransport>();
             utp.MaxPacketQueueSize = 512;
-            utp.SetRelayServerData(dt);
+            utp.SetClientRelayData(
+                joinAllocation.RelayServer.IpV4,
+                (ushort)joinAllocation.RelayServer.Port,
+                joinAllocation.AllocationIdBytes,
+                joinAllocation.Key,
+                joinAllocation.ConnectionData,
+                joinAllocation.HostConnectionData);
 
             return NetworkManager.Singleton.StartClient();
         }
