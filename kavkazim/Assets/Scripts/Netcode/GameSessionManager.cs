@@ -9,6 +9,7 @@ using UnityEngine.SceneManagement;
 using Netcode.Player;
 using Kavkazim.Netcode.WinConditions;
 using Kavkazim.Netcode.Validation;
+using UI;
 
 namespace Kavkazim.Netcode
 {
@@ -1065,6 +1066,123 @@ namespace Kavkazim.Netcode
             if (SceneTransitionManager.Instance != null)
             {
                 SceneTransitionManager.Instance.SuppressNextAutoFadeIn = true;
+            }
+        }
+        public void DistributeAndSyncTasks()
+        {
+            if (!IsServer)
+            {
+                Debug.LogWarning("[GameSessionManager] DistributeAndSyncTasks called on client!");
+                return;
+            }
+            
+            // Notify all clients to respawn their trigger points
+            RespawnTriggerPointsClientRpc();
+            
+            // Notify all clients to reset their task UI and state
+            ResetTasksClientRpc();
+            
+            if (Minigames.MinigameTriggerPointManager.Instance != null)
+            {
+                Minigames.MinigameTriggerPointManager.Instance.ClearAllTriggerPoints();
+                Minigames.MinigameTriggerPointManager.Instance.SpawnAllTriggerPoints();
+                Debug.Log("[GameSessionManager] Respawned trigger points for new game.");
+            }
+            
+            if (Minigames.MinigameManager.Instance != null)
+            {
+                Minigames.MinigameManager.Instance.RefreshTriggerPoints();
+                Debug.Log("[GameSessionManager] Refreshed MinigameManager trigger points.");
+            }
+            
+            var taskAssignments = Minigames.Progress.TaskDistributor.DistributeTasksToInnocentPlayers();
+            
+            if (taskAssignments == null || taskAssignments.Count == 0)
+            {
+                Debug.LogWarning("[GameSessionManager] No task assignments to distribute.");
+                return;
+            }
+            
+            Debug.Log($"[GameSessionManager] Distributing tasks to {taskAssignments.Count} players via network.");
+            
+            foreach (var kvp in taskAssignments)
+            {
+                ulong clientId = kvp.Key;
+                var tasks = kvp.Value;
+                
+                var networkTasks = new NetworkTaskData[tasks.Count];
+                for (int i = 0; i < tasks.Count; i++)
+                {
+                    networkTasks[i] = new NetworkTaskData
+                    {
+                        MinigameType = (byte)tasks[i].MinigameType,
+                        LocationX = tasks[i].Location.x,
+                        LocationY = tasks[i].Location.y,
+                        Description = tasks[i].Description
+                    };
+                }
+                
+                // Send to all clients (everyone needs to know all assignments for indicator visibility)
+                SendTaskAssignmentsClientRpc(clientId, networkTasks);
+            }
+        }
+        
+        [Rpc(SendTo.ClientsAndHost)]
+        private void SendTaskAssignmentsClientRpc(ulong assignedClientId, NetworkTaskData[] tasks)
+        {
+            if (GameplayUI.Instance == null)
+            {
+                Debug.LogWarning("[GameSessionManager] GameplayUI.Instance is null, cannot receive task assignments.");
+                return;
+            }
+            
+            var taskList = new List<Minigames.Progress.Task>();
+            foreach (var networkTask in tasks)
+            {
+                taskList.Add(new Minigames.Progress.Task(
+                    (Minigames.Base.MinigameType)networkTask.MinigameType,
+                    new Vector2(networkTask.LocationX, networkTask.LocationY),
+                    networkTask.Description.ToString()
+                ));
+            }
+            
+            var currentAssignments = GameplayUI.Instance.GetTaskAssignments();
+            if (currentAssignments == null)
+            {
+                currentAssignments = new Dictionary<ulong, List<Minigames.Progress.Task>>();
+            }
+            
+            currentAssignments[assignedClientId] = taskList;
+            GameplayUI.Instance.SetTaskAssignments(currentAssignments);
+            
+            Debug.Log($"[GameSessionManager] Received {tasks.Length} tasks for client {assignedClientId}");
+        }
+        
+        [Rpc(SendTo.ClientsAndHost)]
+        private void RespawnTriggerPointsClientRpc()
+        {
+            Debug.Log("[GameSessionManager] Client: Respawning trigger points for new game.");
+            
+            if (Minigames.MinigameTriggerPointManager.Instance != null)
+            {
+                Minigames.MinigameTriggerPointManager.Instance.ClearAllTriggerPoints();
+                Minigames.MinigameTriggerPointManager.Instance.SpawnAllTriggerPoints();
+            }
+            
+            if (Minigames.MinigameManager.Instance != null)
+            {
+                Minigames.MinigameManager.Instance.RefreshTriggerPoints();
+            }
+        }
+        
+
+
+        [Rpc(SendTo.ClientsAndHost)]
+        private void ResetTasksClientRpc()
+        {
+            if (GameplayUI.Instance != null)
+            {
+                GameplayUI.Instance.ResetGameplayUI();
             }
         }
         

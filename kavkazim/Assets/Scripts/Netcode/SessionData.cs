@@ -169,4 +169,31 @@ namespace Kavkazim.Netcode
             };
         }
     }
+    
+    [Serializable]
+    public struct NetworkTaskData : INetworkSerializable, IEquatable<NetworkTaskData>
+    {
+        public byte MinigameType;
+        public float LocationX;
+        public float LocationY;
+        public FixedString64Bytes Description;
+
+        public void NetworkSerialize<T>(BufferSerializer<T> serializer) where T : IReaderWriter
+        {
+            serializer.SerializeValue(ref MinigameType);
+            serializer.SerializeValue(ref LocationX);
+            serializer.SerializeValue(ref LocationY);
+            serializer.SerializeValue(ref Description);
+        }
+
+        public bool Equals(NetworkTaskData other) =>
+            MinigameType == other.MinigameType &&
+            Math.Abs(LocationX - other.LocationX) < 0.01f &&
+            Math.Abs(LocationY - other.LocationY) < 0.01f &&
+            Description.Equals(other.Description);
+
+        public override bool Equals(object obj) => obj is NetworkTaskData other && Equals(other);
+        
+        public override int GetHashCode() => HashCode.Combine(MinigameType, LocationX, LocationY);
+    }
 }
