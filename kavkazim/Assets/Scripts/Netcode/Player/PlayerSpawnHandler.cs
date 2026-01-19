@@ -282,6 +282,12 @@ namespace Netcode.Player
             }
             
             Debug.Log($"[PlayerSpawnHandler] Distributed roles to {_spawnedPlayers.Count} players");
+            
+            // Distribute and sync task assignments after roles are assigned
+            if (GameSessionManager.Instance != null)
+            {
+                GameSessionManager.Instance.DistributeAndSyncTasks();
+            }
         }
     }
 }

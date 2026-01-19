@@ -42,6 +42,7 @@ namespace UI
         private GameObject _progressBarBackground;
         private List<Image> _progressBarStripes = new List<Image>();
         private int _totalTasks = 0;
+        private string _lastTaskUiSignature = "";
 
         private void Awake()
         {
@@ -599,31 +600,14 @@ namespace UI
             }
             
             bool isInnocent = _localAvatar.PerceivedRole == PlayerRoleType.Innocent;
-            
-            if (NetworkManager.Singleton != null && NetworkManager.Singleton.IsServer && 
-                (_taskAssignments == null || _taskAssignments.Count == 0))
+            if (_taskListContainer.activeSelf != isInnocent)
             {
-                if (GameSessionManager.Instance != null && 
-                    GameSessionManager.Instance.CurrentPhase.Value == MatchPhase.MatchInProgress)
-                {
-                    _taskAssignments = TaskDistributor.DistributeTasksToInnocentPlayers();
-                    Debug.Log($"[GameplayUI] Distributed tasks to {_taskAssignments.Count} players on server.");
-                    
-                    if (GameSessionManager.Instance != null)
-                    {
-                        int totalTasks = 0;
-                        foreach (var assignment in _taskAssignments)
-                        {
-                            totalTasks += assignment.Value.Count;
-                        }
-                        GameSessionManager.Instance.TasksLeft.Value = totalTasks;
-                        _totalTasks = totalTasks;
-                        Debug.Log($"[GameplayUI] Initialized TasksLeft to {totalTasks}");
-                        
-                        UpdateTaskProgressBar();
-                    }
-                }
+                _taskListContainer.SetActive(isInnocent);
             }
+            
+            if (!isInnocent) return;
+            
+            // Task assignments are now synchronized from server via GameSessionManager.DistributeAndSyncTasks()
             
             ulong localClientId = _localAvatar.OwnerClientId;
             List<Task> playerTasks = new List<Task>();
@@ -632,119 +616,133 @@ namespace UI
             {
                 playerTasks = _taskAssignments[localClientId];
             }
-            else if (NetworkManager.Singleton != null && !NetworkManager.Singleton.IsServer)
+            
+            // Check if we need to rebuild the UI
+            // Build a string signature of the current tasks state to detect changes
+            System.Text.StringBuilder currentSignature = new System.Text.StringBuilder();
+            if (playerTasks.Count > 0)
             {
-                if (isInnocent && GameSessionManager.Instance != null && 
-                    GameSessionManager.Instance.CurrentPhase.Value == MatchPhase.MatchInProgress)
+                foreach(var t in playerTasks)
                 {
-                    if (_taskAssignments == null || _taskAssignments.Count == 0)
-                    {
-                        _taskAssignments = TaskDistributor.DistributeTasksToInnocentPlayers();
-                        Debug.LogWarning("[GameplayUI] Client distributed tasks locally - this may not match server!");
-                    }
-                    if (_taskAssignments != null && _taskAssignments.ContainsKey(localClientId))
-                    {
-                        playerTasks = _taskAssignments[localClientId];
-                    }
+                    currentSignature.Append($"{t.MinigameType}_{t.Location}_{IsTaskCompleted(t)}|");
                 }
             }
-            
-            if (_taskListContainer != null)
+            else
             {
-                _taskListContainer.SetActive(isInnocent);
+                currentSignature.Append("NoTasks");
             }
             
-            if (isInnocent && _taskListContentContainer != null)
+            string newSignature = currentSignature.ToString();
+            if (_lastTaskUiSignature == newSignature)
             {
-                foreach (var taskObj in _taskTextObjects)
+                return; // UI is up to date
+            }
+            _lastTaskUiSignature = newSignature;
+            
+            // Clear existing task text objects before rebuilding
+            foreach (var taskObj in _taskTextObjects)
+            {
+                if (taskObj != null)
                 {
-                    if (taskObj != null)
+                    Destroy(taskObj);
+                }
+            }
+            _taskTextObjects.Clear();
+            
+            if (playerTasks.Count > 0)
+            {
+                List<Task> incompleteTasks = new List<Task>();
+                for (int i = 0; i < playerTasks.Count; i++)
+                {
+                    var task = playerTasks[i];
+                    if (!IsTaskCompleted(task))
                     {
-                        Destroy(taskObj);
+                        incompleteTasks.Add(task);
                     }
                 }
-                _taskTextObjects.Clear();
                 
-                if (playerTasks.Count > 0)
+                for (int i = 0; i < incompleteTasks.Count; i++)
                 {
-                    List<Task> incompleteTasks = new List<Task>();
-                    for (int i = 0; i < playerTasks.Count; i++)
-                    {
-                        var task = playerTasks[i];
-                        if (!IsTaskCompleted(task))
-                        {
-                            incompleteTasks.Add(task);
-                        }
-                    }
-                    
-                    for (int i = 0; i < incompleteTasks.Count; i++)
-                    {
-                        var task = incompleteTasks[i];
-                        string taskText = $"{i + 1}. {task.Description}";
+                    var task = incompleteTasks[i];
+                    string taskText = $"{i + 1}. {task.Description}";
                         
-                        GameObject taskTextObj = new GameObject($"Task_{i}");
-                        taskTextObj.transform.SetParent(_taskListContentContainer.transform, false);
-                        Text text = taskTextObj.AddComponent<Text>();
-                        text.text = taskText;
-                        text.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-                        text.alignment = TextAnchor.MiddleLeft;
-                        text.fontSize = 44;
-                        text.resizeTextForBestFit = false;
+                    GameObject taskTextObj = new GameObject($"Task_{i}");
+                    taskTextObj.transform.SetParent(_taskListContentContainer.transform, false);
+                    Text text = taskTextObj.AddComponent<Text>();
+                    text.text = taskText;
+                    text.font = UIUtils.GetDefaultFont();
+                    text.alignment = TextAnchor.MiddleLeft;
+                    text.fontSize = 24;
+                    text.resizeTextForBestFit = false;
                         
-                        text.color = Color.white;
+                    text.color = Color.white;
                         
-                        RectTransform rect = taskTextObj.GetComponent<RectTransform>();
-                        rect.anchorMin = new Vector2(0, 1);
-                        rect.anchorMax = new Vector2(1, 1);
-                        rect.pivot = new Vector2(0, 1);
-                        rect.sizeDelta = new Vector2(0, 50);
-                        
-                        LayoutElement layoutElement = taskTextObj.AddComponent<LayoutElement>();
-                        layoutElement.preferredHeight = 50;
-                        layoutElement.flexibleHeight = 0;
-                        
-                        _taskTextObjects.Add(taskTextObj);
-                    }
-                }
-                else
-                {
-                    GameObject noTasksObj = new GameObject("NoTasksText");
-                    noTasksObj.transform.SetParent(_taskListContentContainer.transform, false);
-                    Text noTasksText = noTasksObj.AddComponent<Text>();
-                    noTasksText.text = "No tasks assigned yet.";
-                    noTasksText.font = UIUtils.GetDefaultFont();
-                    noTasksText.alignment = TextAnchor.MiddleLeft;
-                    noTasksText.color = Color.white;
-                    noTasksText.fontSize = 14;
-                    
-                    RectTransform rect = noTasksObj.GetComponent<RectTransform>();
+                    RectTransform rect = taskTextObj.GetComponent<RectTransform>();
                     rect.anchorMin = new Vector2(0, 1);
                     rect.anchorMax = new Vector2(1, 1);
                     rect.pivot = new Vector2(0, 1);
                     rect.sizeDelta = new Vector2(0, 30);
-                    
-                    LayoutElement layoutElement = noTasksObj.AddComponent<LayoutElement>();
+                        
+                    LayoutElement layoutElement = taskTextObj.AddComponent<LayoutElement>();
                     layoutElement.preferredHeight = 30;
                     layoutElement.flexibleHeight = 0;
-                    
-                    _taskTextObjects.Add(noTasksObj);
+                        
+                    _taskTextObjects.Add(taskTextObj);
                 }
+            }
+            else
+            {
+                GameObject noTasksObj = new GameObject("NoTasksText");
+                noTasksObj.transform.SetParent(_taskListContentContainer.transform, false);
+                Text noTasksText = noTasksObj.AddComponent<Text>();
+                noTasksText.text = "No tasks assigned yet.";
+                noTasksText.font = UIUtils.GetDefaultFont();
+                noTasksText.alignment = TextAnchor.MiddleLeft;
+                noTasksText.color = Color.white;
+                noTasksText.fontSize = 14;
                 
-                if (_taskListContentContainer != null)
-                {
-                    UnityEngine.UI.LayoutRebuilder.ForceRebuildLayoutImmediate(_taskListContentContainer.GetComponent<RectTransform>());
-                }
+                RectTransform rect = noTasksObj.GetComponent<RectTransform>();
+                rect.anchorMin = new Vector2(0, 1);
+                rect.anchorMax = new Vector2(1, 1);
+                rect.pivot = new Vector2(0, 1);
+                rect.sizeDelta = new Vector2(0, 30);
                 
-                if (_taskListContainer != null)
-                {
-                    UnityEngine.UI.LayoutRebuilder.ForceRebuildLayoutImmediate(_taskListContainer.GetComponent<RectTransform>());
-                }
+                LayoutElement layoutElement = noTasksObj.AddComponent<LayoutElement>();
+                layoutElement.preferredHeight = 30;
+                layoutElement.flexibleHeight = 0;
+                
+                _taskTextObjects.Add(noTasksObj);
+            }
+            
+            if (_taskListContentContainer != null)
+            {
+                LayoutRebuilder.ForceRebuildLayoutImmediate(_taskListContentContainer.GetComponent<RectTransform>());
+            }
+            
+            if (_taskListContainer != null)
+            {
+                LayoutRebuilder.ForceRebuildLayoutImmediate(_taskListContainer.GetComponent<RectTransform>());
             }
         }
 
         public void SetTaskAssignments(Dictionary<ulong, List<Task>> assignments)
         {
             _taskAssignments = assignments;
+            int totalTasks = 0;
+            if (_taskAssignments != null)
+            {
+                foreach (var assignment in _taskAssignments)
+                {
+                    totalTasks += assignment.Value.Count;
+                }
+            }
+            _totalTasks = totalTasks;
+            
+            // Update the progress bar
+            UpdateTaskProgressBar();
+            
+            // Update the task list UI
+            UpdateTaskListUI();
         }
 
         public Dictionary<ulong, List<Task>> GetTaskAssignments()
@@ -834,6 +832,11 @@ namespace UI
             
             if (_totalTasks == 0) return;
 
+            if (!_progressBarContainer.activeSelf)
+            {
+                _progressBarContainer.SetActive(true);
+            }
+
             foreach (var stripe in _progressBarStripes)
             {
                 if (stripe != null && stripe.gameObject != null)
@@ -884,7 +887,7 @@ namespace UI
             }
         }
 
-        private void ResetGameplayUI()
+        public void ResetGameplayUI()
         {
             if (_taskListContainer) _taskListContainer.SetActive(false);
             if (_progressBarContainer) _progressBarContainer.SetActive(false);
@@ -893,6 +896,7 @@ namespace UI
             _taskAssignments = null;
             _completedTasks.Clear();
             _totalTasks = 0;
+            _lastTaskUiSignature = "";
             
             foreach (var taskObj in _taskTextObjects)
             {

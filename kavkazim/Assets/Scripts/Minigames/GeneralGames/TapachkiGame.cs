@@ -1,8 +1,10 @@
 using Minigames.Base;
-using UnityEditor;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
 
 namespace Minigames.GeneralGames
 {
