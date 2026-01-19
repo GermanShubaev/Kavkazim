@@ -639,10 +639,19 @@ namespace UI
             }
             _lastTaskUiSignature = newSignature;
             
+            // Clear existing task text objects before rebuilding
+            foreach (var taskObj in _taskTextObjects)
+            {
+                if (taskObj != null)
+                {
+                    Destroy(taskObj);
+                }
+            }
+            _taskTextObjects.Clear();
+            
             if (playerTasks.Count > 0)
             {
                 List<Task> incompleteTasks = new List<Task>();
-                int completedCount = 0;
                 for (int i = 0; i < playerTasks.Count; i++)
                 {
                     var task = playerTasks[i];
@@ -650,40 +659,36 @@ namespace UI
                     {
                         incompleteTasks.Add(task);
                     }
-                    else
-                    {
-                        completedCount++;
-                    }
                 }
                 
-                    for (int i = 0; i < incompleteTasks.Count; i++)
-                    {
-                        var task = incompleteTasks[i];
-                        string taskText = $"{i + 1}. {task.Description}";
+                for (int i = 0; i < incompleteTasks.Count; i++)
+                {
+                    var task = incompleteTasks[i];
+                    string taskText = $"{i + 1}. {task.Description}";
                         
-                        GameObject taskTextObj = new GameObject($"Task_{i}");
-                        taskTextObj.transform.SetParent(_taskListContentContainer.transform, false);
-                        Text text = taskTextObj.AddComponent<Text>();
-                        text.text = taskText;
-                        text.font = UIUtils.GetDefaultFont();
-                        text.alignment = TextAnchor.MiddleLeft;
-                        text.fontSize = 24;
-                        text.resizeTextForBestFit = false;
+                    GameObject taskTextObj = new GameObject($"Task_{i}");
+                    taskTextObj.transform.SetParent(_taskListContentContainer.transform, false);
+                    Text text = taskTextObj.AddComponent<Text>();
+                    text.text = taskText;
+                    text.font = UIUtils.GetDefaultFont();
+                    text.alignment = TextAnchor.MiddleLeft;
+                    text.fontSize = 24;
+                    text.resizeTextForBestFit = false;
                         
-                        text.color = Color.white;
+                    text.color = Color.white;
                         
-                        RectTransform rect = taskTextObj.GetComponent<RectTransform>();
-                        rect.anchorMin = new Vector2(0, 1);
-                        rect.anchorMax = new Vector2(1, 1);
-                        rect.pivot = new Vector2(0, 1);
-                        rect.sizeDelta = new Vector2(0, 30);
+                    RectTransform rect = taskTextObj.GetComponent<RectTransform>();
+                    rect.anchorMin = new Vector2(0, 1);
+                    rect.anchorMax = new Vector2(1, 1);
+                    rect.pivot = new Vector2(0, 1);
+                    rect.sizeDelta = new Vector2(0, 30);
                         
-                        LayoutElement layoutElement = taskTextObj.AddComponent<LayoutElement>();
-                        layoutElement.preferredHeight = 30;
-                        layoutElement.flexibleHeight = 0;
+                    LayoutElement layoutElement = taskTextObj.AddComponent<LayoutElement>();
+                    layoutElement.preferredHeight = 30;
+                    layoutElement.flexibleHeight = 0;
                         
-                        _taskTextObjects.Add(taskTextObj);
-                    }
+                    _taskTextObjects.Add(taskTextObj);
+                }
             }
             else
             {
